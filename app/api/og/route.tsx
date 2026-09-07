@@ -311,15 +311,16 @@ function MiniBar({
 function Wordmark() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <div
-        style={{
-          display: "flex",
-          width: 30,
-          height: 30,
-          borderRadius: 8,
-          background: "linear-gradient(150deg,#fff,#8F9BFF 60%,#4B57C4)",
-        }}
-      />
+      {/* The mark, built from flex boxes: Satori renders a subset of SVG, and
+          three rounded rectangles need none of it. Proportions mirror
+          brand/igitur-mark.svg — the second premise is 0.70 of the first. */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 5, width: 34 }}>
+        <div style={{ display: "flex", gap: 2.5, height: 7 }}>
+          <div style={{ display: "flex", width: 17.6, background: "rgba(255,255,255,.36)", borderRadius: 3.5 }} />
+          <div style={{ display: "flex", width: 12.3, background: AC, borderRadius: 3.5 }} />
+        </div>
+        <div style={{ display: "flex", width: 34, height: 9.7, background: FG, borderRadius: 4.85 }} />
+      </div>
       <div style={{ fontSize: 27, color: FG, fontWeight: 600, letterSpacing: "-0.02em" }}>
         {SITE.name}
       </div>

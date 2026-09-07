@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { SITE } from "@/lib/site";
-import { TelegramIcon, XIcon } from "./icons";
+import { BrandMark, TelegramIcon, XIcon } from "./icons";
 import { toast } from "./Toast";
 
 const LINKS: [string, string][] = [
@@ -95,7 +95,7 @@ export function Nav() {
       <nav className="nav">
         <div className="navin">
           <Link className="brand" href="/">
-            <span className="bmark" />
+            <BrandMark />
             {SITE.name}
           </Link>
           <div className="nlinks" id="nlinks">

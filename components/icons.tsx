@@ -28,6 +28,28 @@ export function TelegramIcon() {
   );
 }
 
-export function BrandMark() {
-  return <span className="bmark" />;
+/**
+ * The Igitur mark: two premises above, one position below.
+ *
+ * The second premise is 0.70 the width of the first — the same discount
+ * buildBook() applies to a secondary theme, so the proportion is the product's
+ * own rule rather than a visual preference. The conclusion is white and
+ * heavier because in the allocation bar white is the lead position.
+ *
+ * Geometry lives in brand/igitur-mark.svg; this mirrors it.
+ */
+export function BrandMark({ size = 19 }: { size?: number } = {}) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      style={{ flex: "none", display: "block" }}
+    >
+      <rect x="6" y="8" width="10.35" height="4.6" rx="2.3" fill="rgba(255,255,255,.36)" />
+      <rect x="18.75" y="8" width="7.25" height="4.6" rx="2.3" fill="#7C8CFF" />
+      <rect x="6" y="17.4" width="20" height="6.4" rx="3.2" fill="#FAFAFA" />
+    </svg>
+  );
 }

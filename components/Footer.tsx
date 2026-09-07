@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { BrandMark } from "./icons";
+
 import { REVIEWED } from "@/lib/universe";
 import { SITE } from "@/lib/site";
 
@@ -9,7 +11,7 @@ export function Footer() {
       <div className="fg">
         <div>
           <Link className="brand" href="/" style={{ padding: 0 }}>
-            <span className="bmark" />
+            <BrandMark />
             {SITE.name}
           </Link>
           <p className="p" style={{ marginTop: 12, fontSize: 13, maxWidth: "34ch" }}>

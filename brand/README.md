@@ -1,26 +1,38 @@
 # Brand marks
 
-Logo directions for Igitur. Concepts, not a finished identity — nothing here is
-wired into the app yet; `app/icon.svg` still carries the old allocation-bar
-favicon.
+## The mark
 
-## The idea
+Two premises above, one position below.
 
-*Igitur* is Latin for "therefore", and the therefore sign is **∴** — three dots
-in a triangle, from logic and proof notation. The name has a symbol already, and
-the three-dot motif is native to the design system: the fake browser chrome
-(`.wdots`) is three dots.
+The second premise is **0.70 the width** of the first — the same discount
+`buildBook()` applies to a secondary theme, so the proportion comes from the
+product's own rule rather than from taste. The conclusion is white and heavier
+because in the allocation bar white is the lead position; an earlier draft made
+it indigo, which is the ballast colour, and said the opposite of what was meant.
 
-| File | Concept |
+Everything sits on one 32-unit grid: a 20-unit span, premises and conclusion
+sharing the same left and right edges. That alignment is what makes it read as
+drawn rather than placed.
+
+| File | Use |
 |---|---|
-| `mark-therefore.svg` | ∴ in one colour, inherits `currentColor`. The primary mark. |
-| `mark-therefore-conviction.svg` | ∴ coloured in conviction order — white lead, indigo ballast. A large-size treatment of the same mark, **not** a separate logo: below ~24px the mid-tone dot disappears against the dark ground. |
-| `mark-therefore-bar.svg` | Two premise dots above, the conclusion as a bar segment. |
-| `mark-inference.svg` | Premises above a rule, conclusion below — formal proof notation. Loses the rule below ~24px. |
-| `mark-bar.svg` | The allocation bar, evolved from the old favicon. Honest, but a bar-chart mark is the most crowded space in fintech. |
+| `igitur-mark.svg` | The mark. Mirrored in `BrandMark` in `components/icons.tsx`. |
+| `igitur-mark-gradient.svg` | Conclusion carries a white-to-periwinkle gradient, continuing the old `.bmark` treatment. Swap in if the flat mark reads too plain at large sizes. |
+| `igitur-mark-mono.svg` | One colour, inherits `currentColor`. For light grounds, print, stamping. |
+| `igitur-icon.svg` | The mark inside a dark rounded tile. Shipped as `app/icon.svg`. |
 
-## If one is adopted
+Checked down to 12px. Below about 16px the indigo premise reads as a small
+accent rather than a distinct shape, which is the intended behaviour.
 
-- `app/icon.svg` — the favicon
-- `.bmark` in `app/globals.css` — the nav and footer wordmark tile
-- `Wordmark()` in `app/api/og/route.tsx` — the share cards
+## Where it is wired
+
+- `app/icon.svg` — favicon and app icon
+- `BrandMark` in `components/icons.tsx` — nav and footer
+- `Wordmark()` in `app/api/og/route.tsx` — share cards, rebuilt from flex boxes
+  because Satori renders only a subset of SVG
+
+## Earlier directions
+
+Kept for reference, not in use: `mark-therefore*.svg` (the therefore sign, ∴ —
+the symbol for the word "igitur" itself), `mark-inference.svg`,
+`mark-bar.svg`, and the intermediate `mark-a3-*.svg` studies.
