@@ -38,18 +38,39 @@ cropped to a **circle** and shown as small as 24px on replies.
 
 | File | Size | Use |
 |---|---|---|
-| `x-avatar.png` | 1000×1000 | Profile picture. Upload this one — X downscales, and starting from more pixels keeps the edges clean. |
-| `x-avatar-400.png` | 400×400 | X's stated recommendation, if you would rather match it exactly. |
-| `x-header.png` | 1500×500 | Header banner. |
+| `x-avatar.png` | 1000×1000 | Profile picture. Upload this one. |
+| `x-avatar-400.png` | 400×400 | X's stated recommendation, if you prefer to match it exactly. |
+| `x-avatar-flat.png` | 1000×1000 | Same, without the bloom. The restrained alternative. |
+| `x-header.png` | 3000×1000 | Header banner. Shows the product working. |
+| `x-header-statement.png` | 3000×1000 | Header alternative: the tagline, typographically. |
 
-Two decisions follow from the circular crop. The background bleeds to every edge,
-so nothing is lost when the corners are cut — a rounded-tile icon would lose its
-corners here. And the mark's ink spans 56% of the canvas rather than the ~49% it
-occupies in `igitur-icon.svg`, because at 24px the smaller proportion stops
-resolving.
+### How they are built
 
-The header keeps its content on the right. X overlays the profile picture across
-the bottom-left of the banner, and anything placed there is covered.
+Depth follows the site's own three-layer recipe rather than being invented for
+these files: a radial glow, then SVG turbulence grain at 34% `overlay`, then a
+hairline inset rim. The first version used only the glow, which is why it read
+as a wireframe on a flat field.
+
+The conclusion pill carries a white-to-periwinkle gradient with a one-unit
+specular along its top edge, so light falls from above — the same direction as
+the panel shadows on the site. Beneath it sits a soft indigo bloom at 38%
+opacity. That number was tuned against the alternatives: at 55% the halo starts
+reading as a filter effect rather than as material.
+
+Two things follow from the circular crop. The background bleeds to every edge,
+so nothing is lost when the corners are cut, and the file is a full opaque
+square — X does the cropping, and transparent corners would show as a box
+anywhere the image is displayed uncropped. The mark's ink spans 56% of the
+canvas rather than the ~49% it occupies in `igitur-icon.svg`, because below that
+it stops resolving at reply size.
+
+The header keeps its content clear of the bottom-left, where X overlays the
+profile picture. `x-header.png` puts the real `.window` frame there — the site's
+signature component — showing a premise and the book it produces, so the banner
+demonstrates the product instead of describing it.
+
+Headers export at 3000×1000 rather than X's stated 1500×500: the ratio is the
+same, and the extra pixels survive downscaling on high-density screens.
 
 ## Earlier directions
 
