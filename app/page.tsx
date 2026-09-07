@@ -6,7 +6,6 @@ import { Holdings } from "@/components/Holdings";
 import { HeroPrompt } from "@/components/HeroPrompt";
 import { TelegramIcon, XIcon } from "@/components/icons";
 import { buildBook } from "@/lib/generator";
-import { bookHref } from "@/lib/routes";
 import { FEATURED, HOST, SITE } from "@/lib/site";
 import { NAMES, THEMES } from "@/lib/universe";
 

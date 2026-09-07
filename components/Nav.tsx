@@ -47,8 +47,6 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [wallet, setWallet] = useState<string | null>(null);
 
-  useEffect(() => setOpen(false), [pathname]);
-
   useEffect(() => {
     const eth = (window as { ethereum?: Eip1193 }).ethereum;
     if (!eth?.on) return;
@@ -137,14 +135,16 @@ export function Nav() {
       </nav>
       <div className={"mmenu" + (open ? " open" : "")}>
         {MENU.map(([href, label]) => (
-          <Link key={href} href={href}>
+          // Closing here rather than in an effect on pathname: the menu is
+          // dismissed by the act of navigating, not as a reaction to it.
+          <Link key={href} href={href} onClick={() => setOpen(false)}>
             {label}
           </Link>
         ))}
-        <a href={SITE.x} target="_blank" rel="noopener">
+        <a href={SITE.x} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
           X ↗
         </a>
-        <a href={SITE.telegram} target="_blank" rel="noopener">
+        <a href={SITE.telegram} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
           Telegram ↗
         </a>
       </div>

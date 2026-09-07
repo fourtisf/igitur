@@ -29,7 +29,11 @@ export function Reveal() {
           io.unobserve(x.target);
         }
       },
-      { rootMargin: "0px 0px -6% 0px", threshold: 0.04 }
+      // threshold 0, not a fraction: a tall element (the trending table is
+      // ~8,600px) can never show 4% of itself inside the viewport, so a
+      // fractional threshold left the whole panel stuck at opacity 0 until
+      // the reader scrolled. Any intersection is enough to reveal.
+      { rootMargin: "0px 0px -6% 0px", threshold: 0 }
     );
     els.forEach((e, i) => {
       e.style.transitionDelay = Math.min(i * 45, 220) + "ms";

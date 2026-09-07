@@ -36,7 +36,7 @@ export async function generateMetadata({
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const { premise, drop, book } = read(await searchParams);
+  const { drop, book } = read(await searchParams);
 
   // A refusal is a real page, but it is not one to index.
   if (!book.ok) {

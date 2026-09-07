@@ -33,8 +33,30 @@ const SECTION_UNIVERSE = "/* ===================================================
 const SECTION_MATCHING = "/* ============================================================\n   2. MATCHING";
 const SECTION_RENDER = "/* ============================================================\n   3. RENDER";
 
+/** The shape of a book as the prototype returns it, loosely typed: it is
+ *  plain JavaScript from a string, so only the fields compared here matter. */
+interface ProtoHolding {
+  t: string;
+  pct: number;
+  src: string;
+  lead?: boolean;
+  ballast?: boolean;
+}
+interface ProtoBook {
+  ok: boolean;
+  premise: string;
+  emptied?: boolean;
+  theme?: { id: string };
+  second?: { id: string } | null;
+  risk?: string;
+  horizon?: string;
+  confidence?: number;
+  hits?: string[];
+  seed?: number;
+  holdings?: ProtoHolding[];
+}
 type Proto = {
-  buildBook: (p: string, drop?: string[]) => Record<string, unknown>;
+  buildBook: (p: string, drop?: string[]) => ProtoBook;
   scoreThemes: (t: string) => { th: { id: string }; score: number; hits: string[]; first: number }[];
 };
 
@@ -70,19 +92,19 @@ for (let i = 0; i < 200; i++) {
 const DROPS: string[][] = [[], ["NVDA"], ["NVDA", "TSM"], ["CCJ", "BWXT", "LEU"], ["SGOV"]];
 
 /** The observable book: everything a reader or a shared URL can see. */
-function shape(x: Record<string, any>): string {
+function shape(x: ProtoBook): string {
   if (!x.ok) return JSON.stringify({ ok: false, premise: x.premise, emptied: !!x.emptied });
   return JSON.stringify({
     ok: true,
     premise: x.premise,
-    theme: x.theme.id,
+    theme: x.theme?.id,
     second: x.second ? x.second.id : null,
     risk: x.risk,
     horizon: x.horizon,
     confidence: x.confidence,
     hits: x.hits,
     seed: x.seed,
-    holdings: x.holdings.map((h: any) => [h.t, h.pct, h.src, !!h.lead, !!h.ballast]),
+    holdings: (x.holdings ?? []).map((h) => [h.t, h.pct, h.src, !!h.lead, !!h.ballast]),
   });
 }
 
@@ -99,7 +121,7 @@ test("buildBook matches the prototype exactly, including hand-dropped holdings",
   for (const p of CORPUS) {
     for (const d of DROPS) {
       const a = shape(prototype.buildBook(p, d.slice()));
-      const b = shape(buildBook(p, d.slice()) as unknown as Record<string, any>);
+      const b = shape(buildBook(p, d.slice()) as unknown as ProtoBook);
       assert.equal(b, a, `book drifted for ${JSON.stringify(p)} drop=${JSON.stringify(d)}`);
       compared++;
     }
