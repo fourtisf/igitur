@@ -31,6 +31,26 @@ accent rather than a distinct shape, which is the intended behaviour.
 - `Wordmark()` in `app/api/og/route.tsx` — share cards, rebuilt from flex boxes
   because Satori renders only a subset of SVG
 
+## Social assets
+
+Built for X, and shaped by how X actually displays them: the profile picture is
+cropped to a **circle** and shown as small as 24px on replies.
+
+| File | Size | Use |
+|---|---|---|
+| `x-avatar.png` | 1000×1000 | Profile picture. Upload this one — X downscales, and starting from more pixels keeps the edges clean. |
+| `x-avatar-400.png` | 400×400 | X's stated recommendation, if you would rather match it exactly. |
+| `x-header.png` | 1500×500 | Header banner. |
+
+Two decisions follow from the circular crop. The background bleeds to every edge,
+so nothing is lost when the corners are cut — a rounded-tile icon would lose its
+corners here. And the mark's ink spans 56% of the canvas rather than the ~49% it
+occupies in `igitur-icon.svg`, because at 24px the smaller proportion stops
+resolving.
+
+The header keeps its content on the right. X overlays the profile picture across
+the bottom-left of the banner, and anything placed there is covered.
+
 ## Earlier directions
 
 Kept for reference, not in use: `mark-therefore*.svg` (the therefore sign, ∴ —
