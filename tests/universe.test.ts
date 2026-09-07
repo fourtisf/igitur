@@ -11,8 +11,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { BALLAST, REVIEWED, THEMES, UNIVERSE } from "../lib/universe";
+import { BALLAST, REVIEWED, THEMES, UNIVERSE, UNIVERSE_VERSION } from "../lib/universe";
 import { scoreThemes } from "../lib/generator";
+import { fnv } from "../lib/hash";
 
 const RISKS = new Set(["Speculative", "Aggressive", "Moderate", "Conservative"]);
 const KINDS = new Set(["Equity", "ETF", "Crypto", "Treasury", "Commodity"]);
@@ -143,4 +144,42 @@ test("no theme is unreachable behind another", () => {
     const ranked = scoreThemes(th.claim);
     assert.equal(ranked[0].th.id, th.id, `${th.id} is shadowed by ${ranked[0].th.id}`);
   }
+});
+
+/**
+ * The universe cannot change without its version changing.
+ *
+ * This is the guard for the bug that motivated versioning at all: move one
+ * conviction score by six points and every previously shared book touching that
+ * theme reorders and reweights, while every link already in circulation keeps
+ * claiming to be the book that was sent.
+ *
+ * If this test fails you have edited THEMES or BALLAST. That is fine and
+ * expected — but it means:
+ *
+ *   1. bump UNIVERSE_VERSION in lib/universe.ts,
+ *   2. add a CHANGELOG entry saying what moved, and
+ *   3. update FINGERPRINT below to the value this failure prints.
+ *
+ * Do all three, in that order. Skipping the first is what breaks shared links.
+ */
+const FINGERPRINT = { version: 1, hash: "s38clo" };
+
+test("the universe cannot be edited without bumping its version", () => {
+  const hash = fnv(JSON.stringify({ THEMES, BALLAST })).toString(36);
+  if (hash !== FINGERPRINT.hash) {
+    assert.notEqual(
+      UNIVERSE_VERSION,
+      FINGERPRINT.version,
+      `The universe changed but UNIVERSE_VERSION is still ${UNIVERSE_VERSION}. ` +
+        `Every book URL already shared claims to be built on v${UNIVERSE_VERSION} and would now ` +
+        `render different holdings. Bump the version, add a CHANGELOG entry, then set ` +
+        `FINGERPRINT to { version: ${UNIVERSE_VERSION + 1}, hash: "${hash}" }.`
+    );
+    assert.fail(
+      `Universe changed and the version was bumped correctly — now update FINGERPRINT to ` +
+        `{ version: ${UNIVERSE_VERSION}, hash: "${hash}" }.`
+    );
+  }
+  assert.equal(UNIVERSE_VERSION, FINGERPRINT.version);
 });

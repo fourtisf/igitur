@@ -7,7 +7,7 @@ import { FilterList } from "@/components/FilterList";
 import { bookHref } from "@/lib/routes";
 import { moveFor, priceOf, sparkPath, SYNTHETIC } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
-import { THEMES, UNIVERSE } from "@/lib/universe";
+import { THEMES, UNIVERSE, UNIVERSE_VERSION } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "Trending",
@@ -93,7 +93,7 @@ export default function TrendingPage() {
                 const find = `${a.t} ${a.n} ${a.theme}`.toLowerCase();
                 // A name belongs to a theme, so the row opens that theme's book.
                 return th ? (
-                  <Link key={a.t} className="trow" href={bookHref(th.claim)} data-find={find}>
+                  <Link key={a.t} className="trow" href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })} data-find={find}>
                     {body}
                   </Link>
                 ) : (

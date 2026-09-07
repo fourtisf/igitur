@@ -80,6 +80,11 @@ export interface Book {
   hits: string[];
   seed: number;
   drop: string[];
+  /**
+   * Themes that scored but did not lead, and are not the secondary. Shown on
+   * the book page so a reader can see what the matcher weighed and rejected.
+   */
+  alternatives: { id: string; name: string; score: number; hits: string[] }[];
 }
 
 export interface NoBook {

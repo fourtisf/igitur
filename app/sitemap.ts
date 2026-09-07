@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { bookHref } from "@/lib/routes";
 import { absolute } from "@/lib/site";
-import { THEMES } from "@/lib/universe";
+import { THEMES, UNIVERSE_VERSION } from "@/lib/universe";
 
 /**
  * HANDOFF.md §6.1 — "sitemap.xml including one entry per theme claim".
@@ -26,6 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/compose", 0.9, "monthly"],
     ["/universe", 0.8, "weekly"],
     ["/method", 0.8, "monthly"],
+    ["/changes", 0.6, "weekly"],
     ["/trending", 0.7, "daily"],
     ["/token", 0.6, "weekly"],
     ["/status", 0.6, "weekly"],
@@ -42,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   for (const th of THEMES) {
     pages.push({
-      url: absolute(bookHref(th.claim)),
+      url: absolute(bookHref(th.claim, [], { universe: UNIVERSE_VERSION })),
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,

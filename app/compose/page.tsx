@@ -4,6 +4,7 @@ import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 
 import { normalizePremise } from "@/lib/premise";
+import { THEMES } from "@/lib/universe";
 import { Composer } from "./Composer";
 
 export const metadata: Metadata = {
@@ -37,7 +38,11 @@ export default async function ComposePage({
         Write it the way you would say it out loud. Name a constraint, an industry or a resource —
         that is what the matcher reads.
       </p>
-      <Composer prefill={normalizePremise(sp.p)} />
+      <Composer
+        prefill={normalizePremise(sp.p)}
+        claims={Object.fromEntries(THEMES.map((t) => [t.id, t.claim]))}
+        counts={Object.fromEntries(THEMES.map((t) => [t.id, t.assets.length]))}
+      />
     </section>
   );
 }

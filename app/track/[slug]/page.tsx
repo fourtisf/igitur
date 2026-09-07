@@ -7,7 +7,7 @@ import { TrackChart, trackSeries } from "@/components/TrackChart";
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
-import { bookHref, ogHref, trackHref } from "@/lib/routes";
+import { bookHref, daysSince, ogHref, parseStated, parseUniverse, trackHref } from "@/lib/routes";
 import { SYNTHETIC } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
 
@@ -22,7 +22,9 @@ export async function generateMetadata({
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const premise = normalizePremise((await searchParams).p);
+  const sp = await searchParams;
+  const premise = normalizePremise(sp.p);
+  const days = daysSince(parseStated(sp.d));
   const b = buildBook(premise);
 
   if (!b.ok) {
@@ -33,7 +35,7 @@ export async function generateMetadata({
     };
   }
 
-  const { bEnd, sEnd, win } = trackSeries(b);
+  const { bEnd, sEnd, win } = trackSeries(b, days);
   const title = b.premise.length > 56 ? b.premise.slice(0, 55).trimEnd() + "…" : b.premise;
   const description = `Tracked against the index since the premise was stated: book ${
     bEnd >= 0 ? "+" : ""
@@ -68,13 +70,19 @@ export default async function TrackPage({
   searchParams: Promise<Search>;
 }) {
   const { slug } = await params;
-  const premise = normalizePremise((await searchParams).p);
+  const sp = await searchParams;
+  const premise = normalizePremise(sp.p);
+  const stated = parseStated(sp.d);
+  const universe = parseUniverse(sp.u);
+  const days = daysSince(stated);
   const book = buildBook(premise);
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
 
   const b = book;
-  if (slug !== slugOf(b.premise)) redirect(trackHref(b.premise));
-  const { bEnd, sEnd, win } = trackSeries(b);
+  if (slug !== slugOf(b.premise)) {
+    redirect(trackHref(b.premise, { stated: stated ?? undefined, universe: universe ?? undefined }));
+  }
+  const { bEnd, sEnd, win, N } = trackSeries(b, days);
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -108,7 +116,7 @@ export default async function TrackPage({
           >
             {b.premise}
           </p>
-          <TrackChart book={b} />
+          <TrackChart book={b} days={days} />
         </div>
       </div>
       <div className="stats rv" style={{ marginTop: 12 }}>
@@ -140,7 +148,18 @@ export default async function TrackPage({
       </div>
       <p className="notice rv" style={{ marginTop: 26 }}>
         Weights are frozen at the moment the premise was stated. Nothing has been rebalanced, so
-        this measures the claim rather than the trading around it.
+        this measures the claim rather than the trading around it.{" "}
+        {stated ? (
+          <>
+            This claim was stated on {stated}, {days} day{days === 1 ? "" : "s"} ago, which is the{" "}
+            {N} sessions charted above.
+          </>
+        ) : (
+          <>
+            This link carries no stated date, so the window is a default {N} sessions rather than a
+            real one. Books composed from now on carry their date.
+          </>
+        )}
       </p>
       {SYNTHETIC ? (
         <p className="notice warn rv" style={{ marginTop: 14 }}>

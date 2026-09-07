@@ -15,8 +15,19 @@ import { BALLAST, THEMES } from "./universe";
 import { fnv, rng } from "./hash";
 import type { Book, BookResult, Holding, Risk, Theme } from "./types";
 
-export interface ThemeScore {
-  th: Theme;
+/**
+ * The minimum a theme needs to be scored. The full Theme satisfies it, and so
+ * does the trimmed index the composer ships to the browser — one scorer, so the
+ * live feedback in the composer can never disagree with the book it produces.
+ */
+export interface MatchableTheme {
+  id: string;
+  kw: string[];
+  neg: string[];
+}
+
+export interface ThemeScore<T extends MatchableTheme = Theme> {
+  th: T;
   score: number;
   /** The keywords that actually matched. Drives the confidence figure. */
   hits: string[];
@@ -61,7 +72,10 @@ function escapeRe(s: string): string {
  *  4. Negative keywords. Without them "drones will replace delivery vans"
  *     resolved to Palantir and Northrop Grumman.
  */
-export function scoreThemes(text: string): ThemeScore[] {
+export function scoreThemes<T extends MatchableTheme>(
+  text: string,
+  themes: readonly T[] = THEMES as unknown as readonly T[]
+): ThemeScore<T>[] {
   const q =
     " " +
     text
@@ -70,7 +84,7 @@ export function scoreThemes(text: string): ThemeScore[] {
       .replace(/\s+/g, " ") +
     " ";
 
-  return THEMES.map((th): ThemeScore => {
+  return themes.map((th): ThemeScore<T> => {
     let s = 0;
     const hits: string[] = [];
     const seen: Record<number, 1> = {};
@@ -122,7 +136,7 @@ export function scoreThemes(text: string): ThemeScore[] {
  * @param drop     tickers the reader removed by hand; the book reweights around them
  */
 export function buildBook(premise: string, drop: string[] = []): BookResult {
-  const ranked = scoreThemes(premise);
+  const ranked = scoreThemes(premise, THEMES);
 
   // Refusing is a correct answer. Keep it.
   if (!ranked[0] || ranked[0].score === 0) {
@@ -245,6 +259,15 @@ export function buildBook(premise: string, drop: string[] = []): BookResult {
 
   const conf = Math.min(96, 26 + ranked[0].hits.length * 14 + (ranked[0].score > 12 ? 8 : 0));
 
+  // scoreThemes ranks all 26 and the book uses at most two. The rest are a
+  // real part of how the answer was reached, so they are reported rather than
+  // discarded — the same reason /method publishes its own weak points.
+  const alternatives = ranked
+    .slice(1)
+    .filter((r) => r.score > 0 && r.th.id !== secondary?.id)
+    .slice(0, 3)
+    .map((r) => ({ id: r.th.id, name: r.th.name, score: r.score, hits: r.hits }));
+
   const book: Book = {
     ok: true,
     premise: premise.trim(),
@@ -257,6 +280,7 @@ export function buildBook(premise: string, drop: string[] = []): BookResult {
     hits: ranked[0].hits,
     seed,
     drop,
+    alternatives,
   };
   return book;
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { THEMES } from "@/lib/universe";
+import { THEMES, UNIVERSE_VERSION } from "@/lib/universe";
 import { bookHref } from "@/lib/routes";
 
 /**
@@ -14,7 +14,7 @@ export function ThemeCells() {
         <Link
           key={th.id}
           className="cell"
-          href={bookHref(th.claim)}
+          href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })}
           style={{ gridColumn: "span 1", padding: 16 }}
         >
           <h3 style={{ fontSize: 14 }}>{th.name}</h3>

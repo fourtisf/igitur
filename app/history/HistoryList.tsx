@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 import { buildBook } from "@/lib/generator";
 import { ago, EMPTY, snapshot, subscribe } from "@/lib/history";
 import { bookHref } from "@/lib/routes";
+import { UNIVERSE_VERSION } from "@/lib/universe";
 import { HOST } from "@/lib/site";
 
 /**
@@ -46,7 +47,7 @@ export function HistoryList() {
         {entries.map((h) => {
           const bb = buildBook(h.p);
           return (
-            <Link key={h.p} className="hrow" href={bookHref(h.p)} style={{ ["--fw" as string]: "0%" }}>
+            <Link key={h.p} className="hrow" href={bookHref(h.p, [], { universe: UNIVERSE_VERSION })} style={{ ["--fw" as string]: "0%" }}>
               <span
                 className="hw"
                 style={{ width: "auto", minWidth: 64, fontSize: 12, color: "var(--fg-4)" }}

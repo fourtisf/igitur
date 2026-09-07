@@ -7,7 +7,7 @@ import Link from "next/link";
 import { FilterList } from "@/components/FilterList";
 import { bookHref } from "@/lib/routes";
 import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
-import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
+import { NAMES, REVIEWED, THEMES, UNIVERSE_VERSION } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "The universe",
@@ -76,7 +76,7 @@ export default function UniversePage() {
                     <span className="tagp">{th.risk}</span>
                     <span className="tagp">{th.horizon}</span>
                   </div>
-                  <Link className="b2" href={bookHref(th.claim)} style={{ marginTop: 14 }}>
+                  <Link className="b2" href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })} style={{ marginTop: 14 }}>
                     Build this book
                   </Link>
                 </div>

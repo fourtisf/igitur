@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ThemeCells } from "./ThemeCells";
 import { bookHref } from "@/lib/routes";
+import { UNIVERSE_VERSION } from "@/lib/universe";
 
 /**
  * The refusal. HANDOFF.md §0 and §13: this is the product's main
@@ -31,7 +32,7 @@ export function NoMatch({ premise, emptied }: { premise: string; emptied?: boole
             : "Rather than assemble something plausible out of whatever was nearest, the tool stops here. Pick a written thesis below, or rewrite the premise naming a specific constraint, industry or resource."}
         </p>
         <div style={{ marginTop: 24, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link className="b1" href={bookHref(premise)}>
+          <Link className="b1" href={bookHref(premise, [], { universe: UNIVERSE_VERSION })}>
             {emptied ? "Restore the book" : "Try again"}
           </Link>
           <Link className="b2" href={`/compose?p=${encodeURIComponent(premise)}`}>

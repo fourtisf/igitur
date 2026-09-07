@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { bookHref } from "@/lib/routes";
-import { THEMES } from "@/lib/universe";
+import { scoreThemes } from "@/lib/generator";
+import { MATCH_INDEX } from "@/lib/match-index";
+import { normalizePremise } from "@/lib/premise";
+import { bookHref, today } from "@/lib/routes";
+import { UNIVERSE_VERSION } from "@/lib/universe";
 
 /**
  * The composer. Autofocus, Enter submits, Shift+Enter breaks the line.
@@ -14,7 +17,18 @@ import { THEMES } from "@/lib/universe";
  * prototype did, and it is why the cells are buttons on this page and links
  * everywhere else.
  */
-export function Composer({ prefill = "" }: { prefill?: string }) {
+export function Composer({
+  prefill = "",
+  claims,
+  counts,
+}: {
+  prefill?: string;
+  /** Theme claims, passed from the server so the prose stays off the wire. */
+  claims: Record<string, string>;
+  counts: Record<string, number>;
+}) {
+  const CLAIMS = claims;
+  const COUNTS = counts;
   const router = useRouter();
   const field = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState(prefill);
@@ -36,9 +50,28 @@ export function Composer({ prefill = "" }: { prefill?: string }) {
     grow();
   }, [value]);
 
+  /**
+   * What the matcher currently makes of the sentence, recomputed as it is
+   * typed. This uses the same scorer the book is built with, so it cannot
+   * promise a theme the book then refuses.
+   *
+   * It shows the reader the vocabulary the matcher actually reads, which is
+   * the honest way to reduce refusals — the refusal itself stays exactly as
+   * strict as it was.
+   */
+  const read = useMemo(() => {
+    const text = normalizePremise(value);
+    if (text.length < 3) return null;
+    const ranked = scoreThemes(text, MATCH_INDEX);
+    const top = ranked[0];
+    if (!top || top.score === 0) return { matched: false as const };
+    const confidence = Math.min(96, 26 + top.hits.length * 14 + (top.score > 12 ? 8 : 0));
+    return { matched: true as const, name: top.th.name, risk: top.th.risk, hits: top.hits, confidence };
+  }, [value]);
+
   function go(text: string) {
     const v = text.trim();
-    if (v) router.push(bookHref(v));
+    if (v) router.push(bookHref(v, [], { universe: UNIVERSE_VERSION, stated: today() }));
   }
 
   function pick(claim: string) {
@@ -80,6 +113,32 @@ export function Composer({ prefill = "" }: { prefill?: string }) {
             }}
           />
         </div>
+        {read ? (
+          <div className="matchline" aria-live="polite">
+            {read.matched ? (
+              <>
+                <span className="mdot" />
+                <b>{read.name}</b>
+                <span className="faint">{read.risk}</span>
+                <span className="faint">
+                  matched {read.hits.length} term{read.hits.length === 1 ? "" : "s"}
+                  {read.hits.length ? `: ${read.hits.slice(0, 4).join(", ")}` : ""}
+                </span>
+                <span className={"mconf" + (read.confidence < 50 ? " warn" : "")}>
+                  {read.confidence}%
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="mdot off" />
+                <span className="faint">
+                  No theme carries this yet — name a constraint, an industry or a resource.
+                </span>
+              </>
+            )}
+          </div>
+        ) : null}
+
         <div className="crow2">
           <button className="b1" onClick={() => go(value)}>
             Build the book
@@ -100,20 +159,20 @@ export function Composer({ prefill = "" }: { prefill?: string }) {
       </div>
 
       <p className="p rv" style={{ margin: "clamp(30px,4vw,46px) 0 14px", fontSize: 13 }}>
-        Or start from a written thesis — all {THEMES.length} of them
+        Or start from a written thesis — all {MATCH_INDEX.length} of them
       </p>
       <div className="rv">
         <div className="bento" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-          {THEMES.map((th) => (
+          {MATCH_INDEX.map((th) => (
             <button
               key={th.id}
               className="cell"
-              onClick={() => pick(th.claim)}
+              onClick={() => pick(CLAIMS[th.id])}
               style={{ gridColumn: "span 1", padding: 16 }}
             >
               <h3 style={{ fontSize: 14 }}>{th.name}</h3>
               <p className="p" style={{ fontSize: 12, marginTop: 5 }}>
-                {th.assets.length} names · {th.risk}
+                {COUNTS[th.id]} names · {th.risk}
               </p>
             </button>
           ))}

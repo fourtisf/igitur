@@ -6,12 +6,23 @@ import { Bar, BarFoot } from "@/components/Bar";
 import { ShareBook } from "@/components/ShareBook";
 import { Holdings } from "@/components/Holdings";
 import { NoMatch } from "@/components/NoMatch";
+import { Amount } from "@/components/Amount";
 import { Remember } from "@/components/Remember";
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
-import { bookHref, ogHref, parseDrop, trackHref } from "@/lib/routes";
+import {
+  bookCanonical,
+  bookHref,
+  daysSince,
+  ogHref,
+  parseDrop,
+  parseStated,
+  parseUniverse,
+  trackHref,
+} from "@/lib/routes";
 import { HOST, SITE } from "@/lib/site";
+import { THEME_BY_ID, UNIVERSE_VERSION } from "@/lib/universe";
 
 type Params = { slug: string };
 type Search = Record<string, string | string[] | undefined>;
@@ -27,7 +38,14 @@ type Search = Record<string, string | string[] | undefined>;
 function read(sp: Search) {
   const premise = normalizePremise(sp.p);
   const drop = parseDrop(sp.x);
-  return { premise, drop, book: buildBook(premise, drop) };
+  return {
+    premise,
+    drop,
+    // Provenance, not content: neither changes what the book holds.
+    universe: parseUniverse(sp.u),
+    stated: parseStated(sp.d),
+    book: buildBook(premise, drop),
+  };
 }
 
 export async function generateMetadata({
@@ -58,7 +76,7 @@ export async function generateMetadata({
 
   // A distinct canonical per book — never the homepage. This is the exact bug
   // the competitor shipped, and §6.1 says not to repeat it.
-  const canonical = bookHref(book.premise, drop);
+  const canonical = bookCanonical(book.premise, drop);
   const image = ogHref(book.premise, drop);
 
   return {
@@ -90,7 +108,7 @@ export default async function BookPage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const { premise, drop, book } = read(sp);
+  const { premise, drop, universe, stated, book } = read(sp);
 
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
 
@@ -99,11 +117,18 @@ export default async function BookPage({
   // carry a slug that contradicts the premise it renders
   // (/b/nuclear-is-dead?p=nuclear+will+boom). Send any mismatch to the one
   // canonical address so the URL a person reads always matches the page.
-  if (slug !== slugOf(book.premise)) redirect(bookHref(book.premise, drop));
+  if (slug !== slugOf(book.premise)) {
+    redirect(bookHref(book.premise, drop, { universe: universe ?? undefined, stated: stated ?? undefined }));
+  }
 
   const b = book;
   const short = `${HOST}/b/${slugOf(b.premise)}`;
   const low = b.confidence < 50;
+  // A book is deterministic for a given universe, not absolutely. Say so when
+  // the link was built against an older one, rather than quietly serving
+  // different holdings than the sender saw.
+  const stale = universe !== null && universe !== UNIVERSE_VERSION;
+  const age = daysSince(stated);
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -130,6 +155,33 @@ export default async function BookPage({
           holdings carefully or rewrite the premise more specifically.
         </p>
       ) : null}
+
+      {stale ? (
+        <p className="notice warn rv" style={{ marginTop: 18 }}>
+          This link was built against universe v{universe}, and the published universe is now v
+          {UNIVERSE_VERSION}. Conviction scores and holdings may have been revised since, so the
+          book below is not necessarily the one that was shared.{" "}
+          <Link href="/changes" style={{ textDecoration: "underline" }}>
+            See what changed
+          </Link>
+          .
+        </p>
+      ) : null}
+
+      <div className="prov rv">
+        <span>
+          Universe v{universe ?? UNIVERSE_VERSION}
+          {universe === null ? " (assumed — this link predates the field)" : ""}
+        </span>
+        {stated ? (
+          <span>
+            · Stated {stated}
+            {age !== null && age > 0 ? `, ${age} day${age === 1 ? "" : "s"} ago` : ", today"}
+          </span>
+        ) : (
+          <span>· No stated date on this link</span>
+        )}
+      </div>
 
       <div className="window rv" style={{ marginTop: "clamp(26px,3.5vw,44px)" }}>
         <div className="wbar">
@@ -159,7 +211,7 @@ export default async function BookPage({
           >
             <h3>Every holding, and why it is that size</h3>
             {drop.length ? (
-              <Link className="b3" href={bookHref(b.premise)}>
+              <Link className="b3" href={bookHref(b.premise, [], { universe: universe ?? undefined, stated: stated ?? undefined })}>
                 Restore removed
               </Link>
             ) : (
@@ -171,7 +223,12 @@ export default async function BookPage({
           <div style={{ marginTop: 16 }}>
             <Holdings
               holdings={b.holdings}
-              removeHref={(t) => bookHref(b.premise, drop.includes(t) ? drop : [...drop, t])}
+              removeHref={(t) =>
+                bookHref(b.premise, drop.includes(t) ? drop : [...drop, t], {
+                  universe: universe ?? undefined,
+                  stated: stated ?? undefined,
+                })
+              }
             />
           </div>
         </div>
@@ -194,6 +251,34 @@ export default async function BookPage({
               <div className="stx">{b.theme.againstCase}</div>
             </div>
           </div>
+          {b.alternatives.length ? (
+            <div className="cell" style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14 }}>Also considered</h3>
+              <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
+                These themes scored on your premise but did not lead. The matcher weighs all{" "}
+                {THEME_BY_ID.size} and reports what it rejected.
+              </p>
+              <div className="alts">
+                {b.alternatives.map((a) => {
+                  const th = THEME_BY_ID.get(a.id);
+                  return th ? (
+                    <Link key={a.id} href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })}>
+                      {a.name} <i>{a.score}</i>
+                    </Link>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="cell" style={{ padding: 20 }}>
+            <h3 style={{ fontSize: 14 }}>What the weights are worth</h3>
+            <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
+              Percentages, converted. Nothing is sent anywhere.
+            </p>
+            <Amount holdings={b.holdings} />
+          </div>
+
           <div className="cell" style={{ padding: 20 }}>
             <h3 style={{ fontSize: 14 }}>This book has an address</h3>
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
@@ -203,7 +288,7 @@ export default async function BookPage({
             <Link
               className="b2"
               style={{ marginTop: 12, width: "100%", justifyContent: "center" }}
-              href={trackHref(b.premise)}
+              href={trackHref(b.premise, { stated: stated ?? undefined, universe: universe ?? undefined })}
             >
               Track this book
             </Link>

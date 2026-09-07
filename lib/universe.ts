@@ -21,6 +21,42 @@ function a(t: string, n: string, k: Kind, c: number, why: string) {
 export const REVIEWED = "1 September 2026";
 
 /**
+ * The version of the published universe.
+ *
+ * A book is deterministic *for a given universe*, not absolutely. Move one
+ * conviction score by six points — an ordinary editorial revision, and /method
+ * says these are editorial judgements — and every previously shared book that
+ * touches that theme reorders and reweights. The reader who opens a month-old
+ * link sees a different book and believes it is the one that was sent.
+ *
+ * So every book URL carries the version it was built against, and a book built
+ * against an older one says so. Bump this on ANY change to THEMES or BALLAST:
+ * a new name, a dropped name, a reworded reason, a moved conviction score. Then
+ * add the release to CHANGELOG below, which is what /changes publishes.
+ */
+export const UNIVERSE_VERSION = 1;
+
+export interface UniverseRelease {
+  version: number;
+  /** The date this version became the published universe. */
+  date: string;
+  summary: string;
+  /** One line per change. Empty for the first release. */
+  changes: string[];
+}
+
+/** Newest first. Published at /changes. */
+export const CHANGELOG: UniverseRelease[] = [
+  {
+    version: 1,
+    date: "1 September 2026",
+    summary:
+      "The first published universe: 26 themes, 160 names and 3 ballast instruments, each with a written reason and a conviction score.",
+    changes: [],
+  },
+];
+
+/**
  * Ballast sleeve. Index 0 is used for Speculative books, index 2 for
  * Conservative, and one of 0/1 is drawn from the premise seed otherwise.
  */
