@@ -86,6 +86,17 @@ Both are covered by tests.
 prototype across ~3,300 book comparisons. If you deliberately change the
 generator, that test is the one to update last and on purpose.
 
+`tests/universe.test.ts` guards the data itself, so it cannot rot quietly: no
+uppercase keyword (which could never match, because the matcher lowercases its
+input), no keyword that is both positive and negative for the same theme, no
+ticker meaning two different companies in two themes, no conviction out of
+range, no holding without a written reason, and no theme shadowed by another
+such that its own claim never reaches it.
+
+`tests/premise.test.ts` pins the only untrusted input: the premise is bounded,
+truncation stays deterministic, whitespace variants collapse to one book, and
+the share-card allowlist rejects anything not in it.
+
 ## Still to do
 
 In build order (`HANDOFF.md` §12):
@@ -93,7 +104,10 @@ In build order (`HANDOFF.md` §12):
 1. ~~Server routes, per-page canonicals, dynamic OG image~~ — **done**
 2. **Real market data.** Everything in `lib/market.ts` is generated from the
    ticker string. Swap the function bodies for a vendor; `SYNTHETIC = false`
-   then removes the "prototype figures" warnings the UI shows today.
+   then removes the "prototype figures" warnings the UI shows today. When that
+   lands, take the `noindex` off `/track` and put its 26 URLs back in the
+   sitemap — they are held out today because publishing fabricated performance
+   into a search index is the one thing that would make this site dishonest.
 3. **LLM matcher** behind `POST /api/compose`, with the keyword matcher kept as
    the fallback. The weighting formula stays in application code so weights stay
    auditable and reproducible. The model must be allowed to return
@@ -101,6 +115,22 @@ In build order (`HANDOFF.md` §12):
 4. Persistence — books and history that survive a refresh.
 5. Conviction tied to disclosed segment revenue, with sources on `/universe`.
 6. Public books, follow and fork.
+
+## Share images
+
+Every route has one. `/api/og?p=<premise>` renders the book card — the
+allocation bar, the theme, and why the lead position leads. `/api/og?page=<id>`
+renders a card for a non-book page, from the fixed allowlist in
+`lib/og-pages.ts`.
+
+That allowlist is the point: there is deliberately no free-text mode. Letting
+the route take a title and body off the query string would let anyone mint a
+Premise-branded image saying anything at all. A book card renders the reader's
+own premise because the premise *is* the content; a page card renders only text
+that ships in this repo.
+
+Rendered PNGs are cached in process (bounded, oldest-evicted) and served
+immutable, so a book being shared is rendered once rather than once per reader.
 
 ## Before deploy
 

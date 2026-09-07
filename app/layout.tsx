@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
 import { Reveal } from "@/components/Reveal";
 import { Toast } from "@/components/Toast";
+import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 import "./globals.css";
 
@@ -35,12 +36,16 @@ export const metadata: Metadata = {
     title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
     url: "/",
+    // Inherited by every page that does not set its own, so no route ever
+    // shares as a blank card — §6.2 applies to the whole site, not just books.
+    images: [{ url: pageOg("home"), width: 1200, height: 630, alt: SITE.tagline }],
   },
   twitter: {
     card: "summary_large_image",
     site: SITE.xHandle,
     title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
+    images: [pageOg("home")],
   },
   robots: { index: true, follow: true },
   icons: {

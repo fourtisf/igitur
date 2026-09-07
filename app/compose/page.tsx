@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
-import { one } from "@/lib/routes";
+import { pageOg } from "@/lib/og-pages";
+
+import { normalizePremise } from "@/lib/premise";
 import { Composer } from "./Composer";
 
 export const metadata: Metadata = {
@@ -13,7 +15,9 @@ export const metadata: Metadata = {
     title: "Compose a book — Premise",
     description:
       "State one belief about the next decade and get a weighted portfolio with a reason on every holding.",
+    images: [{ url: pageOg("compose"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("compose")] },
 };
 
 export default async function ComposePage({
@@ -32,7 +36,7 @@ export default async function ComposePage({
         Write it the way you would say it out loud. Name a constraint, an industry or a resource —
         that is what the matcher reads.
       </p>
-      <Composer prefill={one(sp.p)} />
+      <Composer prefill={normalizePremise(sp.p)} />
     </section>
   );
 }

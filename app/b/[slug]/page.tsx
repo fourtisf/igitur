@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { Bar, BarFoot } from "@/components/Bar";
-import { CopyUrl } from "@/components/CopyUrl";
+import { ShareBook } from "@/components/ShareBook";
 import { Holdings } from "@/components/Holdings";
 import { NoMatch } from "@/components/NoMatch";
 import { Remember } from "@/components/Remember";
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
-import { bookHref, ogHref, one, parseDrop, trackHref } from "@/lib/routes";
+import { normalizePremise } from "@/lib/premise";
+import { bookHref, ogHref, parseDrop, trackHref } from "@/lib/routes";
 import { HOST, SITE } from "@/lib/site";
 
 type Params = { slug: string };
@@ -23,7 +25,7 @@ type Search = Record<string, string | string[] | undefined>;
  */
 
 function read(sp: Search) {
-  const premise = one(sp.p);
+  const premise = normalizePremise(sp.p);
   const drop = parseDrop(sp.x);
   return { premise, drop, book: buildBook(premise, drop) };
 }
@@ -86,11 +88,18 @@ export default async function BookPage({
   params: Promise<Params>;
   searchParams: Promise<Search>;
 }) {
-  await params;
+  const { slug } = await params;
   const sp = await searchParams;
   const { premise, drop, book } = read(sp);
 
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
+
+  // The slug is readable text, not an identifier — the premise in the query
+  // string is what builds the book. Left unchecked, that lets a shared link
+  // carry a slug that contradicts the premise it renders
+  // (/b/nuclear-is-dead?p=nuclear+will+boom). Send any mismatch to the one
+  // canonical address so the URL a person reads always matches the page.
+  if (slug !== slugOf(book.premise)) redirect(bookHref(book.premise, drop));
 
   const b = book;
   const short = `${HOST}/b/${slugOf(b.premise)}`;
@@ -190,7 +199,7 @@ export default async function BookPage({
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
               Anyone who opens it rebuilds the same book, weight for weight.
             </p>
-            <CopyUrl display={short} />
+            <ShareBook display={short} premise={b.premise} />
             <Link
               className="b2"
               style={{ marginTop: 12, width: "100%", justifyContent: "center" }}

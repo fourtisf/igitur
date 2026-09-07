@@ -24,7 +24,12 @@
   --bg:#0A0A0B; --bg-2:#0D0D0F;
   --surf:rgba(255,255,255,.026); --surf-2:rgba(255,255,255,.048); --surf-3:rgba(255,255,255,.075);
   --bd:rgba(255,255,255,.068); --bd-2:rgba(255,255,255,.115);
-  --fg:#FAFAFA; --fg-2:#9E9EA6; --fg-3:#6B6B74; --fg-4:#45454D;
+  /* Text colours all clear WCAG AA (4.5:1) on --bg. --fg-3 was #6B6B74 (3.75:1)
+     and --fg-4 was #45454D (2.08:1, failing even the 3:1 large-text bar) — and
+     --fg-4 carries real content, not decoration: the ticker/kind/price/market-cap
+     line under every holding, the trending column headers, the "Not built" pills.
+     The four-step hierarchy is preserved: 18.9 / 7.4 / 5.8 / 4.7. */
+  --fg:#FAFAFA; --fg-2:#9E9EA6; --fg-3:#8A8A92; --fg-4:#7A7A82;
   --ac:#7C8CFF; --ac-2:#AEB6FF; --ac-dim:rgba(124,140,255,.16);
   --warn:#FF8A6B;
   --r:16px; --r-s:10px; --pad:clamp(20px,5vw,48px); --max:1200px;

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { pageOg } from "@/lib/og-pages";
+
 export const metadata: Metadata = {
   title: "Terms, disclosures and privacy",
   description:
@@ -9,7 +11,9 @@ export const metadata: Metadata = {
     url: "/legal",
     title: "Terms, disclosures and privacy — Premise",
     description: "Not advice, synthetic data, no tracking, and the wallet rules — in plain language.",
+    images: [{ url: pageOg("legal"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("legal")] },
 };
 
 export default function LegalPage() {

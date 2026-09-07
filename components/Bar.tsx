@@ -9,8 +9,11 @@ import type { Holding } from "@/lib/types";
  *   descending white alpha  conviction order
  *   indigo                  ballast
  *
- * Every segment is keyboard-reachable and carries its ticker, weight and
- * reason in an aria-label, so the bar is readable without seeing it.
+ * Every segment carries its ticker, weight and reason in an aria-label, so a
+ * screen reader gets the whole book from the bar alone. The segments are not
+ * focusable: they do nothing when activated, and seven inert tab stops in front
+ * of the holdings list costs a keyboard user more than it gives them. The same
+ * information is in that list as ordinary text.
  */
 export function Bar({
   holdings,
@@ -41,7 +44,6 @@ export function Bar({
             key={x.t}
             className={[k, x.pct < 8 ? "narrow" : ""].filter(Boolean).join(" ")}
             role="listitem"
-            tabIndex={0}
             aria-label={`${x.t}, ${x.pct} percent. ${x.why}`}
             style={{
               flex: `0 0 ${x.pct}%`,

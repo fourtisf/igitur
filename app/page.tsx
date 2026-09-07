@@ -6,6 +6,7 @@ import { Holdings } from "@/components/Holdings";
 import { HeroPrompt } from "@/components/HeroPrompt";
 import { TelegramIcon, XIcon } from "@/components/icons";
 import { buildBook } from "@/lib/generator";
+import { pageOg } from "@/lib/og-pages";
 import { FEATURED, HOST, SITE } from "@/lib/site";
 import { NAMES, THEMES } from "@/lib/universe";
 
@@ -13,7 +14,13 @@ export const metadata: Metadata = {
   title: `${SITE.name} — ${SITE.tagline}`,
   description: SITE.description,
   alternates: { canonical: "/" },
-  openGraph: { url: "/", title: `${SITE.name} — ${SITE.tagline}`, description: SITE.description },
+  openGraph: {
+    url: "/",
+    title: `${SITE.name} — ${SITE.tagline}`,
+    description: SITE.description,
+    images: [{ url: pageOg("home"), width: 1200, height: 630, alt: SITE.tagline }],
+  },
+  twitter: { card: "summary_large_image", images: [pageOg("home")] },
 };
 
 const COMPARISON: [string, string, string][] = [

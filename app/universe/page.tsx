@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { pageOg } from "@/lib/og-pages";
 import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
@@ -14,7 +16,9 @@ export const metadata: Metadata = {
     url: "/universe",
     title: "The universe — Premise",
     description: `All ${NAMES} names across ${THEMES.length} themes, with a written reason and a conviction score on every one.`,
+    images: [{ url: pageOg("universe"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("universe")] },
 };
 
 export default function UniversePage() {

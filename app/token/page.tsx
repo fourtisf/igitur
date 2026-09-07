@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { pageOg } from "@/lib/og-pages";
+
 import { TelegramIcon, XIcon } from "@/components/icons";
 import { SITE } from "@/lib/site";
 
@@ -11,7 +13,9 @@ export const metadata: Metadata = {
     url: "/token",
     title: `$${SITE.token.ticker} — Premise`,
     description: `Fixed supply, stated utilities, and the anti-scam rules — published before anything is deployed.`,
+    images: [{ url: pageOg("token"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("token")] },
 };
 
 /**

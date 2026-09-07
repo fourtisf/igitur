@@ -7,9 +7,14 @@
  * class of that bug.
  */
 
-export function XIcon() {
+/** `size` is for uses outside `.socbig`, which sizes its own icons in CSS. */
+export function XIcon({ size }: { size?: number } = {}) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      style={size ? { width: size, height: size, fill: "currentColor", flex: "none" } : undefined}
+    >
       <path d="M18.9 1.9h3.6l-7.9 9 9.3 12.3h-7.3l-5.7-7.5-6.5 7.5H.8l8.4-9.6L.3 1.9h7.4l5.2 6.8zm-1.3 19.2h2L7.1 3.9H5z" />
     </svg>
   );

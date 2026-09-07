@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { NoMatch } from "@/components/NoMatch";
 import { TrackChart, trackSeries } from "@/components/TrackChart";
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
-import { bookHref, one, trackHref } from "@/lib/routes";
+import { normalizePremise } from "@/lib/premise";
+import { bookHref, ogHref, trackHref } from "@/lib/routes";
 import { SYNTHETIC } from "@/lib/market";
 import { HOST } from "@/lib/site";
 
@@ -20,7 +22,7 @@ export async function generateMetadata({
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const premise = one((await searchParams).p);
+  const premise = normalizePremise((await searchParams).p);
   const b = buildBook(premise);
 
   if (!b.ok) {
@@ -43,7 +45,18 @@ export async function generateMetadata({
     title: `Track: ${title}`,
     description,
     alternates: { canonical: trackHref(b.premise) },
-    openGraph: { url: trackHref(b.premise), title: `Track: ${title} — Premise`, description },
+    openGraph: {
+      url: trackHref(b.premise),
+      title: `Track: ${title} — Premise`,
+      description,
+      images: [{ url: ogHref(b.premise), width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image", images: [ogHref(b.premise)] },
+    // Every figure on this page is synthetic. Publishing fabricated performance
+    // into a search index would be the one dishonest thing on an otherwise
+    // honest site — and performance claims are exactly what regulators read.
+    // Drop this (and restore the sitemap entries) when real data lands.
+    robots: { index: false, follow: true },
   };
 }
 
@@ -54,12 +67,13 @@ export default async function TrackPage({
   params: Promise<Params>;
   searchParams: Promise<Search>;
 }) {
-  await params;
-  const premise = one((await searchParams).p);
+  const { slug } = await params;
+  const premise = normalizePremise((await searchParams).p);
   const book = buildBook(premise);
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
 
   const b = book;
+  if (slug !== slugOf(b.premise)) redirect(trackHref(b.premise));
   const { bEnd, sEnd, win } = trackSeries(b);
 
   return (

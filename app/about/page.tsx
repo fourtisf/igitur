@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { pageOg } from "@/lib/og-pages";
+
 import { TelegramIcon, XIcon } from "@/components/icons";
 import { SITE } from "@/lib/site";
 
@@ -12,7 +14,9 @@ export const metadata: Metadata = {
     url: "/about",
     title: "About — Premise",
     description: "What Premise is, and what it deliberately will not do.",
+    images: [{ url: pageOg("about"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("about")] },
 };
 
 export default function AboutPage() {

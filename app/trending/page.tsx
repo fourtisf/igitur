@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { pageOg } from "@/lib/og-pages";
 import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
@@ -17,7 +19,9 @@ export const metadata: Metadata = {
     title: "Trending — Premise",
     description:
       "Every name in the universe ranked by absolute move. The order is a measurement, not a recommendation.",
+    images: [{ url: pageOg("trending"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("trending")] },
 };
 
 const themeByName = new Map(THEMES.map((t) => [t.name, t]));

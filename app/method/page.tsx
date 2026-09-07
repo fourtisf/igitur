@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { pageOg } from "@/lib/og-pages";
 import Link from "next/link";
 
 import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
@@ -13,7 +15,9 @@ export const metadata: Metadata = {
     title: "Methodology — Premise",
     description:
       "Matching, weighting, conviction, and the places the method is weak. Published in full, including its own weaknesses.",
+    images: [{ url: pageOg("method"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("method")] },
 };
 
 export default function MethodPage() {

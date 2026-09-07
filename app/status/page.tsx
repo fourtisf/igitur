@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { pageOg } from "@/lib/og-pages";
+
 export const metadata: Metadata = {
   title: "What is built",
   description:
@@ -10,7 +12,9 @@ export const metadata: Metadata = {
     title: "What is built — Premise",
     description:
       "What works today and what does not. A line moves to the first list when it ships, and not before.",
+    images: [{ url: pageOg("status"), width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image", images: [pageOg("status")] },
 };
 
 /**
@@ -30,7 +34,8 @@ const LIVE = [
   "Filter the universe and the trending table",
   "A shareable address per book, no account",
   "Server-rendered routes with a canonical URL per page",
-  "A generated preview image per book",
+  "A generated preview image per book, and per page",
+  "Share a book straight to X",
   "Performance against the index, honestly centred",
   "Published methodology with its own weak points",
   "Wallet connection for any EVM wallet",
@@ -97,7 +102,9 @@ export default function StatusPage() {
       <p className="notice warn rv" style={{ marginTop: 14 }}>
         The market data is still synthetic. Prices, moves, market caps and the whole return series
         are generated from the ticker text and reflect nothing. That is the next thing to replace,
-        and until it is replaced every page carrying a number says so.
+        and until it is replaced every page carrying a number says so. The tracking pages are
+        deliberately kept out of search engines and out of the sitemap while that is true — a
+        fabricated return has no business in a search result.
       </p>
       <p className="notice rv" style={{ marginTop: 14 }}>
         Order routing is the hardest line on this page. It needs a broker relationship and custody,
