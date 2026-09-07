@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { NAMES_INDEX, nameHref } from "@/lib/names";
 import { bookHref } from "@/lib/routes";
 import { absolute } from "@/lib/site";
 import { THEMES, UNIVERSE_VERSION } from "@/lib/universe";
@@ -24,6 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const statics: [string, number, MetadataRoute.Sitemap[number]["changeFrequency"]][] = [
     ["/", 1, "weekly"],
     ["/compose", 0.9, "monthly"],
+    ["/compare", 0.7, "monthly"],
     ["/universe", 0.8, "weekly"],
     ["/method", 0.8, "monthly"],
     ["/changes", 0.6, "weekly"],
@@ -47,6 +49,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
+    });
+  }
+
+  // One page per published name. This is the largest indexable surface the
+  // site has, and it is built entirely from data that already existed.
+  for (const n of NAMES_INDEX) {
+    pages.push({
+      url: absolute(nameHref(n.ticker)),
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
     });
   }
 

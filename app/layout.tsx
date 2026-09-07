@@ -60,9 +60,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The three depth layers, in this order and nothing else. §11 */}
         <div className="glow" />
         <div className="grain" />
+        {/* 24 focusable elements sat between the top of every page and its
+            content. This is the way past them. */}
+        <a className="skip" href="#app">
+          Skip to content
+        </a>
         <div className="wrap">
           <Nav />
-          <main id="app">{children}</main>
+          <main id="app" tabIndex={-1}>
+            {children}
+          </main>
           <Footer />
         </div>
         <Toast />

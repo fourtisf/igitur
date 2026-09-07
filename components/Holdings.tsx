@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Holding } from "@/lib/types";
 import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
+import { nameHref } from "@/lib/names";
 
 /**
  * Every holding, with the sentence that justifies its size.
@@ -11,10 +12,15 @@ import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
 export function Holdings({
   holdings,
   removeHref,
+  stepHref,
 }: {
   holdings: Holding[];
   /** Given a ticker, the URL of this book with that holding removed. */
   removeHref?: (ticker: string) => string;
+  /** Given a ticker and a delta, the URL of this book with that weight nudged.
+   *  A Link, not a slider, so adjusting works without JavaScript and every
+   *  adjusted book keeps a real, shareable address. */
+  stepHref?: (ticker: string, delta: number) => string | null;
 }) {
   const max = holdings[0].pct;
   return (
@@ -30,9 +36,34 @@ export function Holdings({
             <span className="hn">{x.n}</span>
             <div className="hy">{x.why}</div>
             <div className="hm">
-              {x.t} · {x.k} · ${priceOf(x.t).toFixed(2)} · {fmtMcap(mcapOf(x.t))} · {x.src}
+              <Link href={nameHref(x.t)} className="tlink">
+                {x.t}
+              </Link>{" "}
+              · {x.k} · ${priceOf(x.t).toFixed(2)} · {fmtMcap(mcapOf(x.t))} · {x.src}
             </div>
           </span>
+          {stepHref && !x.ballast ? (
+            <span className="step">
+              {[-1, 1].map((d) => {
+                const href = stepHref(x.t, d);
+                return href ? (
+                  <Link
+                    key={d}
+                    href={href}
+                    scroll={false}
+                    aria-label={`${d < 0 ? "Decrease" : "Increase"} ${x.t} by one point`}
+                    title={`${d < 0 ? "Down" : "Up"} 1%`}
+                  >
+                    {d < 0 ? "−" : "+"}
+                  </Link>
+                ) : (
+                  <span key={d} aria-disabled="true" title="At the limit">
+                    {d < 0 ? "−" : "+"}
+                  </span>
+                );
+              })}
+            </span>
+          ) : null}
           {removeHref && !x.ballast ? (
             <Link
               className="hx"

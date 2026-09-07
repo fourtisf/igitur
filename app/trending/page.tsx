@@ -4,10 +4,10 @@ import { pageOg } from "@/lib/og-pages";
 import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
-import { bookHref } from "@/lib/routes";
+import { nameHref } from "@/lib/names";
 import { moveFor, priceOf, sparkPath, SYNTHETIC } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
-import { THEMES, UNIVERSE, UNIVERSE_VERSION } from "@/lib/universe";
+import { UNIVERSE } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "Trending",
@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", images: [pageOg("trending")] },
 };
 
-const themeByName = new Map(THEMES.map((t) => [t.name, t]));
 
 export default function TrendingPage() {
   const rows = UNIVERSE.map((a) => ({ ...a, m: moveFor(a.t) })).sort(
@@ -67,7 +66,6 @@ export default function TrendingPage() {
             </div>
             <div id="trows">
               {rows.map((a, i) => {
-                const th = themeByName.get(a.theme);
                 const stroke = a.m >= 0 ? "#fff" : "#AEB6FF";
                 const body = (
                   <>
@@ -91,13 +89,9 @@ export default function TrendingPage() {
                   </>
                 );
                 const find = `${a.t} ${a.n} ${a.theme}`.toLowerCase();
-                // A name belongs to a theme, so the row opens that theme's book.
-                return th ? (
-                  <Link key={a.t} className="trow" href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })} data-find={find}>
-                    {body}
-                  </Link>
-                ) : (
-                  <Link key={a.t} className="trow" href="/compose" data-find={find}>
+                // Clicking a ticker asks about the name, not about a theme.
+                return (
+                  <Link key={a.t} className="trow" href={nameHref(a.t)} data-find={find}>
                     {body}
                   </Link>
                 );

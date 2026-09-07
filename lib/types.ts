@@ -85,6 +85,11 @@ export interface Book {
    * the book page so a reader can see what the matcher weighed and rejected.
    */
   alternatives: { id: string; name: string; score: number; hits: string[] }[];
+  /**
+   * True when the reader has set weights by hand. An edited book keeps every
+   * other invariant but may be led by a holding the generator did not choose.
+   */
+  edited?: boolean;
 }
 
 export interface NoBook {

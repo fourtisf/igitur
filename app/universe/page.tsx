@@ -5,6 +5,7 @@ import { SITE } from "@/lib/site";
 import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
+import { nameHref } from "@/lib/names";
 import { bookHref } from "@/lib/routes";
 import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
 import { NAMES, REVIEWED, THEMES, UNIVERSE_VERSION } from "@/lib/universe";
@@ -84,7 +85,9 @@ export default function UniversePage() {
                   {th.assets.map((a) => (
                     <div key={a.t} className="hrow" style={{ ["--fw" as string]: `${a.c}%` }}>
                       <span className="hw" style={{ fontSize: 13 }}>
-                        {a.t}
+                        <Link href={nameHref(a.t)} className="tlink">
+                          {a.t}
+                        </Link>
                       </span>
                       <span style={{ minWidth: 0 }}>
                         <span className="hn">{a.n}</span>

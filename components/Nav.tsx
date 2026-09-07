@@ -11,6 +11,7 @@ import { toast } from "./Toast";
 const LINKS: [string, string][] = [
   ["/", "Overview"],
   ["/compose", "Compose"],
+  ["/compare", "Compare"],
   ["/history", "History"],
   ["/trending", "Trending"],
   ["/track", "Track"],
@@ -20,6 +21,7 @@ const LINKS: [string, string][] = [
 
 const MENU: [string, string][] = [
   ["/compose", "Compose"],
+  ["/compare", "Compare"],
   ["/history", "History"],
   ["/trending", "Trending"],
   ["/track", "Track"],

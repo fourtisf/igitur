@@ -323,6 +323,13 @@ footer a:hover{color:var(--fg)}
   font-size:13.5px;font-weight:550;background:var(--surf-2);box-shadow:inset 0 0 0 1px var(--bd-2);transition:background .18s,transform .18s}
 .socbig a:hover{background:var(--surf-3);transform:translateY(-1.5px)}
 .socbig svg{width:15px;height:15px;fill:currentColor}
+/* Visible only on focus, and above everything when it appears. */
+.skip{position:fixed;top:-100px;left:50%;transform:translateX(-50%);z-index:200;
+  padding:12px 22px;border-radius:0 0 var(--r-s) var(--r-s);font-size:14px;font-weight:600;
+  background:var(--fg);color:var(--bg);transition:top .18s}
+.skip:focus{top:0}
+#app:focus{outline:none}
+
 /* Live match read-out under the composer, and the provenance / alternatives
    rows on a book. Same quiet register as .barfoot — these report, they do not
    advertise. */
@@ -347,6 +354,15 @@ footer a:hover{color:var(--fg)}
 .amt input:focus{outline:2px solid var(--ac);outline-offset:2px}
 .amt select{background:var(--surf-2);border:none;border-radius:var(--r-s);padding:10px 11px;
   font-size:13px;box-shadow:inset 0 0 0 1px var(--bd);color:var(--fg)}
+.step{display:flex;gap:4px;flex:none}
+.step a,.step span{display:flex;align-items:center;justify-content:center;width:24px;height:24px;
+  border-radius:7px;font-size:14px;line-height:1;color:var(--fg-3);background:var(--surf-2);
+  box-shadow:inset 0 0 0 1px var(--bd);transition:background .16s,color .16s}
+.step a:hover{background:var(--surf-3);color:var(--fg)}
+.step span[aria-disabled]{opacity:.3}
+.tlink{color:var(--fg-3);text-decoration:underline;text-decoration-color:var(--bd-2);
+  text-underline-offset:2px;transition:color .16s}
+.tlink:hover{color:var(--ac-2)}
 .hv{font-size:11px;color:var(--ac-2);margin-top:3px;font-weight:600}
 
 .rv{opacity:0;transform:translateY(18px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.3,1)}

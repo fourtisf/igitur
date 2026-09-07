@@ -9,6 +9,7 @@ import { NoMatch } from "@/components/NoMatch";
 import { Amount } from "@/components/Amount";
 import { Remember } from "@/components/Remember";
 import { buildBook } from "@/lib/generator";
+import { applyPins, formatPins, MAX_PCT, MIN_PCT, parsePins } from "@/lib/reweight";
 import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
 import {
@@ -44,7 +45,13 @@ function read(sp: Search) {
     // Provenance, not content: neither changes what the book holds.
     universe: parseUniverse(sp.u),
     stated: parseStated(sp.d),
-    book: buildBook(premise, drop),
+    ...(() => {
+      const generated = buildBook(premise, drop);
+      if (!generated.ok) return { pins: new Map<string, number>(), book: generated };
+      const known = new Set(generated.holdings.filter((h) => !h.ballast).map((h) => h.t));
+      const pins = parsePins(sp.w, known);
+      return { pins, book: applyPins(generated, pins) };
+    })(),
   };
 }
 
@@ -56,7 +63,7 @@ export async function generateMetadata({
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const { drop, book } = read(await searchParams);
+  const { drop, pins, book } = read(await searchParams);
 
   // A refusal is a real page, but it is not one to index.
   if (!book.ok) {
@@ -76,7 +83,7 @@ export async function generateMetadata({
 
   // A distinct canonical per book — never the homepage. This is the exact bug
   // the competitor shipped, and §6.1 says not to repeat it.
-  const canonical = bookCanonical(book.premise, drop);
+  const canonical = bookCanonical(book.premise, drop, formatPins(pins) || undefined);
   const image = ogHref(book.premise, drop);
 
   return {
@@ -108,9 +115,11 @@ export default async function BookPage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const { premise, drop, universe, stated, book } = read(sp);
+  const { premise, drop, universe, stated, pins, book } = read(sp);
 
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
+
+  const prov = { universe: universe ?? undefined, stated: stated ?? undefined };
 
   // The slug is readable text, not an identifier — the premise in the query
   // string is what builds the book. Left unchecked, that lets a shared link
@@ -118,7 +127,7 @@ export default async function BookPage({
   // (/b/nuclear-is-dead?p=nuclear+will+boom). Send any mismatch to the one
   // canonical address so the URL a person reads always matches the page.
   if (slug !== slugOf(book.premise)) {
-    redirect(bookHref(book.premise, drop, { universe: universe ?? undefined, stated: stated ?? undefined }));
+    redirect(bookHref(book.premise, drop, { ...prov, weights: formatPins(pins) || undefined }));
   }
 
   const b = book;
@@ -145,6 +154,7 @@ export default async function BookPage({
         <span className="tagp">{b.holdings.length} holdings</span>
         <span className={"tagp" + (low ? " warn" : "")}>Confidence {b.confidence}%</span>
         {drop.length ? <span className="tagp warn">{drop.length} removed</span> : null}
+        {pins.size ? <span className="tagp warn">{pins.size} reweighted</span> : null}
       </div>
 
       {/* The honest signal that the match is weak. HANDOFF.md §3.2 — keep it. */}
@@ -210,25 +220,36 @@ export default async function BookPage({
             }}
           >
             <h3>Every holding, and why it is that size</h3>
-            {drop.length ? (
-              <Link className="b3" href={bookHref(b.premise, [], { universe: universe ?? undefined, stated: stated ?? undefined })}>
-                Restore removed
+            {drop.length || pins.size ? (
+              <Link className="b3" href={bookHref(b.premise, [], prov)}>
+                Restore the book
               </Link>
             ) : (
               <span className="faint" style={{ fontSize: 12 }}>
-                Click × to remove and reweight
+                Nudge a weight with ± , or × to remove
               </span>
             )}
           </div>
           <div style={{ marginTop: 16 }}>
             <Holdings
               holdings={b.holdings}
-              removeHref={(t) =>
-                bookHref(b.premise, drop.includes(t) ? drop : [...drop, t], {
-                  universe: universe ?? undefined,
-                  stated: stated ?? undefined,
-                })
-              }
+              removeHref={(t) => {
+                const next = new Map(pins);
+                next.delete(t);
+                return bookHref(b.premise, drop.includes(t) ? drop : [...drop, t], {
+                  ...prov,
+                  weights: formatPins(next) || undefined,
+                });
+              }}
+              stepHref={(t, delta) => {
+                const cur = b.holdings.find((h) => h.t === t);
+                if (!cur) return null;
+                const want = Math.round((cur.pct + delta) * 10) / 10;
+                if (want < MIN_PCT || want > MAX_PCT) return null;
+                const next = new Map(pins);
+                next.set(t, want);
+                return bookHref(b.premise, drop, { ...prov, weights: formatPins(next) });
+              }}
             />
           </div>
         </div>
@@ -285,10 +306,24 @@ export default async function BookPage({
               Anyone who opens it rebuilds the same book, weight for weight.
             </p>
             <ShareBook display={short} premise={b.premise} />
+            <a
+              className="b2"
+              style={{ marginTop: 10, width: "100%", justifyContent: "center" }}
+              href={`/api/book.csv?${new URLSearchParams({
+                p: b.premise,
+                ...(drop.length ? { x: drop.join(",") } : {}),
+                ...(pins.size ? { w: formatPins(pins) } : {}),
+                u: String(universe ?? UNIVERSE_VERSION),
+                ...(stated ? { d: stated } : {}),
+              })}`}
+              download
+            >
+              Download as CSV
+            </a>
             <Link
               className="b2"
               style={{ marginTop: 12, width: "100%", justifyContent: "center" }}
-              href={trackHref(b.premise, { stated: stated ?? undefined, universe: universe ?? undefined })}
+              href={trackHref(b.premise, prov)}
             >
               Track this book
             </Link>

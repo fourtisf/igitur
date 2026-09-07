@@ -24,15 +24,18 @@ import { UNIVERSE_VERSION } from "./universe";
 export interface BookRef {
   premise: string;
   drop?: string[];
+  /** Reader-set weights, `NVDA:12,TSM:8`. Determines the book, so canonical. */
+  weights?: string;
   /** Defaults to the current universe. */
   universe?: number;
   /** ISO date, YYYY-MM-DD. Omitted for links that predate the field. */
   stated?: string;
 }
 
-function params({ premise, drop = [], universe, stated }: BookRef): URLSearchParams {
+function params({ premise, drop = [], weights, universe, stated }: BookRef): URLSearchParams {
   const q = new URLSearchParams({ p: premise });
   if (drop.length) q.set("x", drop.join(","));
+  if (weights) q.set("w", weights);
   if (universe !== undefined) q.set("u", String(universe));
   if (stated) q.set("d", stated);
   return q;
@@ -42,7 +45,7 @@ function params({ premise, drop = [], universe, stated }: BookRef): URLSearchPar
 export function bookHref(
   premise: string,
   drop: string[] = [],
-  opts: { universe?: number; stated?: string } = {}
+  opts: { universe?: number; stated?: string; weights?: string } = {}
 ): string {
   return `/b/${slugOf(premise)}?${params({ premise, drop, ...opts })}`;
 }
@@ -52,8 +55,8 @@ export function bookHref(
  * Two readers who state the same premise on different days are looking at one
  * page, and search engines should be told so.
  */
-export function bookCanonical(premise: string, drop: string[] = []): string {
-  return `/b/${slugOf(premise)}?${params({ premise, drop })}`;
+export function bookCanonical(premise: string, drop: string[] = [], weights?: string): string {
+  return `/b/${slugOf(premise)}?${params({ premise, drop, weights })}`;
 }
 
 export function trackHref(
