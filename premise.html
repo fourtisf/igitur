@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Premise — Write what you believe. See what it holds.</title>
+<meta name="description" content="Write one sentence about the next decade. Premise returns a weighted portfolio, and every weight carries the reason it earned its size.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A0A0B'/%3E%3Crect x='7' y='9' width='5' height='14' rx='2' fill='white'/%3E%3Crect x='14' y='13' width='5' height='10' rx='2' fill='%23AEB6FF' opacity='.55'/%3E%3Crect x='21' y='16' width='5' height='7' rx='2' fill='%237C8CFF' opacity='.7'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0B; --bg-2:#0D0D0F;
+  --surf:rgba(255,255,255,.026); --surf-2:rgba(255,255,255,.048); --surf-3:rgba(255,255,255,.075);
+  --bd:rgba(255,255,255,.068); --bd-2:rgba(255,255,255,.115);
+  --fg:#FAFAFA; --fg-2:#9E9EA6; --fg-3:#6B6B74; --fg-4:#45454D;
+  --ac:#7C8CFF; --ac-2:#AEB6FF; --ac-dim:rgba(124,140,255,.16);
+  --warn:#FF8A6B;
+  --r:16px; --r-s:10px; --pad:clamp(20px,5vw,48px); --max:1200px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);
+  font-family:"Inter",-apple-system,"Segoe UI",system-ui,sans-serif;
+  font-size:16px;line-height:1.55;letter-spacing:-.011em;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;font-variant-numeric:tabular-nums}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--ac);outline-offset:3px;border-radius:6px}
+::selection{background:rgba(124,140,255,.3)}
+
+.glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(760px 480px at 50% -8%,rgba(124,140,255,.15),transparent 64%),
+             radial-gradient(560px 400px at 88% 12%,rgba(160,140,255,.07),transparent 62%)}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.34;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{position:relative;z-index:2}
+.shell{max-width:var(--max);margin:0 auto;padding-inline:var(--pad)}
+
+.nav{position:fixed;top:14px;left:0;right:0;z-index:90;display:flex;justify-content:center;padding-inline:var(--pad)}
+.navin{width:100%;max-width:var(--max);min-height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px 0 18px;border-radius:99px;background:rgba(14,14,16,.74);
+  backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:inset 0 0 0 1px var(--bd),0 8px 32px -14px rgba(0,0,0,.9)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.025em}
+.bmark{width:19px;height:19px;border-radius:5px;background:linear-gradient(150deg,#fff,#8F9BFF 60%,#4B57C4);
+  box-shadow:0 0 14px rgba(124,140,255,.4);flex:none}
+.nlinks{display:flex;gap:2px}
+.nlinks a{font-size:13.5px;color:var(--fg-3);padding:7px 11px;border-radius:8px;transition:color .18s,background .18s;font-weight:450}
+.nlinks a:hover,.nlinks a.on{color:var(--fg);background:var(--surf-2)}
+.burger{display:none;width:38px;height:38px;border-radius:50%;align-items:center;justify-content:center;
+  background:var(--surf-2);box-shadow:inset 0 0 0 1px var(--bd-2)}
+.burger span{display:block;width:15px;height:1.6px;background:var(--fg);position:relative}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0;width:15px;height:1.6px;background:var(--fg)}
+.burger span::before{top:-5px}.burger span::after{top:5px}
+.mmenu{display:none;position:fixed;top:78px;left:var(--pad);right:var(--pad);z-index:89;border-radius:18px;padding:10px;
+  background:rgba(14,14,16,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 30px 60px -24px rgba(0,0,0,1)}
+.mmenu.open{display:block}
+.mmenu a{display:block;padding:12px 14px;border-radius:10px;font-size:15px;font-weight:500;color:var(--fg-2)}
+.mmenu a:hover{background:var(--surf-2);color:var(--fg)}
+@media(max-width:1040px){.nlinks{display:none}.burger{display:flex}}
+
+.b1{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#0A0A0B;padding:11px 20px;border-radius:99px;
+  font-size:13.5px;font-weight:600;letter-spacing:-.012em;transition:transform .18s,box-shadow .18s;
+  box-shadow:0 0 0 1px rgba(255,255,255,.9),0 8px 26px -12px rgba(255,255,255,.35)}
+.b1:hover{transform:translateY(-1.5px);box-shadow:0 0 0 1px #fff,0 12px 32px -12px rgba(255,255,255,.5)}
+.b2{display:inline-flex;align-items:center;gap:8px;background:var(--surf-2);color:var(--fg);padding:11px 20px;border-radius:99px;
+  font-size:13.5px;font-weight:550;box-shadow:inset 0 0 0 1px var(--bd-2);transition:background .18s,transform .18s}
+.b2:hover{background:var(--surf-3);transform:translateY(-1.5px)}
+.b1.lg,.b2.lg{padding:14px 26px;font-size:15px}
+.b3{font-size:12px;font-weight:600;color:var(--fg-3);padding:5px 10px;border-radius:7px;background:var(--surf);
+  box-shadow:inset 0 0 0 1px var(--bd);transition:color .16s,background .16s}
+.b3:hover{color:var(--fg);background:var(--surf-2)}
+
+.badge{display:inline-flex;align-items:center;gap:9px;padding:6px 14px 6px 7px;border-radius:99px;
+  font-size:12.5px;font-weight:500;color:var(--fg-2);background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd)}
+.badge b{background:var(--ac-dim);color:var(--ac-2);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px}
+h1.hero{font-size:clamp(2.6rem,6.6vw,5rem);font-weight:600;line-height:1.02;letter-spacing:-.045em;text-wrap:balance}
+h1.hero span{color:var(--fg-3)}
+h1.pg{font-size:clamp(2rem,4.4vw,3.3rem);font-weight:600;line-height:1.05;letter-spacing:-.042em;text-wrap:balance}
+h2{font-size:clamp(1.9rem,4vw,3rem);font-weight:600;line-height:1.08;letter-spacing:-.04em;text-wrap:balance}
+h3{font-size:17px;font-weight:600;letter-spacing:-.022em}
+.sub{font-size:clamp(15px,1.6vw,18px);color:var(--fg-2);font-weight:350;line-height:1.62;max-width:52ch}
+.kick{font-size:12.5px;font-weight:600;color:var(--ac-2)}
+.p{color:var(--fg-2);font-weight:350;line-height:1.65;font-size:14.5px}
+.mut{color:var(--fg-3)} .faint{color:var(--fg-4)} .ac{color:var(--ac-2)} .wn{color:var(--warn)}
+section{padding-block:clamp(64px,9vw,120px)}
+.hr{height:1px;background:linear-gradient(90deg,transparent,var(--bd-2),transparent)}
+.pgtop{padding-top:clamp(112px,13vw,160px)}
+.hero-wrap{padding-top:clamp(120px,15vw,190px);text-align:center}
+.hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+
+.window{margin-top:clamp(44px,6vw,76px);border-radius:var(--r);overflow:hidden;text-align:left;
+  background:linear-gradient(180deg,#141417,#0C0C0E);
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 60px 120px -50px rgba(0,0,0,1),0 0 90px -40px rgba(124,140,255,.35)}
+.wbar{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--bd);background:rgba(255,255,255,.02)}
+.wdots{display:flex;gap:6px} .wdots i{width:9px;height:9px;border-radius:50%;background:var(--surf-3);display:block}
+.wurl{flex:1;font-size:12px;color:var(--fg-4);background:var(--surf);border-radius:6px;padding:5px 11px;
+  box-shadow:inset 0 0 0 1px var(--bd);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.wbody{padding:clamp(16px,2.4vw,26px)}
+
+.prompt{display:flex;gap:11px;align-items:flex-start;padding:15px 17px;border-radius:var(--r-s);
+  background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd)}
+.prompt .pre{font-size:clamp(15px,1.8vw,20px);font-weight:300;color:var(--fg-4);letter-spacing:-.02em;flex:none;line-height:1.35}
+.prompt .txt{font-size:clamp(15px,1.8vw,20px);font-weight:450;letter-spacing:-.024em;line-height:1.35;min-height:1.35em}
+.caret{display:inline-block;width:2px;height:1em;background:var(--ac-2);vertical-align:-2px;margin-left:2px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.tagp{font-size:11.5px;font-weight:500;color:var(--fg-3);padding:4px 11px;border-radius:99px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd)}
+.tagp.on{color:var(--ac-2);background:var(--ac-dim);box-shadow:inset 0 0 0 1px rgba(124,140,255,.3)}
+.tagp.warn{color:var(--warn);background:rgba(255,138,107,.13);box-shadow:inset 0 0 0 1px rgba(255,138,107,.28)}
+
+.bar{display:flex;gap:4px;height:clamp(100px,13vw,158px);margin-top:16px}
+.bar.sm{height:clamp(58px,7vw,86px);gap:3px}
+.bar>div{position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:10px 10px 11px;
+  min-width:0;overflow:hidden;border-radius:var(--r-s);
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.075);
+  transition:transform .22s cubic-bezier(.2,.7,.3,1),filter .22s}
+.bar>div:hover{transform:translateY(-4px);filter:brightness(1.25)}
+.bar .lead{background:linear-gradient(180deg,#fff,#C9CEFF 55%,#8B95E8);color:#0A0A0B;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),0 0 40px -8px rgba(174,182,255,.6)}
+.bar .bal{background:linear-gradient(180deg,rgba(124,140,255,.5),rgba(76,88,180,.28));
+  box-shadow:inset 0 0 0 1px rgba(124,140,255,.35)}
+.bar b{font-size:11.5px;font-weight:600;opacity:.72;display:block;white-space:nowrap}
+.bar em{font-style:normal;font-size:clamp(13px,1.7vw,22px);font-weight:620;letter-spacing:-.04em;display:block;line-height:1.1;white-space:nowrap}
+.bar.sm em{font-size:13px} .bar.sm b{font-size:10.5px}
+.narrow b{opacity:0}
+.barfoot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11.5px}
+.dk{display:inline-flex;align-items:center;gap:6px;color:var(--fg-4)}
+.dk i{width:7px;height:7px;border-radius:50%;display:block}
+.bar.go>div{animation:up .85s cubic-bezier(.6,.02,.16,1) both}
+@keyframes up{from{flex-basis:14.28%;opacity:0;transform:translateY(22px) scaleY(.85)}to{opacity:1;transform:none}}
+
+.sk{border-radius:var(--r-s);background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));
+  background-size:220% 100%;animation:shim 1.25s ease-in-out infinite}
+@keyframes shim{to{background-position:-220% 0}}
+.skbar{display:flex;gap:4px;height:clamp(100px,13vw,158px);margin-top:16px}
+.loadline{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--fg-3);margin-top:18px}
+.spin{width:13px;height:13px;border-radius:50%;border:1.6px solid var(--bd-2);border-top-color:var(--ac-2);animation:sp .7s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.strip{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.track{display:flex;gap:52px;width:max-content;animation:sl 70s linear infinite}
+.track span{font-size:13px;font-weight:500;color:var(--fg-4);white-space:nowrap}
+@keyframes sl{to{transform:translateX(-50%)}}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--bd);border-radius:var(--r);overflow:hidden;
+  box-shadow:inset 0 0 0 1px var(--bd)}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stats>div{background:var(--bg-2);padding:24px 22px}
+.sn{font-size:30px;font-weight:600;letter-spacing:-.045em;line-height:1}
+.sl{font-size:12.5px;color:var(--fg-3);margin-top:8px}
+
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:clamp(34px,4vw,54px)}
+.cell{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+  border-radius:var(--r);padding:clamp(18px,2.2vw,26px);box-shadow:inset 0 0 0 1px var(--bd);
+  position:relative;overflow:hidden;transition:box-shadow .25s,transform .25s;text-align:left}
+.cell:hover{box-shadow:inset 0 0 0 1px var(--bd-2);transform:translateY(-2px)}
+.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}.c2{grid-column:span 2}
+@media(max-width:900px){.c4,.c3,.c2{grid-column:span 6}}
+.cell h3{margin-bottom:8px} .cell .p{font-size:13.5px}
+
+.hrow{display:flex;gap:12px;align-items:flex-start;padding:11px 13px;border-radius:9px;background:var(--surf);
+  box-shadow:inset 0 0 0 1px var(--bd);position:relative;overflow:hidden}
+.hrow+.hrow{margin-top:7px}
+.hrow::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--fw,0%);
+  background:linear-gradient(90deg,rgba(174,182,255,.10),transparent);pointer-events:none}
+.hrow.bal::after{background:linear-gradient(90deg,rgba(124,140,255,.14),transparent)}
+.hw{font-size:14px;font-weight:640;letter-spacing:-.03em;flex:none;width:52px;color:var(--ac-2)}
+.hn{font-size:13.5px;font-weight:550}
+.hy{font-size:12px;color:var(--fg-3);margin-top:3px;line-height:1.45}
+.hm{font-size:11px;color:var(--fg-4);margin-top:5px}
+.hx{position:relative;z-index:2;flex:none;width:26px;height:26px;border-radius:7px;color:var(--fg-4);
+  display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;align-self:center;
+  transition:background .16s,color .16s}
+.hx:hover{background:rgba(255,138,107,.14);color:var(--warn)}
+
+.sbox{padding:16px;border-radius:9px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);position:relative}
+.sbox::before{content:"";position:absolute;top:0;left:0;right:0;height:1.5px;border-radius:9px 9px 0 0}
+.sfor::before{background:linear-gradient(90deg,#fff,transparent 75%)}
+.sag::before{background:linear-gradient(90deg,var(--ac),transparent 75%)}
+.slab{font-size:11.5px;font-weight:600;margin-bottom:7px}
+.sfor .slab{color:#fff} .sag .slab{color:var(--ac-2)}
+.stx{font-size:12.5px;color:var(--fg-3);line-height:1.55}
+
+.urlbox{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:9px;background:var(--surf);
+  box-shadow:inset 0 0 0 1px var(--bd);font-size:12px;color:var(--fg-3);overflow:hidden}
+.urlbox code{font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.copyb{font-size:11.5px;font-weight:600;color:var(--fg);background:var(--surf-2);padding:5px 11px;border-radius:6px;
+  box-shadow:inset 0 0 0 1px var(--bd-2);flex:none;transition:background .16s}
+.copyb:hover{background:var(--surf-3)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:clamp(34px,4vw,54px)}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.step{padding:clamp(20px,2.4vw,28px);border-radius:var(--r);
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));box-shadow:inset 0 0 0 1px var(--bd)}
+.stepn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:640;color:var(--ac-2);background:var(--ac-dim);box-shadow:inset 0 0 0 1px rgba(124,140,255,.28)}
+
+.cmp{border-radius:var(--r);overflow:hidden;box-shadow:inset 0 0 0 1px var(--bd);margin-top:clamp(30px,4vw,48px)}
+.crow{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:1px;background:var(--bd)}
+.crow>div{background:var(--bg-2);padding:15px 18px;font-size:13.5px}
+.crow.head>div{background:rgba(255,255,255,.03);font-weight:600;font-size:12.5px;color:var(--fg-3)}
+.crow.head>div:last-child{color:var(--fg)}
+.crow>div:first-child{color:var(--fg-3)}
+.crow>div:nth-child(2){color:var(--fg-4)}
+.crow>div:last-child{color:var(--fg);font-weight:500}
+@media(max-width:720px){.crow{grid-template-columns:1fr}.crow.head{display:none}
+  .crow>div:first-child{font-weight:600;color:var(--fg);padding-bottom:4px}}
+
+.composer{border-radius:var(--r);padding:clamp(18px,2.4vw,26px);
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 30px 70px -40px rgba(0,0,0,.9);transition:box-shadow .25s}
+.composer.hot{box-shadow:inset 0 0 0 1px rgba(124,140,255,.45),0 0 0 4px rgba(124,140,255,.09),0 30px 70px -40px rgba(0,0,0,.9)}
+.cfield{display:flex;gap:11px;align-items:flex-start}
+.cpre{font-size:clamp(16px,2vw,22px);font-weight:300;color:var(--fg-4);letter-spacing:-.022em;flex:none;line-height:1.35}
+.cin{flex:1;min-width:0;border:none;background:none;resize:none;overflow:hidden;
+  font-size:clamp(16px,2vw,22px);font-weight:450;letter-spacing:-.026em;line-height:1.35}
+.cin::placeholder{color:var(--fg-4);font-weight:300}
+.cin:focus{outline:none}
+.crow2{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:20px}
+.chip{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:450;color:var(--fg-2);
+  background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:color .18s,background .18s;text-align:left}
+.chip:hover{color:var(--fg);background:var(--surf-2)}
+.srch{width:100%;padding:12px 16px;border-radius:99px;background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);
+  font-size:14px;border:none;transition:box-shadow .2s}
+.srch:focus{outline:none;box-shadow:inset 0 0 0 1px rgba(124,140,255,.45)}
+
+.kv{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--bd)}
+.kv:last-child{border-bottom:none}
+.kv-k{font-size:13px;color:var(--fg-3)} .kv-v{font-size:13px;font-weight:600;text-align:right}
+.pill{padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:600}
+.pon{background:var(--ac-dim);color:var(--ac-2);box-shadow:inset 0 0 0 1px rgba(124,140,255,.28)}
+.poff{background:var(--surf-2);color:var(--fg-4);box-shadow:inset 0 0 0 1px var(--bd)}
+
+.thead{display:grid;grid-template-columns:38px 84px 1fr 92px 112px 90px;gap:14px;padding:0 14px 10px;font-size:11.5px;color:var(--fg-4)}
+.thead span:last-child,.thead span:nth-child(4){text-align:right}
+.trow{display:grid;grid-template-columns:38px 84px 1fr 92px 112px 90px;gap:14px;align-items:center;width:100%;text-align:left;
+  padding:12px 14px;border-radius:9px;transition:background .16s,box-shadow .16s;box-shadow:inset 0 0 0 1px transparent}
+.trow+.trow{margin-top:2px}
+.trow:hover{background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd)}
+.tr{font-size:12.5px;color:var(--fg-4)}
+.tt{font-weight:620;letter-spacing:-.022em;font-size:14px}
+.tn{color:var(--fg-3);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tpx{font-size:13px;color:var(--fg-2);text-align:right}
+.tsp{height:26px;width:100%;display:block}
+.tm{font-weight:620;text-align:right;letter-spacing:-.026em;font-size:14px}
+.up{color:#fff} .down{color:var(--ac-2)}
+@media(max-width:900px){
+  .thead,.trow{grid-template-columns:28px 1fr 76px 76px;gap:10px;padding-inline:11px}
+  .thead span:nth-child(3),.thead span:nth-child(5),.tn,.tsp{display:none}
+}
+
+.cta{position:relative;border-radius:22px;padding:clamp(38px,6vw,76px) clamp(24px,4vw,48px);text-align:center;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015));box-shadow:inset 0 0 0 1px var(--bd-2)}
+.cta::before{content:"";position:absolute;inset:0;background:radial-gradient(600px 300px at 50% 0%,rgba(124,140,255,.22),transparent 68%)}
+.cta>*{position:relative;z-index:2}
+
+footer{border-top:1px solid var(--bd);padding-block:44px 36px;margin-top:clamp(50px,7vw,90px)}
+.fg{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:28px}
+@media(max-width:760px){.fg{grid-template-columns:1fr 1fr;gap:26px}}
+footer a{display:block;font-size:13.5px;color:var(--fg-3);padding-block:5px;transition:color .16s}
+footer a:hover{color:var(--fg)}
+.fh{font-size:12.5px;font-weight:600;color:var(--fg);margin-bottom:8px}
+
+.chart{width:100%;height:clamp(220px,30vw,360px);display:block;overflow:visible}
+.axis{font-size:11px;fill:var(--fg-4)} .endlab{font-size:12.5px;font-weight:640}
+.notice{border-left:2px solid rgba(124,140,255,.45);padding-left:14px;font-size:13px;color:var(--fg-3);max-width:64ch;line-height:1.6}
+.notice.warn{border-left-color:rgba(255,138,107,.6)}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:120;
+  padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;
+  background:rgba(20,20,24,.95);box-shadow:inset 0 0 0 1px var(--bd-2),0 20px 40px -18px rgba(0,0,0,1);
+  transition:opacity .25s,transform .25s}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---- wallet, socials, token ---- */
+.wbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:99px;
+  font-size:13px;font-weight:600;color:var(--fg);background:var(--surf-2);
+  box-shadow:inset 0 0 0 1px var(--bd-2);transition:background .18s,box-shadow .18s}
+.wbtn:hover{background:var(--surf-3)}
+.wbtn.on{color:var(--ac-2);background:var(--ac-dim);box-shadow:inset 0 0 0 1px rgba(124,140,255,.34)}
+.wdot{width:7px;height:7px;border-radius:50%;background:var(--fg-4);flex:none}
+.wbtn.on .wdot{background:var(--ac-2);box-shadow:0 0 8px var(--ac-2)}
+.soc{display:flex;gap:4px}
+.soc a{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:var(--fg-3);transition:color .16s,background .16s}
+.soc a:hover{color:var(--fg);background:var(--surf-2)}
+.soc svg{width:15px;height:15px;fill:currentColor}
+@media(max-width:1240px){.nav .soc{display:none}}
+@media(max-width:640px){.nav .wbtn span.wtxt{display:none}.nav .wbtn{padding:10px 12px}}
+.addrbox{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:var(--r-s);
+  background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);font-size:13px}
+.addrbox code{flex:1;font-family:inherit;color:var(--fg-4);letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.soon{padding:4px 11px;border-radius:99px;font-size:11px;font-weight:650;
+  background:rgba(255,138,107,.13);color:var(--warn);box-shadow:inset 0 0 0 1px rgba(255,138,107,.3);flex:none}
+.buystep{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--bd)}
+.buystep:last-child{border-bottom:none}
+.buyn{width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:650;color:var(--ac-2);background:var(--ac-dim);box-shadow:inset 0 0 0 1px rgba(124,140,255,.26)}
+.socbig{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.socbig a{display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:99px;
+  font-size:13.5px;font-weight:550;background:var(--surf-2);box-shadow:inset 0 0 0 1px var(--bd-2);transition:background .18s,transform .18s}
+.socbig a:hover{background:var(--surf-3);transform:translateY(-1.5px)}
+.socbig svg{width:15px;height:15px;fill:currentColor}
+.rv{opacity:0;transform:translateY(18px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.3,1)}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .rv{opacity:1!important;transform:none!important}
+  .bar.go>div{opacity:1!important;transform:none!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="glow"></div><div class="grain"></div>
+<div class="wrap">
+
+<nav class="nav">
+  <div class="navin">
+    <a class="brand" href="#/"><span class="bmark"></span>Premise</a>
+    <div class="nlinks" id="nlinks">
+      <a href="#/" data-r="/">Overview</a>
+      <a href="#/compose" data-r="/compose">Compose</a>
+      <a href="#/history" data-r="/history">History</a>
+      <a href="#/trending" data-r="/trending">Trending</a>
+      <a href="#/track" data-r="/track">Track</a>
+      <a href="#/universe" data-r="/universe">Universe</a>
+      <a href="#/token" data-r="/token">Token</a>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="soc">
+        <a href="https://x.com/premisefi" target="_blank" rel="noopener" aria-label="X" title="X">
+          <svg viewBox="0 0 24 24"><path d="M18.9 1.9h3.6l-7.9 9 9.3 12.3h-7.3l-5.7-7.5-6.5 7.5H.8l8.4-9.6L.3 1.9h7.4l5.2 6.8zm-1.3 19.2h2L7.1 3.9H5z"/></svg></a>
+        <a href="https://t.me/premiseportal" target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
+          <svg viewBox="0 0 24 24"><path d="M23.1 3.5 19.6 20c-.3 1.2-1 1.5-2 .9l-5.5-4-2.7 2.6c-.3.3-.6.6-1.2.6l.4-5.6L18.8 5c.4-.4-.1-.6-.7-.2L5.5 12.7.1 11c-1.2-.4-1.2-1.2.3-1.8L21.5 1.7c1-.4 1.9.2 1.6 1.8z"/></svg></a>
+      </div>
+      <button class="wbtn" id="wbtn"><span class="wdot"></span><span class="wtxt">Connect wallet</span></button>
+      <button class="burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mmenu" id="mmenu">
+  <a href="#/compose">Compose</a><a href="#/history">History</a><a href="#/trending">Trending</a>
+  <a href="#/track">Track</a><a href="#/universe">Universe</a><a href="#/method">Method</a>
+  <a href="#/token">Token</a><a href="#/status">Status</a><a href="#/about">About</a><a href="#/legal">Terms</a>
+  <a href="https://x.com/premisefi" target="_blank" rel="noopener">X ↗</a>
+  <a href="https://t.me/premiseportal" target="_blank" rel="noopener">Telegram ↗</a>
+</div>
+
+<main id="app"></main>
+
+<footer class="shell">
+  <div class="fg">
+    <div>
+      <a class="brand" href="#/" style="padding:0"><span class="bmark"></span>Premise</a>
+      <p class="p" style="margin-top:12px;font-size:13px;max-width:34ch">A working prototype. Research only. Nothing here is investment advice and no order ever leaves this page.</p>
+    </div>
+    <div><div class="fh">Product</div><a href="#/compose">Compose</a><a href="#/history">History</a><a href="#/trending">Trending</a><a href="#/track">Track</a></div>
+    <div><div class="fh">Reference</div><a href="#/universe">The universe</a><a href="#/method">Methodology</a><a href="#/token">Token</a><a href="#/status">What is built</a></div>
+    <div><div class="fh">Community</div>
+      <a href="https://x.com/premisefi" target="_blank" rel="noopener">X ↗</a>
+      <a href="https://t.me/premiseportal" target="_blank" rel="noopener">Telegram ↗</a>
+      <a href="#/about">About</a><a href="#/legal">Terms &amp; disclosures</a></div>
+  </div>
+  <p class="faint" style="font-size:12px;margin-top:34px">© 2026 Premise · Prototype build 2.1 · Universe reviewed 1 September 2026 · Token not deployed</p>
+</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   0. UTIL
+   ============================================================ */
+function fnv(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){var s=(seed>>>0)||1;return function(){s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function A(t,n,k,c,why){return {t:t,n:n,k:k,c:c,why:why}}
+var REVIEWED="1 September 2026";
+
+/* ============================================================
+   1. THE UNIVERSE — 26 themes
+   kw pulls a premise toward a theme, neg pushes it away. That
+   is what stops "delivery drones" resolving to defence stocks.
+   ============================================================ */
+var BALLAST=[
+ {t:"SGOV",n:"0–3 Month Treasury Bill ETF",k:"Treasury",why:"Cash that still earns while the thesis is early."},
+ {t:"IEF",n:"7–10 Year Treasury ETF",k:"Treasury",why:"Duration that tends to rally when growth disappoints."},
+ {t:"GLD",n:"Gold Trust",k:"Commodity",why:"A hedge that does not depend on this thesis being right."}
+];
+
+var THEMES=[
+{id:"compute",name:"Compute buildout",risk:"Aggressive",horizon:"3–5 years",
+ claim:"Compute is the binding constraint on artificial intelligence, not model design.",
+ forCase:"Frontier training runs are gated by physical supply, not ideas. Leading-edge capacity is booked years out, high-bandwidth memory is sold before it is made, and grid interconnection queues run for years. Anything on that critical path collects the toll.",
+ againstCase:"Every capex supercycle in semiconductors has ended in a glut. Efficiency gains, smaller models and custom silicon all cut the accelerators needed per unit of intelligence, and buyers are a handful of firms who can pause in one quarter.",
+ kw:["ai","artificial intelligence","compute","gpu","chip","chips","semiconductor","silicon","inference","training","datacenter","datacentre","data center","llm","agi","frontier model","wafer","accelerator","foundry","hbm"],neg:[],
+ assets:[A("NVDA","Nvidia","Equity",97,"Sits on the critical path of nearly every frontier training run."),
+  A("TSM","Taiwan Semiconductor","Equity",93,"Leading-edge dies are fabricated here or they are not fabricated."),
+  A("ASML","ASML","Equity",88,"Sole supplier of EUV lithography; there is no second source."),
+  A("AVGO","Broadcom","Equity",84,"Custom accelerators for buyers who want off a single vendor's price list."),
+  A("MU","Micron","Equity",80,"High-bandwidth memory is the second bottleneck after the die."),
+  A("VRT","Vertiv","Equity",74,"Power and cooling inside the rack, where density fails first."),
+  A("ANET","Arista Networks","Equity",69,"The switching fabric between accelerators."),
+  A("SMH","Semiconductor ETF","ETF",62,"Broad exposure for the part that is not a single-name bet."),
+  A("SMCI","Super Micro Computer","Equity",48,"Integration and assembly — real volume, thinnest moat in the chain.")]},
+
+{id:"energy",name:"Grid and load growth",risk:"Moderate",horizon:"5–10 years",
+ claim:"Electricity demand grows for the first time in twenty years, and the grid cannot be built quickly.",
+ forCase:"Datacentres, electrified transport and reshored manufacturing pull on the same wires. Generation adds in months; transmission and interconnection take most of a decade. Scarcity accrues to whoever holds capacity or builds the equipment.",
+ againstCase:"Utilities are rate-regulated, so upside is capped by regulators answering to voters with rising bills. Load forecasts have been wrong before and much of the demand is announced rather than contracted.",
+ kw:["energy","grid","power","electricity","electric","load growth","utility","utilities","transmission","solar","renewable","electrification","megawatt","transformer","interconnection"],neg:[],
+ assets:[A("GEV","GE Vernova","Equity",91,"Turbines and grid equipment; the order book is the constraint."),
+  A("CEG","Constellation Energy","Equity",89,"Existing baseload under contracts signed before the shortage."),
+  A("VST","Vistra","Equity",84,"Merchant generation with direct exposure to power prices."),
+  A("ETN","Eaton","Equity",81,"Electrical distribution sits between every new load and the wire."),
+  A("NEE","NextEra Energy","Equity",77,"The largest renewables pipeline, with a regulated utility underneath."),
+  A("PWR","Quanta Services","Equity",75,"Someone has to physically build the transmission; this is who."),
+  A("XLU","Utilities Select Sector ETF","ETF",58,"The sector floor, for the part that is simply more electricity."),
+  A("FSLR","First Solar","Equity",54,"Domestic panel supply, exposed to policy in both directions.")]},
+
+{id:"nuclear",name:"Nuclear restart",risk:"Aggressive",horizon:"5–10 years",
+ claim:"Firm carbon-free baseload becomes acceptable again because nothing else clears the demand.",
+ forCase:"Datacentre operators need power that runs at night and does not move with weather. Restarts and uprates of existing plants are the cheapest megawatts available, and fuel supply sits in very few hands.",
+ againstCase:"Nuclear has decades of practice being late and over budget. Small modular designs are mostly unbuilt, and the policy support that opened the door can close after one bad headline.",
+ kw:["nuclear","uranium","smr","fission","reactor","atomic","baseload","enrichment","fuel cycle"],neg:[],
+ assets:[A("CCJ","Cameco","Equity",92,"Fuel is upstream of every reactor, running or planned."),
+  A("BWXT","BWX Technologies","Equity",89,"Naval and government reactor components; revenue that already exists."),
+  A("LEU","Centrus Energy","Equity",85,"Domestic enrichment, the actual bottleneck for advanced fuel."),
+  A("CEG","Constellation Energy","Equity",83,"The largest existing fleet; restarts beat new builds on time."),
+  A("VST","Vistra","Equity",76,"Nuclear capacity inside a merchant power book."),
+  A("URA","Uranium ETF","ETF",64,"Basket exposure to miners without picking which deposit works."),
+  A("SMR","NuScale Power","Equity",52,"The purest expression of the thesis and the least proven.")]},
+
+{id:"longevity",name:"Healthspan",risk:"Moderate",horizon:"Up to 10 years",
+ claim:"Medicine shifts from treating disease late to extending the years a person stays healthy.",
+ forCase:"Metabolic drugs turned out to affect far more than weight. Sequencing costs fell far enough to make genetic medicine economic, and the payer is a demographic wave already here.",
+ againstCase:"Drug pricing is a political target in every developed market. Patents expire on schedule, trials fail late and expensively, and the largest products already carry near-perfect expectations.",
+ kw:["longevity","aging","ageing","healthspan","biotech","gene","genetic","genome","obesity","drug","pharma","crispr","cancer","therapeutic","clinical trial","sequencing","medicine","disease","healthy","healthcare","treatment","patient"],neg:[],
+ assets:[A("LLY","Eli Lilly","Equity",93,"The broadest metabolic franchise and deepest follow-on pipeline."),
+  A("NVO","Novo Nordisk","Equity",86,"The other half of the metabolic duopoly, with more pricing exposure."),
+  A("VRTX","Vertex Pharmaceuticals","Equity",84,"Genetic medicine that already generates cash, not just readouts."),
+  A("ILMN","Illumina","Equity",79,"Sequencing is the instrument layer under everything genetic."),
+  A("REGN","Regeneron","Equity",75,"An antibody platform that has produced beyond one franchise."),
+  A("TMO","Thermo Fisher Scientific","Equity",72,"Tools and reagents; paid whether or not a trial reads out."),
+  A("XBI","Biotech ETF","ETF",61,"Spread across small-cap biotech, where single-name risk is brutal."),
+  A("CRSP","CRISPR Therapeutics","Equity",49,"Approved editing therapy, tiny commercial base, wide outcomes.")]},
+
+{id:"robotics",name:"Physical labour automation",risk:"Aggressive",horizon:"Up to 10 years",
+ claim:"Machines that manipulate the physical world become cheap enough to replace repetitive human labour.",
+ forCase:"Vision and control models improved faster than the hardware around them. Warehouses are the ideal first environment: structured, indoors, already measured to the second. Labour cost and availability push the same way.",
+ againstCase:"Demonstrations are not deployments. Reliability in unstructured environments is unsolved, and payback only works at wage levels most of the world does not pay.",
+ kw:["robot","robots","robotics","robotic","humanoid","automation","warehouse","factory automation","actuator","manipulation","manipulate","cobot","machines","manual labour","manual labor","human labour","human labor","repetitive"],neg:[],
+ assets:[A("ROK","Rockwell Automation","Equity",88,"Factory integration is where deployment actually happens."),
+  A("SYM","Symbotic","Equity",85,"Warehouse automation already installed and running at scale."),
+  A("TSLA","Tesla","Equity",80,"The clearest public humanoid programme, inside a business that is not one."),
+  A("NVDA","Nvidia","Equity",78,"Simulation and on-robot inference; paid whichever robot wins."),
+  A("TER","Teradyne","Equity",74,"Collaborative arms plus test equipment for the rest of the chain."),
+  A("ISRG","Intuitive Surgical","Equity",69,"Proof that precision robotics can hold a monopoly for two decades."),
+  A("BOTZ","Robotics & AI ETF","ETF",60,"Broad exposure without a bet on form factor.")]},
+
+{id:"lastmile",name:"Last-mile logistics",risk:"Moderate",horizon:"3–5 years",
+ claim:"The final mile of delivery is automated and re-priced, because it is where most of the cost sits.",
+ forCase:"The last mile is roughly half the total cost of a parcel and the least automated link in the chain. Autonomous vans, sidewalk robots and delivery drones all attack the same line item, and volume grows whichever one wins.",
+ againstCase:"Regulation is local, slow and fragmented — approvals happen city by city. Margins in delivery have been thin for a century, and incumbents can absorb losses far longer than a challenger can.",
+ kw:["delivery","last mile","last-mile","courier","parcel","package","shipping","freight","logistics","fulfilment","fulfillment","supply chain","van","vans","truck","distribution","dispatch"],neg:["military","missile","warfare","combat","battlefield"],
+ assets:[A("UPS","United Parcel Service","Equity",88,"The densest delivery network; automation lands here first."),
+  A("AMZN","Amazon","Equity",86,"Runs the largest private logistics network and its own robotics arm."),
+  A("SYM","Symbotic","Equity",82,"Automates the warehouse that feeds every route."),
+  A("GXO","GXO Logistics","Equity",79,"Pure-play contract logistics, buying automation as a service."),
+  A("FDX","FedEx","Equity",74,"Network scale with more freight exposure and slower change."),
+  A("ZBRA","Zebra Technologies","Equity",68,"Scanning and tracking hardware in every depot."),
+  A("IYT","Transportation ETF","ETF",56,"Sector exposure without picking a carrier.")]},
+
+{id:"space",name:"Orbital logistics",risk:"Aggressive",horizon:"5–10 years",
+ claim:"Launch becomes cheap and routine enough that orbit turns into infrastructure rather than an event.",
+ forCase:"Cost per kilogram has fallen by more than an order of magnitude and keeps falling. Once launch is routine the value moves to payloads: connectivity, imaging and defence bought on long government contracts.",
+ againstCase:"The dominant launch provider is private, so public exposure is second-best by construction. Most listed names are pre-revenue, and a single failure resets a company by years.",
+ kw:["space","orbit","orbital","satellite","rocket","launch","lunar","moon","mars","payload","aerospace","low earth orbit"],neg:[],
+ assets:[A("RKLB","Rocket Lab","Equity",92,"The only listed pure-play with an operating launch cadence."),
+  A("ASTS","AST SpaceMobile","Equity",86,"Direct-to-phone connectivity; enormous market, unproven at scale."),
+  A("PL","Planet Labs","Equity",77,"Imaging as a subscription rather than a hardware sale."),
+  A("LUNR","Intuitive Machines","Equity",70,"Lunar delivery contracts, dependent on one customer."),
+  A("LMT","Lockheed Martin","Equity",64,"Space revenue attached to a business that survives a slow decade."),
+  A("IRDM","Iridium Communications","Equity",61,"An operating constellation with real cash flow today."),
+  A("ARKX","Space Exploration ETF","ETF",55,"Diversification where single-name failure is common.")]},
+
+{id:"quantum",name:"Error-corrected quantum",risk:"Speculative",horizon:"10+ years",
+ claim:"The real milestone is logical, error-corrected qubits, and the first to reach them takes a market with no second prize.",
+ forCase:"Error correction has moved from theory to measured improvement on real hardware. Government and hyperscaler contracts arrive before commercial revenue, which funds the gap, and the end state is winner-takes-most.",
+ againstCase:"Useful quantum advantage has been ten years away for thirty years. Every listed pure-play burns cash and funds itself by issuing stock into rallies. Position sizing matters more than name selection.",
+ kw:["quantum","qubit","qubits","superposition","entanglement","error correction","post-quantum","annealing","coherence"],neg:[],
+ assets:[A("IONQ","IonQ","Equity",90,"Trapped ion, deepest balance sheet, clearest contract visibility."),
+  A("RGTI","Rigetti Computing","Equity",84,"Superconducting hardware with a large-vendor partnership behind it."),
+  A("QBTS","D-Wave Quantum","Equity",79,"Annealing is commercially earlier, aimed at optimisation today."),
+  A("IBM","IBM","Equity",63,"A serious roadmap attached to a business that pays you to wait."),
+  A("HON","Honeywell","Equity",60,"Holds the largest stake in a private trapped-ion competitor."),
+  A("QUBT","Quantum Computing Inc.","Equity",58,"The most experimental of the four and most dilution-prone."),
+  A("QTUM","Quantum Computing ETF","ETF",57,"Basket exposure, because which architecture wins is unknown.")]},
+
+{id:"defense",name:"Rearmament",risk:"Moderate",horizon:"5–10 years",
+ claim:"Defence spending rises structurally, and the money moves toward attritable, software-defined systems.",
+ forCase:"Multi-year procurement budgets are legislated across several blocs. Recent conflicts showed cheap expendable systems and the software coordinating them matter more than fewer exquisite platforms.",
+ againstCase:"Procurement is slow, political and lumpy. Peace is a real risk, and newer names trade on contract announcements rather than delivered revenue.",
+ kw:["defense","defence","military","warfare","munitions","missile","deterrence","army","navy","rearmament","combat","battlefield","nato"],neg:["delivery","parcel","courier","grocery","last mile"],
+ assets:[A("PLTR","Palantir","Equity",87,"The software layer for targeting and logistics, priced accordingly."),
+  A("NOC","Northrop Grumman","Equity",84,"Strategic programmes with visibility measured in decades."),
+  A("KTOS","Kratos Defense","Equity",82,"Attritable systems — the doctrine shift, in one company."),
+  A("LMT","Lockheed Martin","Equity",79,"The largest incumbent; slowest to change, hardest to displace."),
+  A("AVAV","AeroVironment","Equity",78,"Small unmanned systems already in field use."),
+  A("RTX","RTX","Equity",73,"Munitions and missile defence, where restocking is happening."),
+  A("ITA","Aerospace & Defense ETF","ETF",58,"The sector floor, without predicting which programme survives.")]},
+
+{id:"water",name:"Water scarcity",risk:"Conservative",horizon:"10+ years",
+ claim:"Fresh water becomes the constraint that adaptation spending is actually organised around.",
+ forCase:"Aquifer depletion and ageing pipes are measurable, slow and already funded. Water utilities are among the few regulated assets where the rate base genuinely has to grow, and demand ignores price.",
+ againstCase:"This is the slowest thesis on the list. Regulated returns cap upside, municipal budgets are constrained, and nothing here re-rates quickly.",
+ kw:["water","drought","aquifer","desalination","irrigation","wastewater","scarcity"],neg:[],
+ assets:[A("XYL","Xylem","Equity",90,"Pumps, metering and treatment; paid on every upgrade cycle."),
+  A("AWK","American Water Works","Equity",86,"The largest regulated water utility, consolidating small systems."),
+  A("VLTO","Veralto","Equity",78,"Water analytics and quality instrumentation."),
+  A("WTRG","Essential Utilities","Equity",74,"Regulated water and gas; slower, cheaper, less crowded."),
+  A("ECL","Ecolab","Equity",71,"Industrial water efficiency, sold as an operating cost saving."),
+  A("PHO","Water Resources ETF","ETF",59,"Basket exposure to a theme with no obvious single winner.")]},
+
+{id:"onchain",name:"Tokenised markets",risk:"Aggressive",horizon:"3–5 years",
+ claim:"Traditional assets move onto public ledgers, and the rails that carry them collect the fee.",
+ forCase:"Stablecoin settlement is at meaningful scale and regulated in several jurisdictions. Tokenised treasuries went from nothing to billions in under two years, and the venues holding the on-ramps monetise the transition whichever chain wins.",
+ againstCase:"Regulation can reverse faster here than anywhere else on this list. Fee compression is the historical norm for market infrastructure, and much current volume is speculative rather than structural.",
+ kw:["onchain","on-chain","crypto","blockchain","tokenization","tokenisation","tokenized","tokenised","defi","stablecoin","bitcoin","ethereum","rwa","real world asset","settlement","ledger"],neg:[],
+ assets:[A("COIN","Coinbase","Equity",90,"The regulated on-ramp with the widest institutional footprint."),
+  A("CRCL","Circle","Equity",87,"Stablecoin issuance is the clearest revenue line in the sector."),
+  A("HOOD","Robinhood Markets","Equity",83,"Retail distribution plus a chain of its own for tokenised equities."),
+  A("ETH","Ethereum","Crypto",80,"Settlement layer where most tokenised assets currently live."),
+  A("BTC","Bitcoin","Crypto",70,"The reserve asset of the sector; correlated to it, not a bet on rails."),
+  A("BLK","BlackRock","Equity",68,"The largest issuer moving funds on-chain."),
+  A("CME","CME Group","Equity",60,"The incumbent venue; wins slowly if the transition is orderly.")]},
+
+{id:"media",name:"Media consolidation",risk:"Moderate",horizon:"3–5 years",
+ claim:"Streaming consolidates into a handful of profitable players and the rest are absorbed or wound down.",
+ forCase:"Content spending peaked while subscriber growth slowed, which forces consolidation. Survivors gain pricing power, bundle leverage and an ad tier that monetises the users who will not pay more.",
+ againstCase:"Content is a hit business dressed as a subscription business. Regulators can block the very mergers the thesis needs, and attention keeps leaking to short-form video none of these companies own.",
+ kw:["streaming","media","film","television","studio","subscriber","bundle","hollywood","entertainment","music"],neg:[],
+ assets:[A("NFLX","Netflix","Equity",90,"The only scaled streamer profitable through the whole cycle."),
+  A("DIS","Disney","Equity",82,"Library depth and parks cash flow to fund the transition."),
+  A("SPOT","Spotify","Equity",78,"The same consolidation logic, playing out earlier in audio."),
+  A("CMCSA","Comcast","Equity",68,"Distribution plus content, priced as if neither works."),
+  A("WBD","Warner Bros. Discovery","Equity",64,"The most likely to be bought rather than to buy."),
+  A("LYV","Live Nation","Equity",61,"Live experience is the part of entertainment that cannot be streamed.")]},
+
+{id:"banks",name:"Banking and credit",risk:"Moderate",horizon:"3–5 years",
+ claim:"Deposit franchises and private credit take share as regulated lending retreats from the middle market.",
+ forCase:"Post-crisis rules pushed lending out of banks and into funds that charge more for it. The largest banks keep the cheap deposits, the alternative managers keep the spread, and both sides of that trade are listed.",
+ againstCase:"Credit losses are invisible until they are not. Private credit has never been tested through a full default cycle, and the marks are set by the managers themselves.",
+ kw:["bank","banks","banking","credit","lending","loan","loans","deposit","private credit","mortgage lending","interest rate","yield curve","financials"],neg:[],
+ assets:[A("JPM","JPMorgan Chase","Equity",88,"The deposit franchise everything else is measured against."),
+  A("BX","Blackstone","Equity",85,"The largest alternative manager; fee streams over cyclical balance sheet."),
+  A("ARES","Ares Management","Equity",82,"The purest listed expression of private credit growth."),
+  A("KKR","KKR","Equity",76,"Alternative assets with more balance-sheet exposure than peers."),
+  A("GS","Goldman Sachs","Equity",73,"Advisory and markets, geared to the transaction cycle."),
+  A("XLF","Financial Select Sector ETF","ETF",57,"Sector exposure without picking which balance sheet is clean.")]},
+
+{id:"housing",name:"Housing shortage",risk:"Moderate",horizon:"5–10 years",
+ claim:"A structural housing shortage persists, and the money accrues to builders, materials and rental owners.",
+ forCase:"Two decades of underbuilding met a demographic wave of first-time buyers. Owners locked into cheap mortgages will not sell, which starves resale supply and pushes demand into new construction and rentals.",
+ againstCase:"Housing is the most rate-sensitive sector there is. Affordability is already stretched, and policy can add supply or cap rents in ways that break the pricing assumption entirely.",
+ kw:["housing","home","homes","property","real estate","rent","rental","construction","builder","shelter","apartment","homebuilder"],neg:[],
+ assets:[A("DHI","D.R. Horton","Equity",88,"The largest builder by volume, aimed at entry-level demand."),
+  A("LEN","Lennar","Equity",85,"Scale plus a land-light model that reduces cycle risk."),
+  A("BLDR","Builders FirstSource","Equity",80,"Materials and components; paid on starts, not on prices."),
+  A("INVH","Invitation Homes","Equity",76,"Owns the rental side of the same shortage."),
+  A("HD","Home Depot","Equity",70,"Repair and remodel spend when people cannot move."),
+  A("ITB","Home Construction ETF","ETF",57,"Sector exposure across builders and suppliers.")]},
+
+{id:"minerals",name:"Critical minerals",risk:"Aggressive",horizon:"5–10 years",
+ claim:"Supply of the metals that electrification depends on cannot expand as fast as demand for them.",
+ forCase:"Copper, lithium and rare earths all take a decade from discovery to production, and permitting has slowed everywhere. Electrification and defence demand arrive on a much shorter clock, and processing is concentrated in one country.",
+ againstCase:"Commodity theses die on substitution and recycling. Prices high enough to prove the thesis are exactly the prices that fund new supply and kill it.",
+ kw:["copper","lithium","rare earth","mineral","minerals","mining","miner","miners","metals","cobalt","nickel","commodity","smelting","refining","ore","copper supply","metal supply"],neg:[],
+ assets:[A("FCX","Freeport-McMoRan","Equity",90,"The largest listed copper pure-play with expandable assets."),
+  A("MP","MP Materials","Equity",86,"The only meaningful rare earth supply chain outside China."),
+  A("SCCO","Southern Copper","Equity",80,"Long-life low-cost copper reserves."),
+  A("ALB","Albemarle","Equity",74,"Lithium at scale, fully exposed to the price cycle."),
+  A("BHP","BHP Group","Equity",70,"Diversified miner; slower upside, far more durable."),
+  A("COPX","Copper Miners ETF","ETF",58,"Basket exposure without single-mine risk.")]},
+
+{id:"cyber",name:"Cyber defence",risk:"Moderate",horizon:"3–5 years",
+ claim:"Security spending grows regardless of the budget cycle because the attack surface keeps expanding.",
+ forCase:"Cloud migration, remote work and now autonomous agents each added attack surface faster than defences. Security is one of the last line items cut, and the market consolidates toward platforms rather than point tools.",
+ againstCase:"The sector is crowded and already discounts a lot of growth. Every incumbent platform vendor bundles security for free, which compresses pricing for pure-plays over time.",
+ kw:["cyber","cybersecurity","hacking","ransomware","breach","zero trust","encryption","phishing","malware","infosec","attack surface","security spending","security software","intrusion"],neg:[],
+ assets:[A("PANW","Palo Alto Networks","Equity",89,"The broadest platform consolidation story in the sector."),
+  A("CRWD","CrowdStrike","Equity",87,"Endpoint agent with the widest telemetry footprint."),
+  A("ZS","Zscaler","Equity",80,"Network access rebuilt for a world with no perimeter."),
+  A("FTNT","Fortinet","Equity",74,"Hardware-anchored, cheaper, slower growing."),
+  A("OKTA","Okta","Equity",70,"Identity is the control plane once the perimeter is gone."),
+  A("BUG","Cybersecurity ETF","ETF",57,"Basket exposure in a sector prone to single-name blowups.")]},
+
+{id:"payments",name:"Payments rewiring",risk:"Moderate",horizon:"3–5 years",
+ claim:"Payment rails are rebuilt around real-time settlement and the incumbent toll is renegotiated.",
+ forCase:"Card networks earn a toll set before the internet existed. Instant payment schemes, account-to-account rails and stablecoins each attack that toll, while total transaction volume compounds regardless of who routes it.",
+ againstCase:"The card networks have survived every disruption for forty years and own the fraud and dispute infrastructure nobody wants to rebuild. Interchange regulation cuts both ways.",
+ kw:["payment","payments","fintech","interchange","checkout","merchant","transaction","remittance","instant payment","card network"],neg:[],
+ assets:[A("V","Visa","Equity",86,"The toll booth; wins on volume even when rates are squeezed."),
+  A("MA","Mastercard","Equity",84,"The same toll with more exposure to cross-border growth."),
+  A("ADYEY","Adyen","Equity",80,"Single-platform acquiring, taking share from legacy processors."),
+  A("CRCL","Circle","Equity",76,"Stablecoin settlement as the credible new rail."),
+  A("FI","Fiserv","Equity",70,"Merchant and bank infrastructure, cheap and unloved."),
+  A("PYPL","PayPal","Equity",63,"Distribution without a durable rail of its own.")]},
+
+{id:"emerging",name:"Manufacturing relocation",risk:"Aggressive",horizon:"5–10 years",
+ claim:"Manufacturing moves out of one dominant country, and India and South-East Asia absorb the largest share.",
+ forCase:"Tariffs, export controls and one pandemic taught every board the cost of single-country sourcing. India has the labour force and the policy support; Vietnam, Mexico and Indonesia take the assembly steps that move first.",
+ againstCase:"Relocation is measured in decades, not quarters, and the supplier ecosystem that makes China cheap took thirty years to build. Currency and governance risk are real, and access is mostly through funds.",
+ kw:["india","indian","indonesia","indonesian","vietnam","vietnamese","mexico","mexican","emerging market","emerging markets","reshoring","friendshoring","manufacturing hub","asean","southeast asia","south-east asia","relocation","tariff","tariffs"],neg:[],
+ assets:[A("INDA","India Large-Cap ETF","ETF",89,"The broadest listed access to Indian equities."),
+  A("SMIN","India Small-Cap ETF","ETF",83,"Domestic manufacturing exposure the large caps do not carry."),
+  A("EWW","Mexico ETF","ETF",76,"Nearshoring for North American demand."),
+  A("HDB","HDFC Bank","Equity",74,"Credit growth is the cleanest proxy for domestic expansion."),
+  A("EWY","South Korea ETF","ETF",72,"The supplier tier that relocates alongside assembly."),
+  A("EEM","Emerging Markets ETF","ETF",58,"The floor, for the part of the thesis that is simply not one country.")]},
+
+{id:"agri",name:"Food and agriculture",risk:"Conservative",horizon:"5–10 years",
+ claim:"Yield growth slows while demand rises, so the value moves to inputs, seeds and processing.",
+ forCase:"Arable land per person keeps falling and weather volatility raises the cost of a bad year. Seed genetics, fertiliser and irrigation are the levers left, and all three are concentrated among a handful of suppliers.",
+ againstCase:"Agriculture is brutally cyclical and politically managed everywhere. One good harvest resets prices, and subsidy regimes can rewrite the economics overnight.",
+ kw:["food","agriculture","farming","farm","crop","crops","harvest","fertiliser","fertilizer","seed","coffee","grain","livestock","soil","arable"],neg:[],
+ assets:[A("DE","Deere","Equity",88,"Equipment plus precision agriculture software on top of it."),
+  A("CTVA","Corteva","Equity",86,"Seed genetics and crop protection, the actual yield lever."),
+  A("NTR","Nutrien","Equity",78,"Fertiliser at scale, fully exposed to the price cycle."),
+  A("ADM","Archer-Daniels-Midland","Equity",72,"Processing and trading; paid on volume, not on price."),
+  A("MOS","Mosaic","Equity",66,"Phosphate and potash, the most cyclical link in the chain."),
+  A("DBA","Agriculture Fund","ETF",56,"Direct soft-commodity exposure without an operating company.")]},
+
+{id:"insurance",name:"Climate risk repricing",risk:"Conservative",horizon:"5–10 years",
+ claim:"Insurers reprice physical climate risk faster than anyone else, and that repricing is where the earnings are.",
+ forCase:"Catastrophe losses forced rates up across property lines and pushed capital out of the market, which is exactly when underwriting returns are best. Reinsurers hold the pricing power in a hard market.",
+ againstCase:"One extraordinary season erases several good ones. Regulators cap rates in the states that need them most, and modelling error is the whole business.",
+ kw:["insurance","insurer","reinsurance","catastrophe","underwriting","premium","climate risk","flood","hurricane","wildfire","adaptation","resilience","climate"],neg:[],
+ assets:[A("RNR","RenaissanceRe","Equity",88,"Pure reinsurance exposure to a hard pricing cycle."),
+  A("EG","Everest Group","Equity",84,"Reinsurance and primary, with reserve depth."),
+  A("CB","Chubb","Equity",79,"Disciplined commercial underwriting through the cycle."),
+  A("TRV","Travelers","Equity",72,"Personal and commercial property, more rate-regulated."),
+  A("AON","Aon","Equity",68,"Brokerage earns the fee whichever way pricing moves."),
+  A("KIE","Insurance ETF","ETF",55,"Sector exposure across underwriters and brokers.")]},
+
+{id:"consumer",name:"Attention and brands",risk:"Moderate",horizon:"3–5 years",
+ claim:"Attention keeps concentrating in a few platforms, and brands pay whatever those platforms charge.",
+ forCase:"Advertising follows time spent, and time spent keeps consolidating into short-form video and search. The platforms with first-party data and ad tech of their own take share from everyone renting audience.",
+ againstCase:"Advertising is the first budget cut in a downturn. Privacy rules keep tightening, and these are the most exposed companies in the market to antitrust action.",
+ kw:["advertising","advertisement","advertising spend","brand","brands","consumer","retail","attention","social media","influencer","marketing","e-commerce","ecommerce"],neg:[],
+ assets:[A("META","Meta Platforms","Equity",89,"The largest attention pool with the deepest ad stack."),
+  A("GOOGL","Alphabet","Equity",86,"Search plus video; intent and attention in one company."),
+  A("AMZN","Amazon","Equity",80,"Retail media is the fastest-growing ad business in the market."),
+  A("TTD","The Trade Desk","Equity",74,"The independent buy side, squeezed between the giants."),
+  A("SHOP","Shopify","Equity",70,"The merchant layer that all of that traffic lands on."),
+  A("NKE","Nike","Equity",60,"A brand strong enough to pay the toll and still hold margin.")]},
+
+{id:"software",name:"Software after agents",risk:"Aggressive",horizon:"3–5 years",
+ claim:"Software pricing shifts from seats to outcomes as agents do work that used to require a licence per person.",
+ forCase:"If an agent does the work, seat-based pricing collapses and the vendors that own the system of record capture the value instead. Those vendors have the data, the workflow and the switching costs.",
+ againstCase:"This is the most contested thesis on the list. If agents commoditise the application layer, incumbents lose pricing power rather than gain it, and the winner may not be listed yet.",
+ kw:["software","saas","enterprise software","agent","agents","seat","licence","license","workflow","crm","erp","productivity"],neg:[],
+ assets:[A("MSFT","Microsoft","Equity",90,"Owns the workflow, the model access and the distribution."),
+  A("NOW","ServiceNow","Equity",86,"The workflow system of record most exposed to agent pricing."),
+  A("CRM","Salesforce","Equity",78,"The largest seat-based base, and the most to lose or gain."),
+  A("SNOW","Snowflake","Equity",76,"Agents need governed data; this is where it sits."),
+  A("DDOG","Datadog","Equity",72,"Consumption-priced already, so the model shift helps."),
+  A("IGV","Software ETF","ETF",56,"Sector exposure while the pricing question resolves.")]},
+
+{id:"travel",name:"Experience spending",risk:"Moderate",horizon:"3–5 years",
+ claim:"Discretionary spending keeps shifting from goods to experiences, and the supply of experiences is fixed.",
+ forCase:"Travel, live events and dining recovered past pre-pandemic levels and kept going, while hotel rooms, aircraft and venues expand slowly. Fixed supply meeting rising demand is a pricing story.",
+ againstCase:"Experience spending is the most cyclical discretionary category there is. It is funded by savings and confidence, both of which disappear quickly in a downturn.",
+ kw:["travel","tourism","hotel","airline","flight","cruise","booking","restaurant","dining","concert","leisure","experience","hospitality","vacation"],neg:[],
+ assets:[A("BKNG","Booking Holdings","Equity",88,"The demand aggregator; earns the fee whichever hotel wins."),
+  A("MAR","Marriott International","Equity",82,"Asset-light franchising with global rate exposure."),
+  A("RCL","Royal Caribbean","Equity",78,"Fixed berth supply and the highest operating leverage in travel."),
+  A("LYV","Live Nation","Equity",76,"Owns venues, ticketing and promotion of the same event."),
+  A("ABNB","Airbnb","Equity",72,"Supply that expands without capital, which cuts both ways."),
+  A("DAL","Delta Air Lines","Equity",64,"Premium cabin mix in the most capital-intensive part of travel.")]},
+
+{id:"demographics",name:"Ageing societies",risk:"Conservative",horizon:"10+ years",
+ claim:"Developed populations age faster than their systems adapt, and the spending follows the demographics.",
+ forCase:"The retirement wave is the most predictable trend in finance — the people already exist. Healthcare delivery, devices, retirement products and senior housing all have demand curves that are simply known.",
+ againstCase:"Predictable does not mean profitable. Government is the dominant payer in most of these markets and sets prices to control cost, which caps the return on being right.",
+ kw:["demographic","demographics","retirement","pension","elderly","senior","boomer","annuity","medicare","population decline","birth rate","ageing population","aging population"],neg:[],
+ assets:[A("UNH","UnitedHealth Group","Equity",86,"The largest managed-care book aimed at the retiring cohort."),
+  A("ABT","Abbott Laboratories","Equity",82,"Devices and diagnostics used more with every decade of age."),
+  A("SYK","Stryker","Equity",80,"Orthopaedics; the demand curve is literally demographic."),
+  A("WELL","Welltower","Equity",78,"Senior housing, where the supply pipeline is thin."),
+  A("MET","MetLife","Equity",68,"Annuities and retirement products at scale."),
+  A("XLV","Health Care Select Sector ETF","ETF",56,"Sector exposure across payers, devices and pharma.")]},
+
+{id:"storage",name:"Storage and flexibility",risk:"Aggressive",horizon:"5–10 years",
+ claim:"Intermittent generation makes storage and demand flexibility more valuable than more generation.",
+ forCase:"Once enough solar and wind sits on a grid, the scarce product stops being energy and becomes the ability to move it in time. Battery costs keep falling and grid-service revenue stacks are only starting to be priced.",
+ againstCase:"Battery manufacturing is a commodity business with brutal competition. Much of the current revenue depends on subsidy structures that can be legislated away.",
+ kw:["battery","batteries","storage","grid storage","energy storage","flexibility","demand response","intermittency","hydrogen"],neg:[],
+ assets:[A("FLNC","Fluence Energy","Equity",88,"Pure-play grid storage integration."),
+  A("TSLA","Tesla","Equity",84,"Energy storage deployments now grow faster than the car business."),
+  A("ENPH","Enphase Energy","Equity",74,"Distributed storage and inverters at the household level."),
+  A("ETN","Eaton","Equity",72,"The switchgear that makes flexibility possible on the grid."),
+  A("EOSE","Eos Energy","Equity",60,"Non-lithium chemistry; higher risk, different supply chain."),
+  A("LIT","Battery Tech ETF","ETF",56,"Basket exposure across chemistry and geography.")]},
+
+{id:"education",name:"Skills and training",risk:"Moderate",horizon:"5–10 years",
+ claim:"Formal credentials matter less than demonstrable skills, and the spending moves to whoever can certify them.",
+ forCase:"Degree cost outran degree value for a decade while employers moved to skills-based hiring. Continuous retraining becomes a recurring expense rather than a one-off, which is a far better business than a four-year sale.",
+ againstCase:"Education is slow to change and heavily regulated, and employers still screen on brand-name degrees in practice. Online learning has repeatedly failed to hold completion rates or pricing.",
+ kw:["education","learning","training","skills","credential","university","degree","reskilling","upskilling","curriculum","tutoring","certification"],neg:[],
+ assets:[A("COUR","Coursera","Equity",84,"University-branded credentials with corporate distribution."),
+  A("DUOL","Duolingo","Equity",86,"Consumer habit loop that no institution has replicated."),
+  A("LRN","Stride","Equity",76,"Public funding attached to online K-12 enrolment."),
+  A("ATGE","Adtalem Global Education","Equity",70,"Healthcare workforce training where the shortage is measurable."),
+  A("PSO","Pearson","Equity",68,"Assessment and certification, the part that is hardest to displace."),
+  A("CHGG","Chegg","Equity",42,"The clearest example of a model that language models undercut.")]}
+];
+
+var UNIVERSE=(function(){
+  var seen={},out=[];
+  THEMES.forEach(function(th){th.assets.forEach(function(a){
+    if(!seen[a.t]){seen[a.t]=1;out.push({t:a.t,n:a.n,k:a.k,theme:th.name})}})});
+  BALLAST.forEach(function(a){if(!seen[a.t]){seen[a.t]=1;out.push({t:a.t,n:a.n,k:a.k,theme:"Ballast"})}});
+  out.push({t:"SPY",n:"S&P 500 ETF",k:"ETF",theme:"Benchmark"});
+  return out;
+})();
+
+function priceOf(t){
+  var r=rng(fnv(t+":px"));r();
+  var band=r();
+  var base=band<.12?(3+r()*22):band<.55?(30+r()*140):band<.88?(160+r()*380):(500+r()*900);
+  return Math.round(base*100)/100;
+}
+function mcapOf(t){
+  var r=rng(fnv(t+":mc"));r();r();
+  var v=r();
+  return v<.2?(0.6+r()*7):v<.55?(9+r()*70):v<.85?(80+r()*420):(500+r()*2600);
+}
+function fmtMcap(b){return b>=1000?("$"+(b/1000).toFixed(2)+"T"):("$"+b.toFixed(0)+"B")}
+
+/* ============================================================
+   2. MATCHING
+   Still keyword matching, not language understanding.
+   /method says exactly where that breaks.
+   ============================================================ */
+function scoreThemes(text){
+  var q=" "+text.toLowerCase().replace(/[^a-z0-9\s-]/g," ").replace(/\s+/g," ")+" ";
+  return THEMES.map(function(th){
+    var s=0,hits=[],seen={};
+    th.kw.forEach(function(k){
+      /* whole-word match, tolerating a plural. Substring credit is only
+         given to keywords of 6+ characters, because short ones produce
+         false positives — "ai" otherwise matches inside "rails". */
+      var re=new RegExp("(^|[^a-z0-9])"+k.replace(/[-\/\\^$*+?.()|[\]{}]/g,"\\$&")+"(e?s)?([^a-z0-9]|$)");
+      var mm=re.exec(q);
+      if(mm){
+        /* one credit per position in the sentence: a list holding both
+           "bank" and "banks" must not score the same word twice */
+        var at=mm.index+mm[1].length;
+        if(!seen[at]){seen[at]=1;s+=(k.indexOf(" ")>-1?6:3);hits.push(k)}
+      }
+      else if(k.length>=6&&q.indexOf(k)>-1){s+=1}
+    });
+    (th.neg||[]).forEach(function(k){if(q.indexOf(k)>-1) s-=7});
+    /* earliest matched keyword: on a tie, the subject of the sentence
+       usually appears before the modifier ("copper supply ... electrification") */
+    var first=1e9;
+    hits.forEach(function(k){var i=q.indexOf(k);if(i>-1&&i<first) first=i});
+    if(first===1e9){th.kw.forEach(function(k){
+      if(k.length>=6){var i=q.indexOf(k);if(i>-1&&i<first) first=i}})}
+    return {th:th,score:Math.max(0,s),hits:hits,first:first};
+  }).sort(function(a,b){
+    if(b.score!==a.score) return b.score-a.score;
+    return a.first-b.first;
+  });
+}
+var RISK_BALLAST={Speculative:.06,Aggressive:.10,Moderate:.16,Conservative:.22};
+
+function buildBook(premise,drop){
+  var ranked=scoreThemes(premise);
+  if(!ranked[0]||ranked[0].score===0) return {ok:false,premise:premise};
+  var primary=ranked[0].th;
+  var secondary=(ranked[1]&&ranked[1].score>=Math.max(3,ranked[0].score*.55))?ranked[1].th:null;
+  var seed=fnv(premise.trim().toLowerCase()),rand=rng(seed);
+  drop=drop||[];
+
+  var picked=[],takeP=secondary?5:6;
+  primary.assets.slice().sort(function(a,b){return b.c-a.c})
+    .filter(function(a){return drop.indexOf(a.t)<0}).slice(0,takeP)
+    .forEach(function(a){picked.push(Object.assign({},a,{src:primary.name}))});
+  if(secondary){
+    secondary.assets.slice().sort(function(a,b){return b.c-a.c})
+      .filter(function(a){return drop.indexOf(a.t)<0}).slice(0,2).forEach(function(a){
+        if(!picked.some(function(p){return p.t===a.t}))
+          picked.push(Object.assign({},a,{src:secondary.name,c:Math.round(a.c*.70)}));
+      });
+  }
+  if(!picked.length) return {ok:false,premise:premise,emptied:true};
+
+  var ballastShare=RISK_BALLAST[primary.risk]||.12,risky=1-ballastShare;
+  function spread(list,budget){
+    var pw=list.map(function(a){return Math.pow(a.c/100,2.8)});
+    var sum=pw.reduce(function(x,y){return x+y},0);
+    list.forEach(function(a,i){a.w=(pw[i]/sum)*budget});
+  }
+  spread(picked,risky);
+  var kept=picked.filter(function(a){return a.w>=.05});
+  if(kept.length>=4){picked=kept;spread(picked,risky)}
+
+  var CAP=.27,excess=0;
+  picked.forEach(function(a){if(a.w>CAP){excess+=a.w-CAP;a.w=CAP;a.capped=true}});
+  if(excess>0){
+    var room=picked.filter(function(a){return !a.capped});
+    var rsum=room.reduce(function(x,a){return x+a.w},0);
+    if(rsum>0) room.forEach(function(a){a.w+=excess*(a.w/rsum)});
+  }
+
+  var bal=BALLAST[primary.risk==="Speculative"?0:(primary.risk==="Conservative"?2:(rand()>.5?0:1))];
+  var holdings=picked.concat([{t:bal.t,n:bal.n,k:bal.k,why:bal.why,w:ballastShare,ballast:true,src:"Ballast"}]);
+  holdings.forEach(function(h){h.pct=Math.round(h.w*1000)/10});
+  var total=holdings.reduce(function(x,h){return x+h.pct},0);
+  holdings[0].pct=Math.round((holdings[0].pct+(100-total))*10)/10;
+  holdings.sort(function(a,b){
+    if(a.ballast!==b.ballast) return a.ballast?1:-1;
+    return b.pct-a.pct;
+  });
+  holdings[0].lead=true;
+
+  var conf=Math.min(96,26+ranked[0].hits.length*14+(ranked[0].score>12?8:0));
+  return {ok:true,premise:premise.trim(),theme:primary,second:secondary,holdings:holdings,
+          risk:primary.risk,horizon:primary.horizon,confidence:conf,hits:ranked[0].hits,
+          seed:seed,drop:drop};
+}
+
+/* ============================================================
+   3. RENDER
+   ============================================================ */
+function renderBar(h,cls,animate){
+  return '<div class="bar '+(cls||"")+(animate?" go":"")+'" role="list">'+h.map(function(x,i){
+    var k=x.lead?"lead":(x.ballast?"bal":"");
+    var tone=(x.lead||x.ballast)?"":
+      "background:linear-gradient(180deg,rgba(255,255,255,"+(0.145-i*0.014).toFixed(3)+"),rgba(255,255,255,"+(0.052-i*0.004).toFixed(3)+"));";
+    return '<div class="'+k+(x.pct<8?" narrow":"")+'" role="listitem" tabindex="0" '+
+      'aria-label="'+esc(x.t)+', '+x.pct+' percent. '+esc(x.why)+'" '+
+      'style="flex:0 0 '+x.pct+'%;'+tone+(animate?"animation-delay:"+(i*70)+"ms;":"")+'">'+
+      '<b>'+esc(x.t)+'</b><em>'+x.pct+'%</em></div>';
+  }).join("")+'</div>';
+}
+function barFoot(){
+  return '<div class="barfoot"><span style="display:flex;gap:14px;flex-wrap:wrap">'+
+    '<span class="dk"><i style="background:#fff"></i>Lead position</span>'+
+    '<span class="dk"><i style="background:rgba(255,255,255,.3)"></i>Conviction, descending</span>'+
+    '<span class="dk"><i style="background:var(--ac)"></i>Ballast</span></span>'+
+    '<span class="faint">Widths are weights · total 100%</span></div>';
+}
+function renderHoldings(h,editable){
+  var max=h[0].pct;
+  return h.map(function(x){
+    return '<div class="hrow'+(x.ballast?" bal":"")+'" style="--fw:'+((x.pct/max)*100).toFixed(1)+'%">'+
+      '<span class="hw">'+x.pct+'%</span><span style="min-width:0;flex:1">'+
+      '<span class="hn">'+esc(x.n)+'</span>'+
+      '<div class="hy">'+esc(x.why)+'</div>'+
+      '<div class="hm">'+esc(x.t)+' · '+esc(x.k)+' · $'+priceOf(x.t).toFixed(2)+' · '+fmtMcap(mcapOf(x.t))+' · '+esc(x.src)+'</div></span>'+
+      (editable&&!x.ballast?'<button class="hx" data-drop="'+esc(x.t)+'" title="Remove and reweight" aria-label="Remove '+esc(x.t)+'">×</button>':'')+
+      '</div>';
+  }).join("");
+}
+function themeCells(){
+  return '<div class="bento" style="grid-template-columns:repeat(5,1fr)">'+THEMES.map(function(th){
+    return '<button class="cell" data-ex="'+esc(th.claim)+'" style="grid-column:span 1;padding:16px">'+
+      '<h3 style="font-size:14px">'+esc(th.name)+'</h3>'+
+      '<p class="p" style="font-size:12px;margin-top:5px">'+th.assets.length+' names · '+th.risk+'</p></button>';
+  }).join("")+'</div>';
+}
+
+/* ============================================================
+   4. MARKET DATA — synthetic, deterministic, NOT rigged
+   ============================================================ */
+var DAY_SEED=20260907, SPY_DRIFT=.034;
+function moveFor(t){
+  var r=rng(fnv(t+":"+DAY_SEED));r();r();
+  var u=r(),v=r(),base=(u-.5)*2;
+  var fat=Math.pow(Math.abs(base),.62)*(base<0?-1:1);
+  var vol=v>.86?3.1:(v>.6?1.7:1);
+  return Math.round(fat*6.4*vol*100)/100;
+}
+function sparkPath(t,w,h){
+  var r=rng(fnv(t+":spark:"+DAY_SEED)),pts=[],v=.5;
+  for(var i=0;i<26;i++){v+=(r()-.48)*.13;v=Math.max(.08,Math.min(.92,v));pts.push(v)}
+  pts[pts.length-1]=moveFor(t)>0?.14:.86;
+  return pts.map(function(p,i){return (i?"L":"M")+((i/(pts.length-1))*w).toFixed(1)+" "+(p*h).toFixed(1)}).join(" ");
+}
+function series(seed,n,drift,vol){
+  var r=rng(seed),out=[],v=0;
+  for(var i=0;i<n;i++){v+=drift+(r()-.5)*vol;out.push(v)}
+  return out;
+}
+/* drift is centred on the index, so about half of all books lose */
+function bookDrift(seed){
+  var r=rng((seed^0x9E3779B9)>>>0);r();r();
+  return SPY_DRIFT+(r()-.5)*.13;
+}
+
+/* ============================================================
+   5. SESSION STATE
+   ============================================================ */
+var HISTORY=[];
+function remember(p){
+  HISTORY=HISTORY.filter(function(x){return x.p!==p});
+  HISTORY.unshift({p:p,at:Date.now()});
+  if(HISTORY.length>20) HISTORY.length=20;
+}
+function ago(ts){
+  var s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "just now";
+  if(s<3600) return Math.floor(s/60)+" min ago";
+  if(s<86400) return Math.floor(s/3600)+" h ago";
+  return Math.floor(s/86400)+" d ago";
+}
+function toast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("on");
+  clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("on")},1900);
+}
+
+/* ============================================================
+   6. VIEWS
+   ============================================================ */
+var app=document.getElementById("app");
+var FEATURED="Compute is the binding constraint on artificial intelligence, not model design.";
+var NAMES=UNIVERSE.length-4;
+
+function viewHome(){
+  var b=buildBook(FEATURED);
+  return `
+<div class="shell hero-wrap">
+  <span class="badge rv"><b>New</b> ${NAMES} names across ${THEMES.length} themes</span>
+  <h1 class="hero rv" style="margin-top:24px">Write what you believe.<br><span>See what it holds.</span></h1>
+  <p class="sub rv" style="margin:24px auto 0;text-align:center">One sentence about the next decade goes in. A weighted portfolio comes out — and every single weight carries the reason it earned its size.</p>
+  <div class="hero-cta rv">
+    <a class="b1 lg" href="#/compose">Build your first book</a>
+    <a class="b2 lg" href="#how">See how it works</a>
+  </div>
+  <div class="window rv">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div>
+      <div class="wurl">premise.app/b?p=compute-is-the-binding-constraint</div></div>
+    <div class="wbody">
+      <div class="prompt"><span class="pre">I believe</span><span class="txt" id="typed"></span></div>
+      <div class="meta">
+        <span class="tagp on">${esc(b.theme.name)}</span><span class="tagp">${b.risk}</span>
+        <span class="tagp">${b.horizon}</span><span class="tagp">${b.holdings.length} holdings</span>
+        <span class="tagp">Confidence ${b.confidence}%</span>
+      </div>
+      ${renderBar(b.holdings,"","hold")}
+      ${barFoot()}
+    </div>
+  </div>
+</div>
+
+<section style="padding-block:clamp(38px,5vw,64px)">
+  <p class="shell" style="text-align:center;font-size:12.5px;color:var(--fg-4);margin-bottom:26px">${THEMES.length} themes, each with a written thesis and both sides of the argument</p>
+  <div class="strip"><div class="track">${THEMES.concat(THEMES).map(function(t){return '<span>'+esc(t.name)+'</span>'}).join("")}</div></div>
+</section>
+
+<div class="shell"><div class="hr"></div></div>
+
+<section id="features" class="shell">
+  <span class="kick rv">Features</span>
+  <h2 class="rv" style="margin-top:12px;max-width:18ch">Research you can actually check.</h2>
+  <p class="sub rv" style="margin-top:16px">Most tools hand you a list. Premise hands you a list, the reasoning behind every line, the argument that would break it, and a page explaining exactly how the weights were set.</p>
+  <div class="bento">
+    <div class="cell c4 rv">
+      <h3>A reason on every holding</h3>
+      <p class="p">No weight appears without a sentence explaining what it is doing there. Remove any line and the rest reweight in front of you.</p>
+      <div style="margin-top:16px">${renderHoldings(b.holdings.slice(0,3))}</div>
+    </div>
+    <div class="cell c2 rv">
+      <h3>Both sides, every time</h3>
+      <p class="p" style="margin-bottom:14px">A tool that only argues one way is a sales page.</p>
+      <div class="sbox sfor"><div class="slab">The case for</div><div class="stx">Frontier training runs are gated by physical supply, not ideas.</div></div>
+      <div class="sbox sag" style="margin-top:10px"><div class="slab">The case against</div><div class="stx">Every capex supercycle in semiconductors has ended in a glut.</div></div>
+    </div>
+    <div class="cell c2 rv">
+      <h3>Weighted by conviction</h3>
+      <p class="p">Not equal weight. Not market cap. Size follows how directly a name carries your claim, and the formula is published.</p>
+      <div style="display:flex;gap:5px;height:60px;align-items:flex-end;margin-top:18px">
+        <div style="flex:1;height:100%;border-radius:6px;background:linear-gradient(180deg,#fff,#9AA3F0)"></div>
+        <div style="flex:1;height:82%;border-radius:6px;background:rgba(255,255,255,.22)"></div>
+        <div style="flex:1;height:68%;border-radius:6px;background:rgba(255,255,255,.17)"></div>
+        <div style="flex:1;height:56%;border-radius:6px;background:rgba(255,255,255,.13)"></div>
+        <div style="flex:1;height:46%;border-radius:6px;background:rgba(255,255,255,.1)"></div>
+        <div style="flex:1;height:40%;border-radius:6px;background:rgba(124,140,255,.42)"></div>
+      </div>
+    </div>
+    <div class="cell c2 rv">
+      <h3>Every book has an address</h3>
+      <p class="p">Send it to anyone. They open the exact same book, weight for weight. No account, nothing stored.</p>
+      <div class="urlbox" style="margin-top:18px"><code>premise.app/b?p=compute-is-the…</code><span class="copyb">Copy</span></div>
+    </div>
+    <div class="cell c2 rv">
+      <h3>Honestly benchmarked</h3>
+      <p class="p">The index is shown whether or not it flatters the book — and plenty of books lose to it.</p>
+      <svg viewBox="0 0 240 72" style="width:100%;height:72px;margin-top:16px;overflow:visible">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#AEB6FF" stop-opacity=".22"/><stop offset="100%" stop-color="#AEB6FF" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0 46 L34 52 L62 40 L92 55 L122 44 L150 58 L182 50 L214 62 L240 56 L240 72 L0 72 Z" fill="url(#g1)"/>
+        <path d="M0 58 L34 55 L62 54 L92 50 L122 48 L150 44 L182 41 L214 37 L240 34" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1.6"/>
+        <path d="M0 46 L34 52 L62 40 L92 55 L122 44 L150 58 L182 50 L214 62 L240 56" fill="none" stroke="#AEB6FF" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="cell c6 rv" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px">
+        <h3>It tells you when it doesn't know</h3>
+        <p class="p" style="margin-top:8px">Write a premise outside the universe and Premise stops, says so, and shows you what it does cover — instead of assembling a plausible-looking portfolio out of whatever was nearest. That refusal is the most important feature on this page.</p>
+      </div>
+      <div style="flex:1;min-width:260px">
+        <div class="sbox" style="padding:18px">
+          <div style="font-size:12px;color:var(--fg-4);margin-bottom:8px">I believe that my cat will become mayor</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ac-2)">No theme in this universe carries that claim.</div>
+          <div class="stx" style="margin-top:7px">Nothing was generated. Pick a written thesis, or name a specific constraint, industry or resource.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="shell">
+  <span class="kick rv">How it works</span>
+  <h2 class="rv" style="margin-top:12px;max-width:20ch">Three steps, no spreadsheet.</h2>
+  <div class="steps">
+    <div class="step rv"><div class="stepn">1</div><h3 style="margin-top:16px">Read the claim</h3>
+      <p class="p" style="margin-top:8px">Your sentence is matched against ${THEMES.length} written theses, with negative terms that stop a claim landing in the wrong sector.</p></div>
+    <div class="step rv"><div class="stepn">2</div><h3 style="margin-top:16px">Assign the weight</h3>
+      <p class="p" style="margin-top:8px">Each candidate carries a published conviction score. Size follows that score through a formula you can read, capped so no name dominates.</p></div>
+    <div class="step rv"><div class="stepn">3</div><h3 style="margin-top:16px">Show the working</h3>
+      <p class="p" style="margin-top:8px">Every holding arrives with its reason, its role, its price, and the case that would break it. Edit anything and the book reweights.</p></div>
+  </div>
+  <div class="stats rv" style="margin-top:12px">
+    <div><div class="sn">${NAMES}</div><div class="sl">names in the universe</div></div>
+    <div><div class="sn">${THEMES.length}</div><div class="sl">themes with a written thesis</div></div>
+    <div><div class="sn">5–8</div><div class="sl">holdings per book</div></div>
+    <div><div class="sn">100%</div><div class="sl">of weights carry a reason</div></div>
+  </div>
+</section>
+
+<section id="compare" class="shell">
+  <span class="kick rv">The difference</span>
+  <h2 class="rv" style="margin-top:12px;max-width:20ch">Two ways to own an idea.</h2>
+  <div class="cmp rv">
+    <div class="crow head"><div></div><div>The usual way</div><div>With Premise</div></div>
+    ${[["What you start from","A ticker someone posted","A claim you can state"],
+       ["How it gets sized","Whatever felt right","Weighted to conviction"],
+       ["What you end up with","Unrelated positions","One coherent thesis"],
+       ["Why you own each thing","You can't quite say","Written, per holding"],
+       ["The other side of the trade","You never looked","Shown next to the case for"],
+       ["How the numbers were set","Nobody says","Published methodology"],
+       ["When it doesn't know","It answers anyway","It stops and says so"]]
+      .map(function(r){return '<div class="crow"><div>'+r[0]+'</div><div>'+r[1]+'</div><div>'+r[2]+'</div></div>'}).join("")}
+  </div>
+</section>
+
+<section id="community" class="shell">
+  <div class="g-none"></div>
+  <span class="kick rv">Community</span>
+  <h2 class="rv" style="margin-top:12px;max-width:20ch">The tool is free. The token is for the expensive part.</h2>
+  <div class="bento rv">
+    <div class="cell c3">
+      <h3>$PREM</h3>
+      <p class="p" style="margin-top:8px">Fixed supply of 1 billion on Robinhood Chain. It gates higher generation limits, published books, creator rewards and governance — not the research, which stays free.</p>
+      <div class="addrbox" style="margin-top:16px"><code>Contract address</code><span class="soon">Coming soon</span></div>
+      <a class="b2" style="margin-top:14px" href="#/token">Read the tokenomics</a>
+    </div>
+    <div class="cell c3">
+      <h3>Two official channels</h3>
+      <p class="p" style="margin-top:8px">The contract address appears on this site and on X at the same moment, and nowhere else first. There is no presale, no whitelist and no team wallet taking deposits. Nobody from this project will message you first.</p>
+      <div class="socbig">
+        <a href="https://x.com/premisefi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18.9 1.9h3.6l-7.9 9 9.3 12.3h-7.3l-5.7-7.5-6.5 7.5H.8l8.4-9.6L.3 1.9h7.4l5.2 6.8zm-1.3 19.2h2L7.1 3.9H5z"/></svg>Follow on X</a>
+        <a href="https://t.me/premiseportal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M23.1 3.5 19.6 20c-.3 1.2-1 1.5-2 .9l-5.5-4-2.7 2.6c-.3.3-.6.6-1.2.6l.4-5.6L18.8 5c.4-.4-.1-.6-.7-.2L5.5 12.7.1 11c-1.2-.4-1.2-1.2.3-1.8L21.5 1.7c1-.4 1.9.2 1.6 1.8z"/></svg>Join Telegram</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="shell">
+  <div class="cta rv">
+    <h2 style="max-width:16ch;margin-inline:auto">You already have a view. Go hold it properly.</h2>
+    <p class="sub" style="margin:18px auto 0;text-align:center;max-width:44ch">Free, unlimited, no account and no wallet needed. Nothing here places an order — taking a position stays your decision.</p>
+    <div class="hero-cta" style="margin-top:28px">
+      <a class="b1 lg" href="#/compose">Build your first book</a>
+      <a class="b2 lg" href="#/method">Read the methodology</a>
+    </div>
+  </div>
+</section>`;
+}
+
+function viewCompose(prefill){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Compose</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:16ch">State the claim first.</h1>
+  <p class="sub rv" style="margin-top:16px">Write it the way you would say it out loud. Name a constraint, an industry or a resource — that is what the matcher reads.</p>
+  <div class="composer rv" id="cbox" style="margin-top:clamp(28px,4vw,44px)">
+    <div class="cfield"><span class="cpre">I believe</span>
+      <textarea class="cin" id="cin" rows="1" placeholder="that fresh water becomes the constraint climate spending is organised around.">${prefill?esc(prefill):""}</textarea></div>
+    <div class="crow2">
+      <button class="b1" id="cgo">Build the book</button>
+      <button class="chip" id="cclear">Clear</button>
+      <span class="faint" style="font-size:12px">Enter to build</span>
+    </div>
+  </div>
+  <p class="p rv" style="margin:clamp(30px,4vw,46px) 0 14px;font-size:13px">Or start from a written thesis — all ${THEMES.length} of them</p>
+  <div class="rv">${themeCells()}</div>
+</section>`;
+}
+
+function skeleton(premise){
+  var w=[22,19,16,14,12,10,7];
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick">Building</span>
+  <h1 class="pg" style="margin-top:12px;max-width:26ch;font-weight:550;color:var(--fg-2)">${esc(premise)}</h1>
+  <div class="window" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div><div class="wurl">premise.app/b</div></div>
+    <div class="wbody">
+      <div class="skbar">${w.map(function(x){return '<div class="sk" style="flex:0 0 '+x+'%"></div>'}).join("")}</div>
+      <div class="loadline"><span class="spin"></span><span id="loadmsg">Reading the claim…</span></div>
+    </div>
+  </div>
+</section>`;
+}
+
+function viewBook(premise,drop){
+  var b=buildBook(premise,drop);
+  if(!b.ok) return viewNoMatch(premise,b.emptied);
+  remember(premise);
+  var short="premise.app/b?p="+encodeURIComponent(b.premise).slice(0,36)+"…";
+  var low=b.confidence<50;
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Your book</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:26ch;font-weight:550">${esc(b.premise)}</h1>
+  <div class="meta rv" style="margin-top:20px">
+    <span class="tagp on">${esc(b.theme.name)}</span>
+    ${b.second?'<span class="tagp">+ '+esc(b.second.name)+'</span>':''}
+    <span class="tagp">${b.risk}</span><span class="tagp">${b.horizon}</span>
+    <span class="tagp">${b.holdings.length} holdings</span>
+    <span class="tagp ${low?"warn":""}">Confidence ${b.confidence}%</span>
+    ${(drop&&drop.length)?'<span class="tagp warn">'+drop.length+' removed</span>':''}
+  </div>
+  ${low?'<p class="notice warn rv" style="margin-top:18px">Only '+b.hits.length+' term'+(b.hits.length===1?"":"s")+' in your premise matched this theme'+(b.hits.length?' ('+b.hits.map(esc).join(", ")+')':'')+'. The match is weak — check the holdings carefully or rewrite the premise more specifically.</p>':''}
+
+  <div class="window rv" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div><div class="wurl">${esc(short)}</div></div>
+    <div class="wbody">${renderBar(b.holdings,"",true)}${barFoot()}</div>
+  </div>
+
+  <div class="bento rv" style="margin-top:12px">
+    <div class="cell c4">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap">
+        <h3>Every holding, and why it is that size</h3>
+        ${(drop&&drop.length)?'<button class="b3" id="resetbook">Restore removed</button>':'<span class="faint" style="font-size:12px">Click × to remove and reweight</span>'}
+      </div>
+      <div style="margin-top:16px">${renderHoldings(b.holdings,true)}</div>
+    </div>
+    <div class="c2" style="display:flex;flex-direction:column;gap:12px">
+      <div class="cell" style="padding:20px">
+        <div class="sbox sfor" style="background:none;box-shadow:none;padding:10px 0 0"><div class="slab">The case for</div><div class="stx">${esc(b.theme.forCase)}</div></div>
+      </div>
+      <div class="cell" style="padding:20px">
+        <div class="sbox sag" style="background:none;box-shadow:none;padding:10px 0 0"><div class="slab">The case against</div><div class="stx">${esc(b.theme.againstCase)}</div></div>
+      </div>
+      <div class="cell" style="padding:20px">
+        <h3 style="font-size:14px">This book has an address</h3>
+        <p class="p" style="font-size:12.5px;margin-top:6px">Anyone who opens it rebuilds the same book, weight for weight.</p>
+        <div class="urlbox" style="margin-top:12px"><code>${esc(short)}</code><button class="copyb" id="copyb">Copy</button></div>
+        <a class="b2" style="margin-top:12px;width:100%;justify-content:center" href="#/track?p=${encodeURIComponent(b.premise)}">Track this book</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-cta rv" style="justify-content:flex-start;margin-top:clamp(30px,4vw,50px)">
+    <a class="b1" href="#/compose">Compose another</a>
+    <a class="b2" href="#/method">How the weights were set</a>
+  </div>
+</section>`;
+}
+
+function viewNoMatch(premise,emptied){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <div class="cell rv" style="padding:clamp(24px,3.4vw,40px)">
+    <span class="badge"><b>${emptied?"Empty":"No match"}</b> Nothing was generated</span>
+    <h1 class="pg" style="margin-top:20px;max-width:22ch">${emptied?"You removed every holding.":"No theme in this universe carries that claim."}</h1>
+    <p class="p" style="margin-top:18px;font-size:13px;color:var(--fg-4)">You wrote</p>
+    <p style="margin-top:6px;font-size:18px;color:var(--fg-2);max-width:40ch">${esc(premise)}</p>
+    <p class="sub" style="margin-top:20px;font-size:15px">${emptied
+      ?"Restore the book, or write a different premise."
+      :"Rather than assemble something plausible out of whatever was nearest, the tool stops here. Pick a written thesis below, or rewrite the premise naming a specific constraint, industry or resource."}</p>
+    <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
+      <a class="b1" href="#/b?p=${encodeURIComponent(premise)}">${emptied?"Restore the book":"Try again"}</a>
+      <a class="b2" href="#/compose">Rewrite the premise</a>
+    </div>
+  </div>
+  <div class="rv" style="margin-top:12px">${themeCells()}</div>
+</section>`;
+}
+
+function viewHistory(){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">History</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:18ch">Everything you built this session.</h1>
+  <p class="sub rv" style="margin-top:16px">Held in memory only, never sent anywhere. Refresh the page and it is gone — which is also why every book carries its own address.</p>
+  ${HISTORY.length?`<div class="window rv" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div><div class="wurl">premise.app/history</div></div>
+    <div class="wbody">${HISTORY.map(function(h){
+      var bb=buildBook(h.p);
+      return '<a class="hrow" href="#/b?p='+encodeURIComponent(h.p)+'" style="--fw:0%">'+
+        '<span class="hw" style="width:auto;min-width:64px;font-size:12px;color:var(--fg-4)">'+ago(h.at)+'</span>'+
+        '<span style="min-width:0;flex:1"><span class="hn">'+esc(h.p)+'</span>'+
+        (bb.ok?'<div class="hm">'+esc(bb.theme.name)+' · '+bb.holdings.length+' holdings · '+bb.risk+'</div>':'<div class="hm">No match</div>')+
+        '</span></a>';
+    }).join("")}</div></div>`
+  :`<div class="cell rv" style="margin-top:clamp(26px,3.5vw,44px);padding:clamp(24px,3vw,40px)">
+      <h3>Nothing here yet.</h3>
+      <p class="p" style="margin-top:8px;max-width:40ch">Build a book and it appears in this list for the rest of the session.</p>
+      <a class="b1" style="margin-top:18px" href="#/compose">Compose a book</a>
+    </div>`}
+</section>`;
+}
+
+function viewTrending(){
+  var rows=UNIVERSE.map(function(a){return Object.assign({},a,{m:moveFor(a.t)})})
+    .sort(function(x,y){return Math.abs(y.m)-Math.abs(x.m)});
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Trending</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:16ch">Ranked by how far it moved.</h1>
+  <p class="sub rv" style="margin-top:16px">Nothing on this page is chosen. The order is a measurement, so a fall ranks alongside a rise of the same size. A name near the top is not a name worth owning.</p>
+  <div class="rv" style="margin-top:clamp(24px,3vw,36px);max-width:420px">
+    <input class="srch" id="tsearch" type="search" placeholder="Filter ${rows.length} names by ticker, name or theme" aria-label="Filter names">
+  </div>
+  <div class="window rv" style="margin-top:16px">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div><div class="wurl">premise.app/trending</div></div>
+    <div class="wbody" style="padding:16px 12px 14px">
+      <div class="thead"><span>#</span><span>Ticker</span><span>Name</span><span>Price</span><span>Session</span><span>Move</span></div>
+      <div id="trows">${rows.map(function(a,i){
+        var c=a.m>=0?"#fff":"#AEB6FF";
+        return '<button class="trow" data-theme="'+esc(a.theme)+'" data-find="'+esc((a.t+" "+a.n+" "+a.theme).toLowerCase())+'">'+
+          '<span class="tr">'+(i+1)+'</span><span class="tt">'+esc(a.t)+'</span>'+
+          '<span class="tn">'+esc(a.n)+'</span>'+
+          '<span class="tpx">$'+priceOf(a.t).toFixed(2)+'</span>'+
+          '<svg class="tsp" viewBox="0 0 112 26" preserveAspectRatio="none" aria-hidden="true">'+
+            '<path d="'+sparkPath(a.t,112,26)+'" fill="none" stroke="'+c+'" stroke-width="1.5" opacity=".8"/></svg>'+
+          '<span class="tm '+(a.m>=0?"up":"down")+'">'+(a.m>=0?"+":"")+a.m.toFixed(2)+'%</span></button>';
+      }).join("")}</div>
+      <p class="faint" id="tempty" style="display:none;padding:22px 4px;font-size:13px">No name matches that filter.</p>
+    </div>
+  </div>
+  <p class="notice warn rv" style="margin-top:18px">Prototype figures. Prices, moves and sparklines are generated deterministically from the ticker text — they are not live quotes and must be replaced with a market data feed before this page is shown to anyone.</p>
+</section>`;
+}
+
+function viewTrack(premise){
+  var p=premise||FEATURED,b=buildBook(p);
+  if(!b.ok) return viewNoMatch(p);
+  var N=180,d=bookDrift(b.seed);
+  var bs=series(b.seed,N,d,1.05),ss=series(fnv("SPY:"+DAY_SEED),N,SPY_DRIFT,.55);
+  var all=bs.concat(ss),lo=Math.min.apply(null,all),hi=Math.max.apply(null,all);
+  var W=1000,H=340,PL=6,PR=64,PT=18,PB=28;
+  function yOf(v){return PT+(1-(v-lo)/((hi-lo)||1))*(H-PT-PB)}
+  function path(a){return a.map(function(v,i){return (i?"L":"M")+(PL+(i/(N-1))*(W-PL-PR)).toFixed(1)+" "+yOf(v).toFixed(1)}).join(" ")}
+  var area=path(bs)+" L "+(W-PR)+" "+(H-PB)+" L "+PL+" "+(H-PB)+" Z";
+  var bEnd=bs[N-1],sEnd=ss[N-1],win=bEnd>=sEnd;
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Track</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:20ch">Measured against the index, from the day it was stated.</h1>
+  <p class="sub rv" style="margin-top:16px">A thesis that cannot beat buying the whole market is a thesis that cost you money to hold. This one ${win?"is ahead":"is behind"} — the benchmark is shown either way.</p>
+  <div class="window rv" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div>
+      <div class="wurl">premise.app/track?p=${esc(encodeURIComponent(b.premise).slice(0,30))}…</div></div>
+    <div class="wbody">
+      <p style="font-size:clamp(15px,1.7vw,19px);color:var(--fg-2);max-width:44ch;font-weight:400">${esc(b.premise)}</p>
+      ${renderBar(b.holdings,"sm",false)}
+      <svg class="chart" style="margin-top:22px" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Book performance against the index over 180 sessions">
+        <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#AEB6FF" stop-opacity=".24"/><stop offset="100%" stop-color="#AEB6FF" stop-opacity="0"/></linearGradient>
+          <filter id="gl"><feGaussianBlur stdDeviation="3.5" result="bb"/><feMerge><feMergeNode in="bb"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+        <line x1="${PL}" y1="${yOf(0).toFixed(1)}" x2="${W-PR}" y2="${yOf(0).toFixed(1)}" stroke="rgba(255,255,255,.11)" stroke-dasharray="3 5"/>
+        <path d="${area}" fill="url(#ag)"/>
+        <path d="${path(ss)}" fill="none" stroke="rgba(255,255,255,.30)" stroke-width="1.7"/>
+        <path d="${path(bs)}" fill="none" stroke="#AEB6FF" stroke-width="2.3" filter="url(#gl)"/>
+        <text class="endlab" x="${W-PR+10}" y="${(yOf(bEnd)+4).toFixed(1)}" fill="#AEB6FF">Book</text>
+        <text class="endlab" x="${W-PR+10}" y="${(yOf(sEnd)+4).toFixed(1)}" fill="rgba(255,255,255,.45)">SPY</text>
+        <text class="axis" x="${PL}" y="${H-6}">Stated</text>
+        <text class="axis" x="${W-PR}" y="${H-6}" text-anchor="end">180 sessions</text>
+      </svg>
+    </div>
+  </div>
+  <div class="stats rv" style="margin-top:12px">
+    <div><div class="sn">${bEnd>=0?"+":""}${bEnd.toFixed(1)}%</div><div class="sl">Book, since stated</div></div>
+    <div><div class="sn mut">${sEnd>=0?"+":""}${sEnd.toFixed(1)}%</div><div class="sl">Index, same window</div></div>
+    <div><div class="sn ${win?"ac":"wn"}">${bEnd-sEnd>=0?"+":""}${(bEnd-sEnd).toFixed(1)}%</div><div class="sl">${win?"Ahead of":"Behind"} the index</div></div>
+    <div><div class="sn">${b.holdings.length}</div><div class="sl">Holdings, unchanged</div></div>
+  </div>
+  <p class="notice rv" style="margin-top:26px">Weights are frozen at the moment the premise was stated. Nothing has been rebalanced, so this measures the claim rather than the trading around it.</p>
+  <p class="notice warn rv" style="margin-top:14px">Prototype figures. The return series is synthetic, drawn from the premise itself and centred on the index — so roughly half of all books lose. Try several premises and you will find losers. Replace with a real return series before this page is shown to anyone.</p>
+  <div class="hero-cta rv" style="justify-content:flex-start;margin-top:clamp(28px,4vw,44px)">
+    <a class="b1" href="#/compose">Compose a book</a>
+    <a class="b2" href="#/b?p=${encodeURIComponent(b.premise)}">Open the full book</a>
+  </div>
+</section>`;
+}
+
+function viewUniverse(){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">The universe</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:16ch">Published in the open.</h1>
+  <p class="sub rv" style="margin-top:16px">A curated universe, not a search of every listed security. Every name a book can hold is on this page with the reason it can earn weight and the conviction score that sets its size. If it is not here, no premise will produce it.</p>
+  <div class="stats rv" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div><div class="sn">${NAMES}</div><div class="sl">names</div></div>
+    <div><div class="sn">${THEMES.length}</div><div class="sl">themes</div></div>
+    <div><div class="sn">3</div><div class="sl">ballast instruments</div></div>
+    <div><div class="sn" style="font-size:18px;letter-spacing:-.02em;padding-top:7px">${REVIEWED}</div><div class="sl">last reviewed</div></div>
+  </div>
+  <div class="rv" style="margin-top:24px;max-width:420px">
+    <input class="srch" id="usearch" type="search" placeholder="Filter by ticker, company or theme" aria-label="Filter universe">
+  </div>
+  <div id="ulist">
+  ${THEMES.map(function(th){
+    return '<div class="rv ublock" data-find="'+esc((th.name+" "+th.claim+" "+th.assets.map(function(a){return a.t+" "+a.n}).join(" ")).toLowerCase())+'" style="margin-top:clamp(26px,3.5vw,46px)">'+
+      '<div class="bento" style="grid-template-columns:repeat(6,1fr);margin-top:0">'+
+        '<div class="cell c2" style="align-self:start">'+
+          '<h3>'+esc(th.name)+'</h3>'+
+          '<p class="p" style="font-size:13px;margin-top:8px">'+esc(th.claim)+'</p>'+
+          '<div class="meta" style="margin-top:14px"><span class="tagp">'+th.risk+'</span><span class="tagp">'+th.horizon+'</span></div>'+
+          '<button class="b2" data-ex="'+esc(th.claim)+'" style="margin-top:14px">Build this book</button>'+
+        '</div>'+
+        '<div class="cell c4" style="padding:14px">'+th.assets.map(function(a){
+          return '<div class="hrow" style="--fw:'+a.c+'%">'+
+            '<span class="hw" style="font-size:13px">'+esc(a.t)+'</span>'+
+            '<span style="min-width:0"><span class="hn">'+esc(a.n)+'</span>'+
+            '<div class="hy">'+esc(a.why)+'</div>'+
+            '<div class="hm">'+esc(a.k)+' · $'+priceOf(a.t).toFixed(2)+' · '+fmtMcap(mcapOf(a.t))+' · conviction '+a.c+'/100</div></span></div>';
+        }).join("")+'</div>'+
+      '</div></div>';
+  }).join("")}
+  </div>
+  <p class="faint" id="uempty" style="display:none;padding:26px 0;font-size:14px">No theme or holding matches that filter.</p>
+</section>`;
+}
+
+function viewMethod(){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Methodology</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:20ch">How every number on this site was produced.</h1>
+  <p class="sub rv" style="margin-top:16px">The whole product rests on a set of judgements. Here they are, including the places where the method is weak.</p>
+  <div class="bento rv">
+    <div class="cell c3">
+      <h3>1. Matching a premise to a theme</h3>
+      <p class="p" style="margin-top:8px">Each of the ${THEMES.length} themes carries a keyword list and a list of negative terms. An exact word match scores 3, a matched phrase scores 6, and each negative term found subtracts 7. The highest scoring theme leads. A second theme can contribute two names if it scores at least 55% of the leader, but its conviction scores are discounted by 30% so it can never take the lead position.</p>
+      <p class="p" style="margin-top:10px"><span class="wn">Where this fails:</span> this is string matching, not language understanding. It cannot tell a delivery drone from a military one except through the hand-written negative list. A premise using vocabulary nobody anticipated is refused even when a sensible portfolio exists. Replacing this with a language model is the single most valuable change that could be made.</p>
+    </div>
+    <div class="cell c3">
+      <h3>2. Setting the weights</h3>
+      <p class="p" style="margin-top:8px">Every holding has a conviction score from 0 to 100 measuring how directly it carries the theme's claim. Weight is that score raised to the power 2.8, normalised across the book. The exponent is what separates a lead position from a filler position — at 1.0 the book would be nearly equal weighted; at 2.8 the top name typically holds two to three times the smallest.</p>
+      <p class="p" style="margin-top:10px">No single name may exceed 27%; the excess is redistributed proportionally. Anything under 5% is dropped rather than shown as an unreadable sliver. A ballast sleeve is added by risk level: 6% speculative, 10% aggressive, 16% moderate, 22% conservative.</p>
+    </div>
+    <div class="cell c3">
+      <h3>3. Where conviction scores come from</h3>
+      <p class="p" style="margin-top:8px">They are editorial judgements, not model output. Each score answers one question: if this claim turns out to be true, how directly does this company benefit? A sole supplier with no substitute scores in the nineties. A conglomerate with a relevant division scores in the sixties. A broad ETF sits in the fifties because it dilutes the claim by design.</p>
+      <p class="p" style="margin-top:10px"><span class="wn">Where this fails:</span> one person set these numbers and they carry that person's blind spots. They are not derived from disclosed revenue and nothing here is audited. A production version should tie conviction to segment revenue so the score can be checked against a filing.</p>
+    </div>
+    <div class="cell c3">
+      <h3>4. Prices, moves and returns</h3>
+      <p class="p" style="margin-top:8px">All of it is synthetic. Prices, market caps, daily moves and sparklines are generated deterministically from the ticker string, so they never change and never reflect anything real. The track series is drawn from the premise and centred on the index drift, meaning roughly half of all books underperform.</p>
+      <p class="p" style="margin-top:10px">That centring is deliberate. An earlier build gave the book a higher drift than the index, so every book beat the market — a claim the interface was making on its own. Nothing on this site should be able to flatter itself.</p>
+    </div>
+    <div class="cell c6">
+      <h3>5. What the universe is, and is not</h3>
+      <p class="p" style="margin-top:8px">${NAMES} names across ${THEMES.length} themes, last reviewed ${REVIEWED}. It is a hand-built list chosen to cover claims people actually make about the next decade. It is not a screen of every listed security, it holds almost no small caps outside these themes, and it is weighted heavily toward US listings. Anything outside it produces a refusal rather than a guess.</p>
+    </div>
+  </div>
+  <div class="hero-cta rv" style="justify-content:flex-start;margin-top:clamp(30px,4vw,50px)">
+    <a class="b1" href="#/compose">Compose a book</a>
+    <a class="b2" href="#/universe">See every name</a>
+  </div>
+</section>`;
+}
+
+function viewStatus(){
+  var live=["Compose a book from any premise","Negative keywords to stop cross-sector mismatches","Written case for and against, every time","Remove a holding and reweight the book","Session history of everything you built","Prices and market caps on every holding","Filter the universe and the trending table","A shareable address per book, no account","Performance against the index, honestly centred","Published methodology with its own weak points","Wallet connection for any EVM wallet","Published tokenomics ahead of any launch"];
+  var not=["Live market data instead of synthetic figures","A language model reading the premise","Reading filings and news at generation time","Conviction scores tied to disclosed segment revenue","Server-rendered routes for search engines","A generated preview image per book","Following and forking other people's books","History that survives a page refresh","Placing an order through a broker","The token contract — not deployed","Every utility listed on the token page"];
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Status</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:16ch">What is built, and what is not.</h1>
+  <p class="sub rv" style="margin-top:16px">No dates are attached to work that is not done. A line moves from the second list to the first when it ships, and not before.</p>
+  <div class="bento rv">
+    <div class="cell c3"><h3 style="color:#fff">Working now</h3>
+      <div style="margin-top:12px">${live.map(function(s){
+        return '<div class="kv"><span class="kv-k">'+s+'</span><span class="kv-v"><span class="pill pon">Live</span></span></div>'}).join("")}</div></div>
+    <div class="cell c3"><h3 class="ac">Not built</h3>
+      <div style="margin-top:12px">${not.map(function(s){
+        return '<div class="kv"><span class="kv-k">'+s+'</span><span class="kv-v"><span class="pill poff">Not built</span></span></div>'}).join("")}</div></div>
+  </div>
+  <p class="notice warn rv" style="margin-top:26px">Two items on the right cannot be fixed inside a single HTML file. Search-engine routing needs a server, because every page here lives behind a hash and crawlers read that as one page. Preview images need a server too, because one has to be generated per book. Both are architecture decisions for the production build rather than oversights.</p>
+  <p class="notice rv" style="margin-top:14px">Order routing is the hardest line on this page. It needs a broker relationship and custody, not a front end. Until that exists this tool produces research and nothing else — and says so on every page.</p>
+  <p class="notice warn rv" style="margin-top:14px">The token is not deployed. Every utility on the token page is a stated intention, not a shipped feature, and the contract address field reads <span class="wn">Coming soon</span> because there is nothing to put in it. Any address circulating for this project today is fake.</p>
+</section>`;
+}
+
+function viewAbout(){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">About</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:20ch">A prototype, built in the open.</h1>
+  <div class="bento rv">
+    <div class="cell c3">
+      <h3>What this is</h3>
+      <p class="p" style="margin-top:8px">Premise turns a stated belief into a weighted portfolio with a written reason on every holding. It exists to close the gap between having a view about the next decade and being able to express that view as positions.</p>
+      <p class="p" style="margin-top:10px">It is a working prototype. The research layer is free and stays free; a token is planned for the parts that cost money to run, and its terms are published on the token page before anything is deployed.</p>
+    </div>
+    <div class="cell c3">
+      <h3>What it deliberately will not do</h3>
+      <p class="p" style="margin-top:8px">It will not place an order, hold your money, or tell you what to buy. It will not produce an answer when it does not have one. It will not show a benchmark only when the benchmark is losing. It will not run a presale, sell a whitelist, or message you first.</p>
+      <p class="p" style="margin-top:10px">Every one of those is easy to get wrong in this category, which is why they are written down here.</p>
+    </div>
+    <div class="cell c6">
+      <h3>Contact</h3>
+      <p class="p" style="margin-top:8px">Corrections to the universe, the conviction scores or the written theses are the most useful thing anyone can send. Reach us on X or Telegram — those two channels are the only official ones, and anything claiming to be us anywhere else is not.</p>
+      <div class="socbig">
+        <a href="https://x.com/premisefi" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18.9 1.9h3.6l-7.9 9 9.3 12.3h-7.3l-5.7-7.5-6.5 7.5H.8l8.4-9.6L.3 1.9h7.4l5.2 6.8zm-1.3 19.2h2L7.1 3.9H5z"/></svg>@premisefi</a>
+        <a href="https://t.me/premiseportal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M23.1 3.5 19.6 20c-.3 1.2-1 1.5-2 .9l-5.5-4-2.7 2.6c-.3.3-.6.6-1.2.6l.4-5.6L18.8 5c.4-.4-.1-.6-.7-.2L5.5 12.7.1 11c-1.2-.4-1.2-1.2.3-1.8L21.5 1.7c1-.4 1.9.2 1.6 1.8z"/></svg>t.me/premiseportal</a>
+      </div>
+    </div>
+  </div>
+</section>`;
+}
+
+function viewLegal(){
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Terms, disclosures and privacy</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:20ch">The short version, in plain language.</h1>
+  <div class="bento rv">
+    <div class="cell c3">
+      <h3>This is not investment advice</h3>
+      <p class="p" style="margin-top:8px">Premise produces research output from a stated premise. It does not know your circumstances, your tax position, your time horizon or your capacity for loss. Nothing generated here is a recommendation to buy or sell any security, and no output should be treated as personalised advice.</p>
+      <p class="p" style="margin-top:10px">Speak to a licensed adviser in your jurisdiction before acting on anything you read here.</p>
+    </div>
+    <div class="cell c3">
+      <h3>The data is synthetic</h3>
+      <p class="p" style="margin-top:8px">Every price, market capitalisation, daily move and performance series on this prototype is generated by a formula from the ticker text. None of it is real market data, none of it updates, and none of it should be used to make a decision about anything.</p>
+      <p class="p" style="margin-top:10px">Conviction scores are editorial opinion, described in full on the methodology page.</p>
+    </div>
+    <div class="cell c3">
+      <h3>Privacy</h3>
+      <p class="p" style="margin-top:8px">No account, no login, no cookies, no analytics. What you type stays in your browser. Session history is held in memory and disappears when you close the tab.</p>
+      <p class="p" style="margin-top:10px">Book addresses encode your premise in the URL, so anything you share is visible to whoever holds the link.</p>
+    </div>
+    <div class="cell c3">
+      <h3>Token and wallet</h3>
+      <p class="p" style="margin-top:8px">The token is not deployed and nothing on this site is an offer to sell it. Utilities described on the token page are stated intentions and may change or never ship. Tokens can be volatile and can lose all value.</p>
+      <p class="p" style="margin-top:10px">Connecting a wallet here reads your public address only. This site never requests a signature, a transaction, a seed phrase or a private key, and never will. Any page that does is not us.</p>
+    </div>
+    <div class="cell c3">
+      <h3>Risk</h3>
+      <p class="p" style="margin-top:8px">Thematic portfolios are concentrated by construction. They carry more single-name risk, more sector risk and more drawdown than a broad index fund, and a correct thesis can still lose money on a bad entry or a long enough horizon.</p>
+      <p class="p" style="margin-top:10px">Past performance, real or simulated, tells you nothing about future returns.</p>
+    </div>
+  </div>
+</section>`;
+}
+
+function viewToken(){
+  var util=[
+    ["Higher generation limits","Unlimited books per day and access to deeper matching once the model layer ships."],
+    ["Publish and fork","Put a book on a public page others can follow or fork under their own premise."],
+    ["Creator rewards","A share of protocol fees routed to the authors of books other people actually follow."],
+    ["Reduced platform fees","Lower cost on the settlement layer once execution exists."],
+    ["Governance","A vote on which themes enter the universe and how conviction scores are reviewed."],
+    ["Staking tiers","Lock for access tiers rather than paying a subscription."]
+  ];
+  var steps=[
+    ["Get an EVM wallet","Any wallet that supports the chain works. MetaMask, Rabby and Coinbase Wallet are all fine."],
+    ["Add Robinhood Chain","Add the network from your wallet's settings, or use the Connect button in the header once the pool is live."],
+    ["Fund the wallet","Bridge or deposit the pairing asset. You will need a small amount extra for gas."],
+    ["Verify the contract","Copy the address only from this page or the official X account. Never from a reply, a DM or a search result."],
+    ["Swap","Enter an amount, check the price impact, and confirm in your wallet."]
+  ];
+  return `
+<section class="shell pgtop" style="padding-bottom:clamp(50px,7vw,90px)">
+  <span class="kick rv">Token</span>
+  <h1 class="pg rv" style="margin-top:12px;max-width:18ch">$PREM</h1>
+  <p class="sub rv" style="margin-top:16px">The research tool is free and stays free. The token exists for the parts that cost money to run — the model layer, the published books, and eventually settlement.</p>
+
+  <div class="stats rv" style="margin-top:clamp(26px,3.5vw,44px)">
+    <div><div class="sn">PREM</div><div class="sl">Ticker</div></div>
+    <div><div class="sn">1B</div><div class="sl">Total supply, fixed</div></div>
+    <div><div class="sn" style="font-size:22px;padding-top:5px">Robinhood</div><div class="sl">Chain</div></div>
+    <div><div class="sn wn" style="font-size:22px;padding-top:5px">Not live</div><div class="sl">Status</div></div>
+  </div>
+
+  <div class="cell rv" style="margin-top:12px;padding:clamp(20px,2.6vw,28px)">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap">
+      <h3>Contract address</h3><span class="soon">Coming soon</span>
+    </div>
+    <p class="p" style="font-size:13px;margin-top:8px;max-width:56ch">Nothing is tradeable yet. When the pool opens, the address appears here and on the official X account at the same moment — and nowhere else first.</p>
+    <div class="addrbox" style="margin-top:14px"><code>0x0000…0000 — not deployed</code>
+      <button class="copyb" id="copyca" disabled style="opacity:.4;cursor:not-allowed">Copy</button></div>
+    <p class="notice warn" style="margin-top:16px">Any contract address for this project circulating right now is fake. There is no presale, no whitelist, no private round and no team wallet taking deposits. Nobody from this project will ever message you first.</p>
+  </div>
+
+  <h2 class="rv" style="margin-top:clamp(46px,6vw,84px);max-width:20ch">What the token is for.</h2>
+  <p class="sub rv" style="margin-top:14px">Written down before launch so it can be held against us afterwards.</p>
+  <div class="bento rv" style="grid-template-columns:repeat(6,1fr)">
+    ${util.map(function(u){return '<div class="cell c2"><h3 style="font-size:15px">'+esc(u[0])+'</h3><p class="p" style="font-size:13px;margin-top:7px">'+esc(u[1])+'</p></div>'}).join("")}
+  </div>
+  <p class="notice rv" style="margin-top:20px">None of these are live. Composing books, reading the universe, tracking against the index and sharing a book address are free today and stay free — the token gates the expensive layer, not the research.</p>
+
+  <h2 class="rv" style="margin-top:clamp(46px,6vw,84px);max-width:20ch">How to buy, when it opens.</h2>
+  <div class="cell rv" style="margin-top:20px;padding:clamp(20px,2.6vw,28px)">
+    ${steps.map(function(st,i){return '<div class="buystep"><span class="buyn">'+(i+1)+'</span><span><span class="hn">'+esc(st[0])+'</span><div class="hy" style="font-size:12.5px">'+esc(st[1])+'</div></span></div>'}).join("")}
+  </div>
+
+  <div class="cta rv" style="margin-top:clamp(40px,5vw,70px)">
+    <h2 style="max-width:18ch;margin-inline:auto">The address drops in the channels first.</h2>
+    <p class="sub" style="margin:16px auto 0;text-align:center;max-width:42ch">Two official channels, and no others. Anyone contacting you from anywhere else is not us.</p>
+    <div class="socbig" style="justify-content:center">
+      <a href="https://x.com/premisefi" target="_blank" rel="noopener">${X_SVG}Follow on X</a>
+      <a href="https://t.me/premiseportal" target="_blank" rel="noopener">${TG_SVG}Join Telegram</a>
+    </div>
+  </div>
+</section>`;
+}
+
+/* ============================================================
+   6b. WALLET (EIP-1193)
+   ============================================================ */
+var WALLET=null;
+function shortAddr(a){return a.slice(0,6)+"…"+a.slice(-4)}
+function paintWallet(){
+  var b=document.getElementById("wbtn");if(!b)return;
+  var t=b.querySelector(".wtxt");
+  if(WALLET){b.classList.add("on");t.textContent=shortAddr(WALLET);b.title="Click to disconnect"}
+  else{b.classList.remove("on");t.textContent="Connect wallet";b.title="Connect an EVM wallet"}
+}
+function connectWallet(){
+  if(WALLET){WALLET=null;paintWallet();toast("Wallet disconnected");return}
+  if(!window.ethereum){toast("No EVM wallet detected in this browser");return}
+  window.ethereum.request({method:"eth_requestAccounts"}).then(function(acc){
+    if(acc&&acc.length){WALLET=acc[0];paintWallet();toast("Connected "+shortAddr(WALLET))}
+  }).catch(function(){toast("Connection rejected")});
+}
+if(window.ethereum&&window.ethereum.on){
+  window.ethereum.on("accountsChanged",function(acc){
+    WALLET=(acc&&acc.length)?acc[0]:null;paintWallet();
+  });
+}
+
+/* ============================================================
+   7. ROUTER
+   ============================================================ */
+var PENDING=null;
+var LOAD_MSGS=["Reading the claim…","Matching against the theses…","Scoring conviction…","Setting the weights…"];
+
+function parseHash(){
+  var h=location.hash.replace(/^#/,"")||"/";
+  if(h.charAt(0)!=="/") return {path:"/",params:{},anchor:h};
+  var qi=h.indexOf("?"),path=qi>-1?h.slice(0,qi):h,params={};
+  if(qi>-1) h.slice(qi+1).split("&").forEach(function(kv){
+    var i=kv.indexOf("=");
+    if(i>-1) params[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1).replace(/\+/g," "));
+  });
+  return {path:path,params:params,anchor:null};
+}
+
+function render(){
+  var r=parseHash();closeMenu();
+  if(r.anchor){
+    if(!app.innerHTML) app.innerHTML=viewHome();
+    var el=document.getElementById(r.anchor);
+    if(el) el.scrollIntoView({behavior:"smooth"});
+    setActive("/");observe();wire("/");return;
+  }
+  var p=r.path, drop=r.params.x?r.params.x.split(","):[];
+  var key=(r.params.p||"")+"|"+drop.join(",");
+
+  if(p==="/b"&&r.params.p&&PENDING!==key){
+    PENDING=key;
+    app.innerHTML=skeleton(r.params.p);
+    window.scrollTo(0,0);setActive(p);
+    var i=0,msg=document.getElementById("loadmsg");
+    var iv=setInterval(function(){i++;if(msg&&i<LOAD_MSGS.length) msg.textContent=LOAD_MSGS[i]},200);
+    setTimeout(function(){
+      clearInterval(iv);
+      if(PENDING!==key) return;
+      app.innerHTML=viewBook(r.params.p,drop);
+      document.title=r.params.p.slice(0,56)+" — Premise";
+      observe();wire(p);
+    },820);
+    return;
+  }
+  PENDING=null;
+
+  var html;
+  if(p==="/compose")       html=viewCompose(r.params.p);
+  else if(p==="/b")        html=viewBook(r.params.p||"",drop);
+  else if(p==="/history")  html=viewHistory();
+  else if(p==="/trending") html=viewTrending();
+  else if(p==="/track")    html=viewTrack(r.params.p);
+  else if(p==="/universe") html=viewUniverse();
+  else if(p==="/method")   html=viewMethod();
+  else if(p==="/token")    html=viewToken();
+  else if(p==="/status")   html=viewStatus();
+  else if(p==="/about")    html=viewAbout();
+  else if(p==="/legal")    html=viewLegal();
+  else                     html=viewHome();
+
+  app.innerHTML=html;
+  window.scrollTo(0,0);
+  setActive(p);
+  document.title=(p==="/b"&&r.params.p)?r.params.p.slice(0,56)+" — Premise":"Premise — Write what you believe. See what it holds.";
+  observe();wire(p);
+  if(p==="/") typeHero();
+}
+
+function setActive(p){
+  document.querySelectorAll("#nlinks a").forEach(function(a){
+    a.classList.toggle("on",a.getAttribute("data-r")===p||(p==="/b"&&a.getAttribute("data-r")==="/compose"));
+  });
+}
+
+var io;
+function observe(){
+  var els=document.querySelectorAll(".rv");
+  if(!("IntersectionObserver" in window)){els.forEach(function(e){e.classList.add("in")});return}
+  if(io) io.disconnect();
+  io=new IntersectionObserver(function(en){
+    en.forEach(function(x){if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}});
+  },{rootMargin:"0px 0px -6% 0px",threshold:.04});
+  els.forEach(function(e,i){e.style.transitionDelay=Math.min(i*45,220)+"ms";io.observe(e)});
+}
+
+function typeHero(){
+  var text="that compute is the binding constraint on AI, not model design.";
+  var el=document.getElementById("typed"),bar=document.querySelector(".window .bar");
+  if(!el||!bar) return;
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){el.textContent=text;bar.classList.add("go");return}
+  var i=0;el.innerHTML='<span class="caret"></span>';
+  setTimeout(function tick(){
+    i++;el.innerHTML=esc(text.slice(0,i))+'<span class="caret"></span>';
+    if(i<text.length) setTimeout(tick,26+Math.random()*34);
+    else setTimeout(function(){
+      el.textContent=text;
+      var segs=bar.children;
+      for(var k=0;k<segs.length;k++) segs[k].style.animationDelay=(k*70)+"ms";
+      bar.classList.add("go");
+    },260);
+  },700);
+}
+
+function grow(el){if(!el)return;el.style.height="auto";el.style.height=el.scrollHeight+"px"}
+function go(t){var v=(t||"").trim();if(v) location.hash="#/b?p="+encodeURIComponent(v)}
+function closeMenu(){
+  var m=document.getElementById("mmenu"),b=document.getElementById("burger");
+  if(m) m.classList.remove("open");
+  if(b) b.setAttribute("aria-expanded","false");
+}
+document.getElementById("wbtn").addEventListener("click",connectWallet);
+document.getElementById("burger").addEventListener("click",function(){
+  var m=document.getElementById("mmenu"),open=m.classList.toggle("open");
+  this.setAttribute("aria-expanded",open?"true":"false");
+});
+
+function filterList(input,rows,empty){
+  if(!input) return;
+  input.addEventListener("input",function(){
+    var q=input.value.trim().toLowerCase(),n=0;
+    rows.forEach(function(el){
+      var ok=!q||(el.getAttribute("data-find")||"").indexOf(q)>-1;
+      el.style.display=ok?"":"none";if(ok)n++;
+    });
+    if(empty) empty.style.display=n?"none":"block";
+  });
+}
+
+function wire(path){
+  document.querySelectorAll("[data-ex]").forEach(function(btn){
+    btn.addEventListener("click",function(){
+      var val=btn.getAttribute("data-ex"),f=document.getElementById("cin");
+      if(f&&path==="/compose"){
+        f.value=val;grow(f);f.focus();
+        try{f.setSelectionRange(val.length,val.length)}catch(e){}
+        f.scrollIntoView({block:"center",behavior:"smooth"});
+      } else go(val);
+    });
+  });
+
+  var cin=document.getElementById("cin"),box=document.getElementById("cbox");
+  if(cin){
+    grow(cin);cin.focus();
+    cin.addEventListener("input",function(){grow(cin)});
+    cin.addEventListener("focus",function(){if(box)box.classList.add("hot")});
+    cin.addEventListener("blur",function(){if(box)box.classList.remove("hot")});
+    cin.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();go(cin.value)}});
+    var g=document.getElementById("cgo");if(g) g.addEventListener("click",function(){go(cin.value)});
+    var cl=document.getElementById("cclear");if(cl) cl.addEventListener("click",function(){cin.value="";grow(cin);cin.focus()});
+  }
+
+  document.querySelectorAll("[data-drop]").forEach(function(btn){
+    btn.addEventListener("click",function(e){
+      e.preventDefault();e.stopPropagation();
+      var r=parseHash(),cur=r.params.x?r.params.x.split(","):[];
+      var t=btn.getAttribute("data-drop");
+      if(cur.indexOf(t)<0) cur.push(t);
+      toast(t+" removed, book reweighted");
+      location.hash="#/b?p="+encodeURIComponent(r.params.p||"")+"&x="+cur.join(",");
+    });
+  });
+  var rb=document.getElementById("resetbook");
+  if(rb) rb.addEventListener("click",function(){
+    var r=parseHash();toast("Book restored");
+    location.hash="#/b?p="+encodeURIComponent(r.params.p||"");
+  });
+
+  var cb=document.getElementById("copyb");
+  if(cb) cb.addEventListener("click",function(){
+    var addr=location.href;
+    var done=function(){cb.textContent="Copied";toast("Address copied");setTimeout(function(){cb.textContent="Copy"},1600)};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(addr).then(done,done);
+    else{var ta=document.createElement("textarea");ta.value=addr;document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy")}catch(e){}document.body.removeChild(ta);done()}
+  });
+
+  document.querySelectorAll(".trow").forEach(function(row){
+    row.addEventListener("click",function(){
+      var th=THEMES.filter(function(t){return t.name===row.getAttribute("data-theme")})[0];
+      if(th) go(th.claim); else location.hash="#/compose";
+    });
+  });
+
+  filterList(document.getElementById("tsearch"),
+    Array.prototype.slice.call(document.querySelectorAll("#trows .trow")),
+    document.getElementById("tempty"));
+  filterList(document.getElementById("usearch"),
+    Array.prototype.slice.call(document.querySelectorAll(".ublock")),
+    document.getElementById("uempty"));
+}
+
+window.addEventListener("hashchange",render);
+render();paintWallet();
+</script>
+</body>
+</html>
