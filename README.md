@@ -1,6 +1,6 @@
-# Premise
+# Priori
 
-Write one sentence stating a belief about the next decade. Premise returns a
+Write one sentence stating a belief about the next decade. Priori returns a
 **book**: a weighted portfolio of 5–8 holdings where every weight carries a
 written reason, plus the case for and against the underlying thesis.
 
@@ -10,9 +10,15 @@ Nothing places an order. It is research output only.
 
 ## What this repository is
 
-`premise.html` is the original single-file prototype. It is kept in the repo on
-purpose: `tests/fidelity.test.ts` loads the generator straight out of it and
-diffs it against the ported one, so the two cannot silently drift.
+`premise.html` is the original single-file prototype, from back when the
+product was called Premise. It keeps that filename on purpose: `tests/fidelity.test.ts`
+loads the generator straight out of it and diffs it against the ported one, so
+the two cannot silently drift. Renaming it would only break that link — it is a
+historical artifact, not source.
+
+`premise` also stays as the domain word throughout the code (`?p=`,
+`normalizePremise`, `buildBook(premise)`). The brand changed; the mechanism did
+not. You still state a premise.
 
 Everything else is the production build — a Next.js app that ports the
 prototype's logic without rebuilding it, and adds the things a single HTML file
@@ -125,7 +131,7 @@ renders a card for a non-book page, from the fixed allowlist in
 
 That allowlist is the point: there is deliberately no free-text mode. Letting
 the route take a title and body off the query string would let anyone mint a
-Premise-branded image saying anything at all. A book card renders the reader's
+Priori-branded image saying anything at all. A book card renders the reader's
 own premise because the premise *is* the content; a page card renders only text
 that ships in this repo.
 

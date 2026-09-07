@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { pageOg } from "@/lib/og-pages";
+import { SITE } from "@/lib/site";
 import Link from "next/link";
 
 import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
@@ -8,11 +9,11 @@ import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "How every number on Premise was produced — matching, weighting, where conviction scores come from, and the places the method is weak.",
+    "How every number on Priori was produced — matching, weighting, where conviction scores come from, and the places the method is weak.",
   alternates: { canonical: "/method" },
   openGraph: {
     url: "/method",
-    title: "Methodology — Premise",
+    title: `Methodology — ${SITE.name}`,
     description:
       "Matching, weighting, conviction, and the places the method is weak. Published in full, including its own weaknesses.",
     images: [{ url: pageOg("method"), width: 1200, height: 630 }],

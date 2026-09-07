@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/token" },
   openGraph: {
     url: "/token",
-    title: `$${SITE.token.ticker} — Premise`,
+    title: `$${SITE.token.ticker} — ${SITE.name}`,
     description: `Fixed supply, stated utilities, and the anti-scam rules — published before anything is deployed.`,
     images: [{ url: pageOg("token"), width: 1200, height: 630 }],
   },

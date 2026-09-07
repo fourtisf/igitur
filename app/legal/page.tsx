@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 
 import { pageOg } from "@/lib/og-pages";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms, disclosures and privacy",
   description:
-    "Premise is research output, not investment advice. The data is synthetic, there is no account or tracking, and the site never requests a signature or a private key.",
+    "Priori is research output, not investment advice. The data is synthetic, there is no account or tracking, and the site never requests a signature or a private key.",
   alternates: { canonical: "/legal" },
   openGraph: {
     url: "/legal",
-    title: "Terms, disclosures and privacy — Premise",
+    title: `Terms, disclosures and privacy — ${SITE.name}`,
     description: "Not advice, synthetic data, no tracking, and the wallet rules — in plain language.",
     images: [{ url: pageOg("legal"), width: 1200, height: 630 }],
   },
@@ -27,7 +28,7 @@ export default function LegalPage() {
         <div className="cell c3">
           <h3>This is not investment advice</h3>
           <p className="p" style={{ marginTop: 8 }}>
-            Premise produces research output from a stated premise. It does not know your
+            Priori produces research output from a stated premise. It does not know your
             circumstances, your tax position, your time horizon or your capacity for loss. Nothing
             generated here is a recommendation to buy or sell any security, and no output should be
             treated as personalised advice.

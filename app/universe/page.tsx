@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { pageOg } from "@/lib/og-pages";
+import { SITE } from "@/lib/site";
 import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
@@ -10,11 +11,11 @@ import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "The universe",
-  description: `Every name a Premise book can hold — ${NAMES} across ${THEMES.length} themes — published with the reason it can earn weight and the conviction score that sets its size.`,
+  description: `Every name a Priori book can hold — ${NAMES} across ${THEMES.length} themes — published with the reason it can earn weight and the conviction score that sets its size.`,
   alternates: { canonical: "/universe" },
   openGraph: {
     url: "/universe",
-    title: "The universe — Premise",
+    title: `The universe — ${SITE.name}`,
     description: `All ${NAMES} names across ${THEMES.length} themes, with a written reason and a conviction score on every one.`,
     images: [{ url: pageOg("universe"), width: 1200, height: 630 }],
   },

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 
 import { pageOg } from "@/lib/og-pages";
+import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "What is built",
   description:
-    "An honest list of what works in Premise today and what does not. No dates are attached to work that is not done.",
+    "An honest list of what works in Priori today and what does not. No dates are attached to work that is not done.",
   alternates: { canonical: "/status" },
   openGraph: {
     url: "/status",
-    title: "What is built — Premise",
+    title: `What is built — ${SITE.name}`,
     description:
       "What works today and what does not. A line moves to the first list when it ships, and not before.",
     images: [{ url: pageOg("status"), width: 1200, height: 630 }],

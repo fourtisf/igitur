@@ -18,7 +18,7 @@ import { FEATURED, SITE } from "@/lib/site";
  *   ?page=<id>    a page card, from the fixed allowlist in lib/og-pages.ts.
  *
  * There is deliberately no free-text mode. Accepting arbitrary title and body
- * from the query string would let anyone mint a Premise-branded image saying
+ * from the query string would let anyone mint a Priori-branded image saying
  * anything at all.
  *
  * Both modes are deterministic, so the rendered PNG is cached in process and
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
               No theme in this universe carries that claim.
             </div>
             <div style={{ display: "flex", fontSize: 26, color: FG2, marginTop: 22, lineHeight: 1.4 }}>
-              Premise stops rather than assembling a plausible-looking portfolio out of whatever was
+              Priori stops rather than assembling a plausible-looking portfolio out of whatever was
               nearest.
             </div>
           </div>

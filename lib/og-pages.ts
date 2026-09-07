@@ -3,7 +3,7 @@
  *
  * This is a fixed allowlist on purpose. The obvious alternative — letting the
  * OG route take arbitrary title and body text from the query string — would let
- * anyone mint a Premise-branded image saying anything they liked. A book card
+ * anyone mint a Priori-branded image saying anything they liked. A book card
  * renders the reader's own premise because the premise *is* the content; a page
  * card renders only text that ships in this file.
  */
@@ -42,7 +42,7 @@ export const PAGE_CARDS = {
   },
   token: {
     kicker: "Token",
-    title: "$PREM",
+    title: "$PRIOR",
     body: "The research tool is free and stays free. Published before launch, so it can be held against us afterwards.",
   },
   status: {
@@ -53,7 +53,7 @@ export const PAGE_CARDS = {
   about: {
     kicker: "About",
     title: "A prototype, built in the open.",
-    body: "What Premise is, and what it deliberately will not do.",
+    body: "What Priori is, and what it deliberately will not do.",
   },
   legal: {
     kicker: "Terms, disclosures and privacy",

@@ -6,17 +6,17 @@ import Link from "next/link";
 import { FilterList } from "@/components/FilterList";
 import { bookHref } from "@/lib/routes";
 import { moveFor, priceOf, sparkPath, SYNTHETIC } from "@/lib/market";
-import { HOST } from "@/lib/site";
+import { HOST, SITE } from "@/lib/site";
 import { THEMES, UNIVERSE } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "Trending",
   description:
-    "Every name in the Premise universe ranked by how far it moved, so a fall ranks alongside a rise of the same size. Nothing on the page is chosen.",
+    "Every name in the Priori universe ranked by how far it moved, so a fall ranks alongside a rise of the same size. Nothing on the page is chosen.",
   alternates: { canonical: "/trending" },
   openGraph: {
     url: "/trending",
-    title: "Trending — Premise",
+    title: `Trending — ${SITE.name}`,
     description:
       "Every name in the universe ranked by absolute move. The order is a measurement, not a recommendation.",
     images: [{ url: pageOg("trending"), width: 1200, height: 630 }],

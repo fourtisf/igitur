@@ -45,7 +45,7 @@ export async function generateMetadata({
     return {
       title: "No match for that premise",
       description:
-        "No theme in this universe carries that claim. Premise stops rather than assembling a plausible-looking portfolio out of whatever was nearest.",
+        "No theme in this universe carries that claim. Priori stops rather than assembling a plausible-looking portfolio out of whatever was nearest.",
       robots: { index: false, follow: true },
       alternates: { canonical: `/b/${slug}` },
     };

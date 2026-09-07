@@ -11,24 +11,32 @@
  */
 
 export const SITE = {
-  name: "Premise",
+  name: "Priori",
   tagline: "Write what you believe. See what it holds.",
   description:
-    "Write one sentence about the next decade. Premise returns a weighted portfolio, and every weight carries the reason it earned its size.",
+    "Write one sentence about the next decade. Priori returns a weighted portfolio, and every weight carries the reason it earned its size.",
 
-  /** ⚠ PLACEHOLDER — set NEXT_PUBLIC_SITE_URL in the deploy environment. */
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://premise.app").replace(/\/$/, ""),
+  /**
+   * ⚠ PLACEHOLDER — set NEXT_PUBLIC_SITE_URL in the deploy environment.
+   *
+   * This one matters more than the rest. /token promises the contract address
+   * appears "here and on X at the same moment, and nowhere else first", and
+   * /legal promises "any page that does is not us". Both are only enforceable
+   * if "here" is unmistakable, so the domain must actually be owned before
+   * launch — and the obvious lookalikes registered defensively alongside it.
+   */
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://priori.app").replace(/\/$/, ""),
 
-  /** ⚠ PLACEHOLDER — HANDOFF.md §10. */
-  x: "https://x.com/premisefi",
-  xHandle: "@premisefi",
-  /** ⚠ PLACEHOLDER — HANDOFF.md §10. */
-  telegram: "https://t.me/premiseportal",
-  telegramHandle: "t.me/premiseportal",
+  /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
+  x: "https://x.com/prioriapp",
+  xHandle: "@prioriapp",
+  /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
+  telegram: "https://t.me/prioriportal",
+  telegramHandle: "t.me/prioriportal",
 
   /** ⚠ PLACEHOLDER — HANDOFF.md §10. */
   token: {
-    ticker: "PREM",
+    ticker: "PRIOR",
     supply: "1B",
     chain: "Robinhood Chain",
     chainShort: "Robinhood",

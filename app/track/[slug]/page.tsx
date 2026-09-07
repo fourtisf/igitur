@@ -9,7 +9,7 @@ import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
 import { bookHref, ogHref, trackHref } from "@/lib/routes";
 import { SYNTHETIC } from "@/lib/market";
-import { HOST } from "@/lib/site";
+import { HOST, SITE } from "@/lib/site";
 
 type Params = { slug: string };
 type Search = Record<string, string | string[] | undefined>;
@@ -47,7 +47,7 @@ export async function generateMetadata({
     alternates: { canonical: trackHref(b.premise) },
     openGraph: {
       url: trackHref(b.premise),
-      title: `Track: ${title} — Premise`,
+      title: `Track: ${title} — ${SITE.name}`,
       description,
       images: [{ url: ogHref(b.premise), width: 1200, height: 630 }],
     },
