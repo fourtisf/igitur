@@ -11,7 +11,7 @@ import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
 
 export const metadata: Metadata = {
   title: "The universe",
-  description: `Every name a Priori book can hold — ${NAMES} across ${THEMES.length} themes — published with the reason it can earn weight and the conviction score that sets its size.`,
+  description: `Every name a Igitur book can hold — ${NAMES} across ${THEMES.length} themes — published with the reason it can earn weight and the conviction score that sets its size.`,
   alternates: { canonical: "/universe" },
   openGraph: {
     url: "/universe",

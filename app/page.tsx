@@ -111,7 +111,7 @@ export default function Home() {
           Research you can actually check.
         </h2>
         <p className="sub rv" style={{ marginTop: 16 }}>
-          Most tools hand you a list. Priori hands you a list, the reasoning behind every line,
+          Most tools hand you a list. Igitur hands you a list, the reasoning behind every line,
           the argument that would break it, and a page explaining exactly how the weights were set.
         </p>
         <div className="bento">
@@ -217,7 +217,7 @@ export default function Home() {
             <div style={{ flex: 1, minWidth: 260 }}>
               <h3>It tells you when it doesn&rsquo;t know</h3>
               <p className="p" style={{ marginTop: 8 }}>
-                Write a premise outside the universe and Priori stops, says so, and shows you what
+                Write a premise outside the universe and Igitur stops, says so, and shows you what
                 it does cover — instead of assembling a plausible-looking portfolio out of whatever
                 was nearest. That refusal is the most important feature on this page.
               </p>
@@ -300,7 +300,7 @@ export default function Home() {
           <div className="crow head">
             <div />
             <div>The usual way</div>
-            <div>With Priori</div>
+            <div>With Igitur</div>
           </div>
           {COMPARISON.map((r) => (
             <div className="crow" key={r[0]}>

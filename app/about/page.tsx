@@ -8,12 +8,12 @@ import { SITE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Priori turns a stated belief into a weighted portfolio with a written reason on every holding. What it is, and what it deliberately will not do.",
+    "Igitur turns a stated belief into a weighted portfolio with a written reason on every holding. What it is, and what it deliberately will not do.",
   alternates: { canonical: "/about" },
   openGraph: {
     url: "/about",
     title: `About — ${SITE.name}`,
-    description: "What Priori is, and what it deliberately will not do.",
+    description: "What Igitur is, and what it deliberately will not do.",
     images: [{ url: pageOg("about"), width: 1200, height: 630 }],
   },
   twitter: { card: "summary_large_image", images: [pageOg("about")] },
@@ -30,7 +30,7 @@ export default function AboutPage() {
         <div className="cell c3">
           <h3>What this is</h3>
           <p className="p" style={{ marginTop: 8 }}>
-            Priori turns a stated belief into a weighted portfolio with a written reason on every
+            Igitur turns a stated belief into a weighted portfolio with a written reason on every
             holding. It exists to close the gap between having a view about the next decade and
             being able to express that view as positions.
           </p>

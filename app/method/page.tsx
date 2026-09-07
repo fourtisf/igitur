@@ -9,7 +9,7 @@ import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
 export const metadata: Metadata = {
   title: "Methodology",
   description:
-    "How every number on Priori was produced — matching, weighting, where conviction scores come from, and the places the method is weak.",
+    "How every number on Igitur was produced — matching, weighting, where conviction scores come from, and the places the method is weak.",
   alternates: { canonical: "/method" },
   openGraph: {
     url: "/method",

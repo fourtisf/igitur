@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site";
 export const metadata: Metadata = {
   title: "What is built",
   description:
-    "An honest list of what works in Priori today and what does not. No dates are attached to work that is not done.",
+    "An honest list of what works in Igitur today and what does not. No dates are attached to work that is not done.",
   alternates: { canonical: "/status" },
   openGraph: {
     url: "/status",

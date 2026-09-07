@@ -1,6 +1,6 @@
-# Priori
+# Igitur
 
-Write one sentence stating a belief about the next decade. Priori returns a
+Write one sentence stating a belief about the next decade. Igitur returns a
 **book**: a weighted portfolio of 5–8 holdings where every weight carries a
 written reason, plus the case for and against the underlying thesis.
 
@@ -131,7 +131,7 @@ renders a card for a non-book page, from the fixed allowlist in
 
 That allowlist is the point: there is deliberately no free-text mode. Letting
 the route take a title and body off the query string would let anyone mint a
-Priori-branded image saying anything at all. A book card renders the reader's
+Igitur-branded image saying anything at all. A book card renders the reader's
 own premise because the premise *is* the content; a page card renders only text
 that ships in this repo.
 

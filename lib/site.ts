@@ -11,10 +11,10 @@
  */
 
 export const SITE = {
-  name: "Priori",
+  name: "Igitur",
   tagline: "Write what you believe. See what it holds.",
   description:
-    "Write one sentence about the next decade. Priori returns a weighted portfolio, and every weight carries the reason it earned its size.",
+    "Write one sentence about the next decade. Igitur returns a weighted portfolio, and every weight carries the reason it earned its size.",
 
   /**
    * ⚠ PLACEHOLDER — set NEXT_PUBLIC_SITE_URL in the deploy environment.
@@ -25,18 +25,18 @@ export const SITE = {
    * if "here" is unmistakable, so the domain must actually be owned before
    * launch — and the obvious lookalikes registered defensively alongside it.
    */
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://priori.app").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://igitur.xyz").replace(/\/$/, ""),
 
   /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
-  x: "https://x.com/prioriapp",
-  xHandle: "@prioriapp",
+  x: "https://x.com/igiturxyz",
+  xHandle: "@igiturxyz",
   /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
-  telegram: "https://t.me/prioriportal",
-  telegramHandle: "t.me/prioriportal",
+  telegram: "https://t.me/igiturxyz",
+  telegramHandle: "t.me/igiturxyz",
 
   /** ⚠ PLACEHOLDER — HANDOFF.md §10. */
   token: {
-    ticker: "PRIOR",
+    ticker: "IGITUR",
     supply: "1B",
     chain: "Robinhood Chain",
     chainShort: "Robinhood",

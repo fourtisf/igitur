@@ -9,7 +9,7 @@ import { Composer } from "./Composer";
 export const metadata: Metadata = {
   title: "Compose a book",
   description:
-    "State one belief about the next decade. Priori matches it against 26 written theses and returns a weighted portfolio with a reason on every holding.",
+    "State one belief about the next decade. Igitur matches it against 26 written theses and returns a weighted portfolio with a reason on every holding.",
   alternates: { canonical: "/compose" },
   openGraph: {
     url: "/compose",

@@ -12,7 +12,7 @@ import { THEMES, UNIVERSE } from "@/lib/universe";
 export const metadata: Metadata = {
   title: "Trending",
   description:
-    "Every name in the Priori universe ranked by how far it moved, so a fall ranks alongside a rise of the same size. Nothing on the page is chosen.",
+    "Every name in the Igitur universe ranked by how far it moved, so a fall ranks alongside a rise of the same size. Nothing on the page is chosen.",
   alternates: { canonical: "/trending" },
   openGraph: {
     url: "/trending",
