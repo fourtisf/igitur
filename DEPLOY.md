@@ -132,6 +132,35 @@ Do **not** add security headers in nginx. The app already sends CSP,
 produces duplicates, and browsers apply the most restrictive of each — which
 is how sites break in ways that are painful to debug.
 
+## 5a. Memperbarui situs yang sudah jalan
+
+`deploy-igitur.sh` adalah untuk pemasangan **pertama**. Untuk memperbarui:
+
+```bash
+cd /var/www/igitur && git fetch --all && git reset --hard origin/HEAD
+bash scripts/update-igitur.sh
+```
+
+Jangan menjalankan ulang `deploy-igitur.sh` pada situs yang hidup. Ia memilih
+port bebas pertama; karena port lama sedang dipakai igitur sendiri, ia akan
+memilih port lain — lalu melewati nginx karena bloknya sudah ada. Nginx menunjuk
+port kosong dan situs yang tadinya sehat menjadi 502. Skrip itu sekarang menolak
+berjalan kalau pm2 sudah mengenal `igitur`, dan menunjuk ke sini.
+
+`update-igitur.sh` justru **membaca** port dari konfigurasi nginx, karena ke
+sanalah lalu lintas sungguhan dikirim. Ia juga:
+
+- menyimpan build lama di `.next.prev` sebelum membangun yang baru;
+- membatalkan dan mengembalikan build lama kalau build gagal, tes gagal, atau
+  versi baru tidak menjawab pada enam rute yang diperiksa — pengembaliannya
+  memakai build lama yang sudah jadi, bukan build ulang yang bisa gagal lagi;
+- memakai `pm2 restart`, bukan `delete` lalu `start`, sehingga entri pm2 dan
+  portnya tetap;
+- tidak menyentuh nginx, sertifikat, heirlom, maupun sunmil.
+
+Ketiga jalur kegagalan itu sudah dilatih di sandbox berisi pm2 dan nginx tiruan
+dengan aplikasi yang benar-benar berjalan, bukan hanya diperiksa sintaksnya.
+
 ## 5b. Market data
 
 Without a vendor key the site runs on figures generated from the ticker text and

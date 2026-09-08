@@ -35,6 +35,15 @@ fi
 
 # ── 2. Port yang benar-benar bebas ──────────────────────────────────────────
 say "2/8  Mencari port bebas"
+# Skrip ini memilih port BEBAS. Pada mesin yang igitur-nya sudah jalan, port
+# lamanya terpakai, jadi yang terpilih adalah port lain — sementara tahap 7 di
+# bawah melewati nginx karena bloknya sudah ada. Hasilnya nginx menunjuk port
+# kosong: 502 pada situs yang tadinya sehat. Jadi jangan dipakai memperbarui.
+if pm2 describe "$PM2_NAME" >/dev/null 2>&1; then
+  die "$PM2_NAME sudah berjalan. Skrip ini untuk pemasangan PERTAMA dan akan
+       memindahkan port di belakang nginx. Untuk memperbarui, jalankan:
+         bash $APP/scripts/update-igitur.sh"
+fi
 PORT=""
 for p in 3100 3101 3102 3110 3200 4100; do
   if ! ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "[:.]$p\$"; then PORT=$p; break; fi
