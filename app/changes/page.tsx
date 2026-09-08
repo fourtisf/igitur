@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     description: "Every revision to the published universe, versioned and dated.",
     images: [{ url: pageOg("universe"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("universe")] },
+  twitter: twitterCard(pageOg("universe")),
 };
 
 /**

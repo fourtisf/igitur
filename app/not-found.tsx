@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { ThemeCells } from "@/components/ThemeCells";
 import { pageOg } from "@/lib/og-pages";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description: "That page does not exist. Every book has an address, but this is not one of them.",
   robots: { index: false, follow: true },
   openGraph: { images: [{ url: pageOg("notfound"), width: 1200, height: 630 }] },
-  twitter: { card: "summary_large_image", images: [pageOg("notfound")] },
+  twitter: twitterCard(pageOg("notfound")),
 };
 
 /**

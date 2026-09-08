@@ -176,6 +176,29 @@ Everything else on the site derives its warning the same way, per quote rather
 than per site, so a vendor that covers 158 of 163 names flags the other five
 instead of letting them pass as real.
 
+## 5c. Social handles
+
+The site links to no social account until one is configured, and says on
+`/token` and `/about` that there are no official channels yet. That is the
+honest state while the handles are unclaimed — the alternative is a public page
+directing people to an account someone else could register, next to a promise
+that the token contract address will be announced there.
+
+Once the accounts are held, add them to the **build** environment and rebuild:
+
+```bash
+cd /var/www/igitur
+NEXT_PUBLIC_SITE_URL=https://igitur.xyz \
+NEXT_PUBLIC_X_HANDLE=yourhandle \
+NEXT_PUBLIC_TELEGRAM_HANDLE=yourhandle \
+  npm run build
+cp -r .next/static .next/standalone/.next/static
+pm2 restart igitur
+```
+
+These are `NEXT_PUBLIC_*`, so they are baked in at build time — a restart alone
+will not pick them up, unlike `MARKET_API_KEY`.
+
 ## 6. HTTPS
 
 ```bash

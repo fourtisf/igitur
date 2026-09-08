@@ -37,12 +37,16 @@ export function Footer() {
         </div>
         <div>
           <div className="fh">Community</div>
-          <a href={SITE.x} target="_blank" rel="noopener">
-            X ↗
-          </a>
-          <a href={SITE.telegram} target="_blank" rel="noopener">
-            Telegram ↗
-          </a>
+          {SITE.x ? (
+            <a href={SITE.x} target="_blank" rel="noopener">
+              X ↗
+            </a>
+          ) : null}
+          {SITE.telegram ? (
+            <a href={SITE.telegram} target="_blank" rel="noopener">
+              Telegram ↗
+            </a>
+          ) : null}
           <Link href="/about">About</Link>
           <Link href="/legal">Terms &amp; disclosures</Link>
         </div>

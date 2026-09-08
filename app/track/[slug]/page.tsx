@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { NoMatch } from "@/components/NoMatch";
 import { TrackChart } from "@/components/TrackChart";
@@ -35,7 +36,7 @@ export async function generateMetadata({
     };
   }
 
-  const { bookEnd: bEnd, indexEnd: sEnd, win } = await trackBook(b, parseStated(sp.d), days);
+  const { bookEnd: bEnd, indexEnd: sEnd, win, live } = await trackBook(b, parseStated(sp.d), days);
   const title = b.premise.length > 56 ? b.premise.slice(0, 55).trimEnd() + "…" : b.premise;
   const description = `Tracked against the index since the premise was stated: book ${
     bEnd >= 0 ? "+" : ""
@@ -53,12 +54,13 @@ export async function generateMetadata({
       description,
       images: [{ url: ogHref(b.premise), width: 1200, height: 630 }],
     },
-    twitter: { card: "summary_large_image", images: [ogHref(b.premise)] },
-    // Every figure on this page is synthetic. Publishing fabricated performance
-    // into a search index would be the one dishonest thing on an otherwise
-    // honest site — and performance claims are exactly what regulators read.
-    // Drop this (and restore the sitemap entries) when real data lands.
-    robots: { index: false, follow: true },
+    twitter: twitterCard(ogHref(b.premise)),
+    // Performance claims are exactly what regulators read, so this page enters
+    // a search index only when every point on it came from real closes.
+    // `live` is true only then: it requires a working vendor *and* a stated
+    // date to measure from, so a link without a date stays out however the
+    // server is configured.
+    robots: { index: live, follow: true },
   };
 }
 

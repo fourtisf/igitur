@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     description: `Fixed supply, stated utilities, and the anti-scam rules — published before anything is deployed.`,
     images: [{ url: pageOg("token"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("token")] },
+  twitter: twitterCard(pageOg("token")),
 };
 
 /**
@@ -184,18 +185,26 @@ export default function TokenPage() {
           The address drops in the channels first.
         </h2>
         <p className="sub" style={{ margin: "16px auto 0", textAlign: "center", maxWidth: "42ch" }}>
-          Two official channels, and no others. Anyone contacting you from anywhere else is not us.
+          {SITE.x || SITE.telegram
+            ? "Two official channels, and no others. Anyone contacting you from anywhere else is not us."
+            : "There are no channels yet. Until they are announced on this domain, every account or group claiming to be this project is not — including any that posts an address."}
         </p>
-        <div className="socbig" style={{ justifyContent: "center" }}>
-          <a href={SITE.x} target="_blank" rel="noopener">
-            <XIcon />
-            Follow on X
-          </a>
-          <a href={SITE.telegram} target="_blank" rel="noopener">
-            <TelegramIcon />
-            Join Telegram
-          </a>
-        </div>
+        {SITE.x || SITE.telegram ? (
+          <div className="socbig" style={{ justifyContent: "center" }}>
+            {SITE.x ? (
+              <a href={SITE.x} target="_blank" rel="noopener">
+                <XIcon />
+                Follow on X
+              </a>
+            ) : null}
+            {SITE.telegram ? (
+              <a href={SITE.telegram} target="_blank" rel="noopener">
+                <TelegramIcon />
+                Join Telegram
+              </a>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
   );

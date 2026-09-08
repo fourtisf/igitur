@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
-import { getQuote, isLive, providerName, vendorError } from "@/lib/market";
+import { isLive, marketIsReal, providerName, vendorError } from "@/lib/market";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
       "What works today and what does not. A line moves to the first list when it ships, and not before.",
     images: [{ url: pageOg("status"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("status")] },
+  twitter: twitterCard(pageOg("status")),
 };
 
 /**
@@ -67,12 +68,11 @@ const ALWAYS_MISSING = [
 export default async function StatusPage() {
   // The market-data line moves by itself. Writing it by hand is how a status
   // page drifts from the thing it describes.
-  // Ask the vendor for one real quote rather than trusting the configuration.
-  // A key that is set but rejected leaves every figure synthetic, and this page
-  // of all pages must not be the one that gets that wrong.
-  const configured = isLive();
-  const live = configured && !(await getQuote("SPY")).synthetic;
-  const rejected = configured && !live;
+  // Ask the vendor rather than trusting the configuration: a key that is set
+  // but rejected leaves every figure synthetic, and this page of all pages must
+  // not be the one that gets that wrong.
+  const live = await marketIsReal();
+  const rejected = isLive() && !live;
   const LIVE = live
     ? [`Live market data from ${providerName()}`, ...ALWAYS_LIVE]
     : ALWAYS_LIVE;

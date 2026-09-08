@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 import Link from "next/link";
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
       "Every name in the universe ranked by absolute move. The order is a measurement, not a recommendation.",
     images: [{ url: pageOg("trending"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("trending")] },
+  twitter: twitterCard(pageOg("trending")),
 };
 
 

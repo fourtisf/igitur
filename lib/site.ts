@@ -10,6 +10,12 @@
  * image URLs, so it must be absolute and must match the deployed domain.
  */
 
+/** A handle, stripped of the @ and the URL people paste instead of it. */
+export function handleFor(raw: string | undefined): string | null {
+  const v = (raw ?? "").trim().replace(/^@/, "").replace(/^https?:\/\/(x\.com|twitter\.com|t\.me)\//i, "");
+  return /^[A-Za-z0-9_]{2,32}$/.test(v) ? v : null;
+}
+
 export const SITE = {
   name: "Igitur",
   tagline: "Write what you believe. See what it holds.",
@@ -27,12 +33,31 @@ export const SITE = {
    */
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://igitur.xyz").replace(/\/$/, ""),
 
-  /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
-  x: "https://x.com/igiturxyz",
-  xHandle: "@igiturxyz",
-  /** ⚠ PLACEHOLDER — HANDOFF.md §10. Claim the handle before shipping this. */
-  telegram: "https://t.me/igiturxyz",
-  telegramHandle: "t.me/igiturxyz",
+  /**
+   * Social handles. Null until the account is actually claimed, and the UI
+   * renders nothing rather than a link.
+   *
+   * These used to be hard-coded to invented names. That is worse than a missing
+   * link: /token promises the contract address appears "here and on X at the
+   * same moment, and nowhere else first", and /legal promises "any page that
+   * does is not us". Pointing those promises at a handle nobody here owns is an
+   * open invitation to whoever registers it — the exact impersonation the two
+   * pages exist to prevent.
+   *
+   * To turn them on, set these in the server environment once the accounts are
+   * held. Nothing else needs to change.
+   *
+   *   NEXT_PUBLIC_X_HANDLE=igiturxyz
+   *   NEXT_PUBLIC_TELEGRAM_HANDLE=igiturxyz
+   */
+  xHandle: handleFor(process.env.NEXT_PUBLIC_X_HANDLE),
+  telegramHandle: handleFor(process.env.NEXT_PUBLIC_TELEGRAM_HANDLE),
+  get x(): string | null {
+    return this.xHandle ? `https://x.com/${this.xHandle}` : null;
+  },
+  get telegram(): string | null {
+    return this.telegramHandle ? `https://t.me/${this.telegramHandle}` : null;
+  },
 
   /** ⚠ PLACEHOLDER — HANDOFF.md §10. */
   token: {

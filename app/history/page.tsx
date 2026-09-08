@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
     "Every book you built this session, held in memory and never sent anywhere. It disappears on refresh — which is why every book carries its own address.",
   alternates: { canonical: "/history" },
   openGraph: { url: "/history", images: [{ url: pageOg("home"), width: 1200, height: 630 }] },
-  twitter: { card: "summary_large_image", images: [pageOg("home")] },
+  twitter: twitterCard(pageOg("home")),
   // Nothing here is the same for two readers, so there is nothing to index.
   robots: { index: false, follow: true },
 };

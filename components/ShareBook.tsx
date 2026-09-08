@@ -43,7 +43,8 @@ export function ShareBook({ display, premise }: { display: string; premise: stri
     const url = new URL("https://x.com/intent/tweet");
     url.searchParams.set("text", text);
     url.searchParams.set("url", window.location.href);
-    url.searchParams.set("via", SITE.xHandle.replace(/^@/, ""));
+    // `via` attributes the share to an account. Only when there is one.
+    if (SITE.xHandle) url.searchParams.set("via", SITE.xHandle);
     window.open(url.toString(), "_blank", "noopener,noreferrer");
   }
 

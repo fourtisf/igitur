@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
     description: `All ${NAMES} names across ${THEMES.length} themes, with a written reason and a conviction score on every one.`,
     images: [{ url: pageOg("universe"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("universe")] },
+  twitter: twitterCard(pageOg("universe")),
 };
 
 export default async function UniversePage() {

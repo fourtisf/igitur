@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
       "State one belief about the next decade and get a weighted portfolio with a reason on every holding.",
     images: [{ url: pageOg("compose"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("compose")] },
+  twitter: twitterCard(pageOg("compose")),
 };
 
 export default async function ComposePage({

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     description: "What Igitur is, and what it deliberately will not do.",
     images: [{ url: pageOg("about"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("about")] },
+  twitter: twitterCard(pageOg("about")),
 };
 
 export default function AboutPage() {
@@ -56,19 +57,26 @@ export default function AboutPage() {
           <h3>Contact</h3>
           <p className="p" style={{ marginTop: 8 }}>
             Corrections to the universe, the conviction scores or the written theses are the most
-            useful thing anyone can send. Reach us on X or Telegram — those two channels are the
-            only official ones, and anything claiming to be us anywhere else is not.
+            useful thing anyone can send.{" "}
+            {SITE.x || SITE.telegram
+              ? "Reach us on the channels below — they are the only official ones, and anything claiming to be us anywhere else is not."
+              : "There is no public channel for it yet; when one opens it will be announced on this domain first, and anything claiming to be us before then is not."}
           </p>
-          <div className="socbig">
-            <a href={SITE.x} target="_blank" rel="noopener">
-              <XIcon />
-              {SITE.xHandle}
-            </a>
-            <a href={SITE.telegram} target="_blank" rel="noopener">
-              <TelegramIcon />
-              {SITE.telegramHandle}
-            </a>
-          </div>
+          {SITE.x || SITE.telegram ? (
+            <div className="socbig">
+              {SITE.x ? (
+                <a href={SITE.x} target="_blank" rel="noopener">
+                  <XIcon />@{SITE.xHandle}
+                </a>
+              ) : null}
+              {SITE.telegram ? (
+                <a href={SITE.telegram} target="_blank" rel="noopener">
+                  <TelegramIcon />
+                  t.me/{SITE.telegramHandle}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

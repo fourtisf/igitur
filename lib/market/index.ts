@@ -50,6 +50,22 @@ export function providerName(): string {
 }
 
 /**
+ * Whether the site is actually serving real figures right now.
+ *
+ * Not the same question as isLive(), and the difference is the whole point: a
+ * key can be set and rejected, in which case every number is still generated.
+ * Asking the vendor for one quote is the only answer that cannot be wrong, and
+ * it costs nothing — the quote is cached for the next sixty seconds anyway.
+ *
+ * Every page that describes the data to a reader decides from this, so the
+ * description and the data can never drift apart.
+ */
+export async function marketIsReal(): Promise<boolean> {
+  if (!isLive()) return false;
+  return !(await getQuote("SPY")).synthetic;
+}
+
+/**
  * Why the vendor last failed, or null. Shown on /status so a rejected key is
  * diagnosable from the site itself rather than only from the server logs.
  * Never contains the key.

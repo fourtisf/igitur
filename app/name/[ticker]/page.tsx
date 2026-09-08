@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { fmtMcap, fmtPrice, getQuote, sparkPath } from "@/lib/market";
 import { lookupName, nameHref, NAMES_INDEX } from "@/lib/names";
@@ -60,7 +61,7 @@ export async function generateMetadata({
       description,
       images: [{ url: pageOg("universe"), width: 1200, height: 630 }],
     },
-    twitter: { card: "summary_large_image", images: [pageOg("universe")] },
+    twitter: twitterCard(pageOg("universe")),
   };
 }
 

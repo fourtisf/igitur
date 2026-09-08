@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
 import { buildBook } from "@/lib/generator";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     description: "Where two beliefs agree, and where they part.",
     images: [{ url: pageOg("compose"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("compose")] },
+  twitter: twitterCard(pageOg("compose")),
 };
 
 /**

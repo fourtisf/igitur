@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
 import { ShareBook } from "@/components/ShareBook";
@@ -98,12 +99,7 @@ export async function generateMetadata({
       description,
       images: [{ url: image, width: 1200, height: 630, alt: `Allocation for: ${book.premise}` }],
     },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} — ${SITE.name}`,
-      description,
-      images: [image],
-    },
+    twitter: { ...twitterCard(image), title: `${title} — ${SITE.name}`, description },
   };
 }
 

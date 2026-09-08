@@ -14,10 +14,13 @@ import { THEMES, UNIVERSE_VERSION } from "@/lib/universe";
  *
  * Two things are deliberately absent:
  *   /history  differs for every reader and indexes nothing.
- *   /track    every figure on it is synthetic. Publishing fabricated
- *             performance into a search index would be the one dishonest thing
- *             on an otherwise honest site. Add these back when real market data
- *             lands and the noindex on the page comes off.
+ *   /track    a track page is indexable only when its figures are real, which
+ *             needs a working vendor *and* a stated date to measure from. The
+ *             thesis URLs below carry no date, so theirs never are, whatever
+ *             the server is configured with — an earlier note here promised to
+ *             add them once real data landed, which would have published a
+ *             synthetic return series. The page decides for itself, per URL,
+ *             from the series it actually computed.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
 import { Holdings } from "@/components/Holdings";
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
     description: SITE.description,
     images: [{ url: pageOg("home"), width: 1200, height: 630, alt: SITE.tagline }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("home")] },
+  twitter: twitterCard(pageOg("home")),
 };
 
 const COMPARISON: [string, string, string][] = [
@@ -345,22 +346,37 @@ export default async function Home() {
             </Link>
           </div>
           <div className="cell c3">
-            <h3>Two official channels</h3>
+            <h3>{SITE.x || SITE.telegram ? "Two official channels" : "No official channels yet"}</h3>
+            {SITE.x || SITE.telegram ? (
+              <>
+                <p className="p" style={{ marginTop: 8 }}>
+                  The contract address appears on this site and on X at the same moment, and nowhere
+                  else first. There is no presale, no whitelist and no team wallet taking deposits.
+                  Nobody from this project will message you first.
+                </p>
+                <div className="socbig">
+                  {SITE.x ? (
+                    <a href={SITE.x} target="_blank" rel="noopener">
+                      <XIcon />
+                      Follow on X
+                    </a>
+                  ) : null}
+                  {SITE.telegram ? (
+                    <a href={SITE.telegram} target="_blank" rel="noopener">
+                      <TelegramIcon />
+                      Join Telegram
+                    </a>
+                  ) : null}
+                </div>
+              </>
+            ) : (
             <p className="p" style={{ marginTop: 8 }}>
-              The contract address appears on this site and on X at the same moment, and nowhere
-              else first. There is no presale, no whitelist and no team wallet taking deposits.
-              Nobody from this project will message you first.
+              There are no official channels yet. Until they are announced here, on this domain,
+              every account, group or DM claiming to be this project is not — including any that
+              posts a contract address. There is no presale, no whitelist and no team wallet taking
+              deposits, and nobody from this project will message you first.
             </p>
-            <div className="socbig">
-              <a href={SITE.x} target="_blank" rel="noopener">
-                <XIcon />
-                Follow on X
-              </a>
-              <a href={SITE.telegram} target="_blank" rel="noopener">
-                <TelegramIcon />
-                Join Telegram
-              </a>
-            </div>
+            )}
           </div>
         </div>
       </section>

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 import Link from "next/link";
 
+import { marketIsReal, providerName } from "@/lib/market";
 import { NAMES, REVIEWED, THEMES } from "@/lib/universe";
 
 export const metadata: Metadata = {
@@ -18,10 +20,21 @@ export const metadata: Metadata = {
       "Matching, weighting, conviction, and the places the method is weak. Published in full, including its own weaknesses.",
     images: [{ url: pageOg("method"), width: 1200, height: 630 }],
   },
-  twitter: { card: "summary_large_image", images: [pageOg("method")] },
+  twitter: twitterCard(pageOg("method")),
 };
 
-export default function MethodPage() {
+/**
+ * The prices described here are fetched on the server; see app/page.tsx for
+ * why that needs a revalidation window rather than a static render.
+ */
+export const revalidate = 300;
+
+export default async function MethodPage() {
+  // This page tells the reader where the numbers come from, so it has to ask
+  // rather than assume. Describing real quotes as invented is the same failure
+  // as the reverse, and on a methodology page it is worse.
+  const live = await marketIsReal();
+
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
       <span className="kick rv">Methodology</span>
@@ -83,17 +96,42 @@ export default function MethodPage() {
         </div>
         <div className="cell c3">
           <h3>4. Prices, moves and returns</h3>
-          <p className="p" style={{ marginTop: 8 }}>
-            All of it is synthetic. Prices, market caps, daily moves and sparklines are generated
-            deterministically from the ticker string, so they never change and never reflect
-            anything real. The track series is drawn from the premise and centred on the index
-            drift, meaning roughly half of all books underperform.
-          </p>
-          <p className="p" style={{ marginTop: 10 }}>
-            That centring is deliberate. An earlier build gave the book a higher drift than the
-            index, so every book beat the market — a claim the interface was making on its own.
-            Nothing on this site should be able to flatter itself.
-          </p>
+          {live ? (
+            <>
+              <p className="p" style={{ marginTop: 8 }}>
+                Prices, market caps and daily moves come from {providerName()}, fetched on the
+                server and refreshed every few minutes. Sparklines are drawn from the three points
+                a quote actually reports — the previous close, the open and the last price — rather
+                than smoothed into a shape nobody measured.
+              </p>
+              <p className="p" style={{ marginTop: 10 }}>
+                Performance is arithmetic on real closes: the weights are frozen at the date the
+                premise was stated and applied to each holding&rsquo;s actual return, against SPY
+                over the same window. Ballast is measured with the rest, because leaving out the
+                sleeve that exists to drag would flatter the thesis. Any name the vendor cannot
+                cover is named on the page and its weight redistributed across the rest, so a gap
+                never reads as a holding that returned nothing.
+              </p>
+              <p className="p" style={{ marginTop: 10 }}>
+                Whether a book beats the index is therefore not a property of this code. It is
+                what happened.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="p" style={{ marginTop: 8 }}>
+                All of it is synthetic. Prices, market caps, daily moves and sparklines are
+                generated deterministically from the ticker string, so they never change and never
+                reflect anything real. The track series is drawn from the premise and centred on
+                the index drift, meaning roughly half of all books underperform.
+              </p>
+              <p className="p" style={{ marginTop: 10 }}>
+                That centring is deliberate. An earlier build gave the book a higher drift than the
+                index, so every book beat the market — a claim the interface was making on its own.
+                Nothing on this site should be able to flatter itself.
+              </p>
+            </>
+          )}
         </div>
         <div className="cell c6">
           <h3>5. What the universe is, and is not</h3>

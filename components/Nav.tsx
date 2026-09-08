@@ -108,14 +108,26 @@ export function Nav() {
             ))}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <div className="soc">
-              <a href={SITE.x} target="_blank" rel="noopener" aria-label="X" title="X">
-                <XIcon />
-              </a>
-              <a href={SITE.telegram} target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">
-                <TelegramIcon />
-              </a>
-            </div>
+            {SITE.x || SITE.telegram ? (
+              <div className="soc">
+                {SITE.x ? (
+                  <a href={SITE.x} target="_blank" rel="noopener" aria-label="X" title="X">
+                    <XIcon />
+                  </a>
+                ) : null}
+                {SITE.telegram ? (
+                  <a
+                    href={SITE.telegram}
+                    target="_blank"
+                    rel="noopener"
+                    aria-label="Telegram"
+                    title="Telegram"
+                  >
+                    <TelegramIcon />
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
             <button
               className={"wbtn" + (wallet ? " on" : "")}
               onClick={connect}
@@ -143,12 +155,16 @@ export function Nav() {
             {label}
           </Link>
         ))}
-        <a href={SITE.x} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
-          X ↗
-        </a>
-        <a href={SITE.telegram} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
-          Telegram ↗
-        </a>
+        {SITE.x ? (
+          <a href={SITE.x} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
+            X ↗
+          </a>
+        ) : null}
+        {SITE.telegram ? (
+          <a href={SITE.telegram} target="_blank" rel="noopener" onClick={() => setOpen(false)}>
+            Telegram ↗
+          </a>
+        ) : null}
       </div>
     </>
   );

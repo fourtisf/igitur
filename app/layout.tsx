@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
+import { twitterCard } from "@/lib/twitter-card";
 
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
@@ -41,11 +42,9 @@ export const metadata: Metadata = {
     images: [{ url: pageOg("home"), width: 1200, height: 630, alt: SITE.tagline }],
   },
   twitter: {
-    card: "summary_large_image",
-    site: SITE.xHandle,
+    ...twitterCard(pageOg("home")),
     title: `${SITE.name} — ${SITE.tagline}`,
     description: SITE.description,
-    images: [pageOg("home")],
   },
   robots: { index: true, follow: true },
   icons: {
