@@ -1,14 +1,8 @@
 import { Bar } from "@/components/Bar";
-import { fnv } from "@/lib/hash";
-import { bookDrift, series, SPY_DRIFT } from "@/lib/market";
-import type { Book } from "@/lib/types";
+import type { Holding } from "@/lib/types";
+import type { TrackResult } from "@/lib/track";
 
-/** Trading sessions in a year, near enough for a window length. */
-const SESSIONS_PER_YEAR = 252;
-/** Used when a link carries no stated date. */
-const DEFAULT_N = 180;
-const MIN_N = 20;
-const MAX_N = 1260;
+/** Chart box. Ported from the prototype and unchanged. */
 const W = 1000;
 const H = 340;
 const PL = 6;
@@ -19,33 +13,12 @@ const PB = 28;
 /**
  * The book against the index. HANDOFF.md §5.
  *
- * The benchmark is shown whether or not it flatters the book. The book's drift
- * is centred on the index, so roughly half of all books lose — that symmetry is
- * load-bearing and must survive the switch to real data.
+ * The benchmark is drawn whether or not it flatters the book. Where the figures
+ * come from is decided in lib/track.ts — real closes when a vendor is
+ * configured, a centred synthetic series otherwise — so this only draws.
  */
-/**
- * How many sessions the claim has been standing.
- *
- * "Since stated" needs a stated date, and until now there was none — the chart
- * drew a fixed 180 sessions from a fixed seed, which the synthetic data hid.
- * A link that carries no date falls back to that default and says so on the
- * page rather than inventing a start.
- */
-export function sessionsFor(days: number | null): number {
-  if (days === null) return DEFAULT_N;
-  const n = Math.round((days / 365) * SESSIONS_PER_YEAR);
-  return Math.min(MAX_N, Math.max(MIN_N, n));
-}
-
-export function trackSeries(b: Book, days: number | null = null) {
-  const N = sessionsFor(days);
-  const bs = series(b.seed, N, bookDrift(b.seed), 1.05);
-  const ss = series(fnv("SPY:20260907"), N, SPY_DRIFT, 0.55);
-  return { bs, ss, N, bEnd: bs[N - 1], sEnd: ss[N - 1], win: bs[N - 1] >= ss[N - 1] };
-}
-
-export function TrackChart({ book, days }: { book: Book; days: number | null }) {
-  const { bs, ss, N, bEnd, sEnd } = trackSeries(book, days);
+export function TrackChart({ book, track }: { book: { holdings: Holding[] }; track: TrackResult }) {
+  const { book: bs, index: ss, n: N, bookEnd: bEnd, indexEnd: sEnd } = track;
   const all = bs.concat(ss);
   const lo = Math.min(...all);
   const hi = Math.max(...all);

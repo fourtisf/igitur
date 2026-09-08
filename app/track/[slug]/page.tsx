@@ -3,12 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { NoMatch } from "@/components/NoMatch";
-import { TrackChart, trackSeries } from "@/components/TrackChart";
+import { TrackChart } from "@/components/TrackChart";
+import { trackBook } from "@/lib/track";
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
 import { bookHref, daysSince, ogHref, parseStated, parseUniverse, trackHref } from "@/lib/routes";
-import { SYNTHETIC } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
 
 type Params = { slug: string };
@@ -35,7 +35,7 @@ export async function generateMetadata({
     };
   }
 
-  const { bEnd, sEnd, win } = trackSeries(b, days);
+  const { bookEnd: bEnd, indexEnd: sEnd, win } = await trackBook(b, parseStated(sp.d), days);
   const title = b.premise.length > 56 ? b.premise.slice(0, 55).trimEnd() + "…" : b.premise;
   const description = `Tracked against the index since the premise was stated: book ${
     bEnd >= 0 ? "+" : ""
@@ -82,7 +82,8 @@ export default async function TrackPage({
   if (slug !== slugOf(b.premise)) {
     redirect(trackHref(b.premise, { stated: stated ?? undefined, universe: universe ?? undefined }));
   }
-  const { bEnd, sEnd, win, N } = trackSeries(b, days);
+  const track = await trackBook(b, stated, days);
+  const { bookEnd: bEnd, indexEnd: sEnd, win, n: N } = track;
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -116,7 +117,7 @@ export default async function TrackPage({
           >
             {b.premise}
           </p>
-          <TrackChart book={b} days={days} />
+          <TrackChart book={b} track={track} />
         </div>
       </div>
       <div className="stats rv" style={{ marginTop: 12 }}>
@@ -161,7 +162,7 @@ export default async function TrackPage({
           </>
         )}
       </p>
-      {SYNTHETIC ? (
+      {!track.live ? (
         <p className="notice warn rv" style={{ marginTop: 14 }}>
           Prototype figures. The return series is synthetic, drawn from the premise itself and
           centred on the index — so roughly half of all books lose. Try several premises and you

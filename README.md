@@ -108,11 +108,16 @@ the share-card allowlist rejects anything not in it.
 In build order (`HANDOFF.md` §12):
 
 1. ~~Server routes, per-page canonicals, dynamic OG image~~ — **done**
-2. **Real market data.** Everything in `lib/market.ts` is generated from the
-   ticker string. Swap the function bodies for a vendor; `SYNTHETIC = false`
-   then removes the "prototype figures" warnings the UI shows today. When that
-   lands, take the `noindex` off `/track` and put its 26 URLs back in the
-   sitemap — they are held out today because publishing fabricated performance
+2. ~~Real market data~~ — **the layer is built**; it needs a key.
+   `lib/market/` holds a provider interface, a Financial Modeling Prep
+   implementation and the synthetic fallback. Set `MARKET_API_KEY` and the site
+   switches: prices, market caps and session moves come from the vendor, and
+   `/track` computes returns from real closes instead of a generated series.
+   Every "prototype figures" warning is derived from the data rather than
+   hard-coded, so they disappear on their own — including the line on `/status`.
+   Anything the vendor cannot cover falls back per ticker and is still flagged.
+   When it lands, take the `noindex` off `/track` and put its URLs back in the
+   sitemap; they are held out today because publishing fabricated performance
    into a search index is the one thing that would make this site dishonest.
 3. **LLM matcher** behind `POST /api/compose`, with the keyword matcher kept as
    the fallback. The weighting formula stays in application code so weights stay

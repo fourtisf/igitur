@@ -6,6 +6,7 @@ import { Holdings } from "@/components/Holdings";
 import { HeroPrompt } from "@/components/HeroPrompt";
 import { TelegramIcon, XIcon } from "@/components/icons";
 import { buildBook } from "@/lib/generator";
+import { getQuotes } from "@/lib/market";
 import { pageOg } from "@/lib/og-pages";
 import { FEATURED, HOST, SITE } from "@/lib/site";
 import { NAMES, THEMES } from "@/lib/universe";
@@ -33,9 +34,10 @@ const COMPARISON: [string, string, string][] = [
   ["When it doesn't know", "It answers anyway", "It stops and says so"],
 ];
 
-export default function Home() {
+export default async function Home() {
   const b = buildBook(FEATURED);
   if (!b.ok) throw new Error("FEATURED premise must build a book");
+  const quotes = await getQuotes(b.holdings.slice(0, 3).map((h) => h.t));
 
   return (
     <>
@@ -122,7 +124,7 @@ export default function Home() {
               line and the rest reweight in front of you.
             </p>
             <div style={{ marginTop: 16 }}>
-              <Holdings holdings={b.holdings.slice(0, 3)} />
+              <Holdings holdings={b.holdings.slice(0, 3)} quotes={quotes} />
             </div>
           </div>
           <div className="cell c2 rv">

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { buildBook } from "@/lib/generator";
 import { slugOf } from "@/lib/hash";
-import { fmtMcap, mcapOf, priceOf, SYNTHETIC } from "@/lib/market";
+import { fmtMcap, fmtPrice, getQuotes, isLive } from "@/lib/market";
 import { normalizePremise } from "@/lib/premise";
 import { applyPins, parsePins } from "@/lib/reweight";
 import { parseDrop, parseStated, parseUniverse } from "@/lib/routes";
@@ -42,6 +42,8 @@ export async function GET(req: NextRequest) {
   const book = applyPins(generated, parsePins(q.get("w") ?? undefined, known));
   const universe = parseUniverse(q.get("u") ?? undefined) ?? UNIVERSE_VERSION;
   const stated = parseStated(q.get("d") ?? undefined);
+  const quotes = await getQuotes(book.holdings.map((h) => h.t));
+  const live = isLive();
 
   const rows: (string | number)[][] = [
     [
@@ -64,11 +66,11 @@ export async function GET(req: NextRequest) {
       h.ballast ? "ballast" : h.lead ? "lead" : "position",
       h.src,
       h.why,
-      priceOf(h.t).toFixed(2),
-      fmtMcap(mcapOf(h.t)),
+      fmtPrice(quotes.get(h.t)?.price ?? 0),
+      fmtMcap(quotes.get(h.t)?.marketCap ?? 0),
       // Stated on every row, because a spreadsheet loses the warning the page
       // carries and these figures are generated from the ticker text.
-      SYNTHETIC ? "yes" : "no",
+      live ? "no" : "yes",
     ]),
   ];
 

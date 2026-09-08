@@ -22,6 +22,7 @@ import {
   parseUniverse,
   trackHref,
 } from "@/lib/routes";
+import { getQuotes } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
 import { THEME_BY_ID, UNIVERSE_VERSION } from "@/lib/universe";
 
@@ -120,6 +121,7 @@ export default async function BookPage({
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
 
   const prov = { universe: universe ?? undefined, stated: stated ?? undefined };
+  const quotes = await getQuotes(book.holdings.map((h) => h.t));
 
   // The slug is readable text, not an identifier — the premise in the query
   // string is what builds the book. Left unchecked, that lets a shared link
@@ -233,6 +235,7 @@ export default async function BookPage({
           <div style={{ marginTop: 16 }}>
             <Holdings
               holdings={b.holdings}
+              quotes={quotes}
               removeHref={(t) => {
                 const next = new Map(pins);
                 next.delete(t);

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { isLive, providerName } from "@/lib/market";
+
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
  * per-book preview image. Both were listed as impossible inside a single HTML
  * file, and both are now live — see §6.1 and §6.2.
  */
-const LIVE = [
+const ALWAYS_LIVE = [
   "Compose a book from any premise",
   "Negative keywords to stop cross-sector mismatches",
   "Written case for and against, every time",
@@ -43,8 +45,7 @@ const LIVE = [
   "Published tokenomics ahead of any launch",
 ];
 
-const NOT_BUILT = [
-  "Live market data instead of synthetic figures",
+const ALWAYS_MISSING = [
   "A language model reading the premise",
   "Reading filings and news at generation time",
   "Conviction scores tied to disclosed segment revenue",
@@ -56,6 +57,16 @@ const NOT_BUILT = [
 ];
 
 export default function StatusPage() {
+  // The market-data line moves by itself. Writing it by hand is how a status
+  // page drifts from the thing it describes.
+  const live = isLive();
+  const LIVE = live
+    ? [`Live market data from ${providerName()}`, ...ALWAYS_LIVE]
+    : ALWAYS_LIVE;
+  const NOT_BUILT = live
+    ? ALWAYS_MISSING
+    : ["Live market data instead of synthetic figures", ...ALWAYS_MISSING];
+
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
       <span className="kick rv">Status</span>
@@ -101,11 +112,16 @@ export default function StatusPage() {
         own URL and its own canonical tag, and every book renders its own image.
       </p>
       <p className="notice warn rv" style={{ marginTop: 14 }}>
-        The market data is still synthetic. Prices, moves, market caps and the whole return series
-        are generated from the ticker text and reflect nothing. That is the next thing to replace,
-        and until it is replaced every page carrying a number says so. The tracking pages are
-        deliberately kept out of search engines and out of the sitemap while that is true — a
-        fabricated return has no business in a search result.
+        {live
+          ? `Market data comes from ${providerName()}. Any figure the vendor cannot cover falls back
+             to a generated one and is flagged individually, rather than the whole page claiming to
+             be real. Tracking pages stay out of the sitemap until their history has been checked
+             against a second source.`
+          : `The market data is still synthetic. Prices, moves, market caps and the whole return
+             series are generated from the ticker text and reflect nothing. The vendor layer is
+             built and waiting on a key — set MARKET_API_KEY and this line moves by itself. The
+             tracking pages are deliberately kept out of search engines and out of the sitemap
+             while this is true; a fabricated return has no business in a search result.`}
       </p>
       <p className="notice rv" style={{ marginTop: 14 }}>
         Order routing is the hardest line on this page. It needs a broker relationship and custody,

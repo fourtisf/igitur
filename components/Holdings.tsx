@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Holding } from "@/lib/types";
-import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
+import { fmtMcap, fmtPrice, type Quote } from "@/lib/market";
 import { nameHref } from "@/lib/names";
 
 /**
@@ -11,10 +11,13 @@ import { nameHref } from "@/lib/names";
  */
 export function Holdings({
   holdings,
+  quotes,
   removeHref,
   stepHref,
 }: {
   holdings: Holding[];
+  /** Quotes for these tickers, fetched once by the page rather than per row. */
+  quotes?: Map<string, Quote>;
   /** Given a ticker, the URL of this book with that holding removed. */
   removeHref?: (ticker: string) => string;
   /** Given a ticker and a delta, the URL of this book with that weight nudged.
@@ -39,7 +42,11 @@ export function Holdings({
               <Link href={nameHref(x.t)} className="tlink">
                 {x.t}
               </Link>{" "}
-              · {x.k} · ${priceOf(x.t).toFixed(2)} · {fmtMcap(mcapOf(x.t))} · {x.src}
+              · {x.k}
+              {quotes?.get(x.t)
+                ? ` · ${fmtPrice(quotes.get(x.t)!.price)} · ${fmtMcap(quotes.get(x.t)!.marketCap)}`
+                : ""}{" "}
+              · {x.src}
             </div>
           </span>
           {stepHref && !x.ballast ? (

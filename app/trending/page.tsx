@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
 import { nameHref } from "@/lib/names";
-import { moveFor, priceOf, sparkPath, SYNTHETIC } from "@/lib/market";
+import { fmtPrice, getQuotes, isLive, sparkPath } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
 import { UNIVERSE } from "@/lib/universe";
 
@@ -25,10 +25,14 @@ export const metadata: Metadata = {
 };
 
 
-export default function TrendingPage() {
-  const rows = UNIVERSE.map((a) => ({ ...a, m: moveFor(a.t) })).sort(
-    (x, y) => Math.abs(y.m) - Math.abs(x.m)
-  );
+export default async function TrendingPage() {
+  // One request for the whole universe, not one per row.
+  const quotes = await getQuotes(UNIVERSE.map((a) => a.t));
+  const live = isLive();
+  const rows = UNIVERSE.map((a) => {
+    const q = quotes.get(a.t)!;
+    return { ...a, q, m: q.changePct };
+  }).sort((x, y) => Math.abs(y.m) - Math.abs(x.m));
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -72,10 +76,10 @@ export default function TrendingPage() {
                     <span className="tr">{i + 1}</span>
                     <span className="tt">{a.t}</span>
                     <span className="tn">{a.n}</span>
-                    <span className="tpx">${priceOf(a.t).toFixed(2)}</span>
+                    <span className="tpx">{fmtPrice(a.q.price)}</span>
                     <svg className="tsp" viewBox="0 0 112 26" preserveAspectRatio="none" aria-hidden="true">
                       <path
-                        d={sparkPath(a.t, 112, 26)}
+                        d={sparkPath(a.q, 112, 26)}
                         fill="none"
                         stroke={stroke}
                         strokeWidth="1.5"
@@ -104,7 +108,7 @@ export default function TrendingPage() {
         </div>
       </FilterList>
 
-      {SYNTHETIC ? (
+      {!live ? (
         <p className="notice warn rv" style={{ marginTop: 18 }}>
           Prototype figures. Prices, moves and sparklines are generated deterministically from the
           ticker text — they are not live quotes and must be replaced with a market data feed before

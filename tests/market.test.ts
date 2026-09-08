@@ -1,0 +1,107 @@
+/**
+ * The market data layer. HANDOFF.md §5.
+ *
+ * These run without a vendor key, which is the point: the site has to be
+ * correct and honest on the synthetic path, and the switch to real data has to
+ * be a configuration change rather than a code change.
+ */
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { fmtMcap, fmtPrice, getQuote, getQuotes, isLive, providerName, sparkPath } from "../lib/market";
+import { syntheticQuote } from "../lib/market/synthetic";
+import { sessionsFor } from "../lib/track";
+import { UNIVERSE } from "../lib/universe";
+
+test("with no key configured the provider is synthetic and says so", () => {
+  // A site that quietly served made-up prices without flagging them would be
+  // the one dishonest thing on an otherwise honest product.
+  assert.equal(process.env.MARKET_API_KEY ?? "", "");
+  assert.equal(isLive(), false);
+  assert.equal(providerName(), "synthetic");
+});
+
+test("every quote carries its own honesty flag", async () => {
+  // Per quote, not per site: a vendor covering 158 of 163 names must not force
+  // the other five to be presented as real.
+  const quotes = await getQuotes(["NVDA", "CCJ", "SGOV"]);
+  for (const q of quotes.values()) {
+    assert.equal(q.synthetic, true, `${q.ticker} did not declare itself`);
+  }
+});
+
+test("quotes are returned for every ticker asked for, always", async () => {
+  // The page must always have something to render; a vendor gap falls back
+  // rather than leaving a hole.
+  const tickers = UNIVERSE.map((u) => u.t);
+  const quotes = await getQuotes(tickers);
+  assert.equal(quotes.size, tickers.length);
+  for (const t of tickers) {
+    const q = quotes.get(t);
+    assert.ok(q, `${t} missing`);
+    assert.ok(q.price > 0, `${t} price ${q.price}`);
+    assert.ok(Number.isFinite(q.changePct), `${t} change ${q.changePct}`);
+  }
+});
+
+test("a ticker outside the universe still yields a usable quote", async () => {
+  // /api/book.csv and the name pages must not throw on an unexpected symbol.
+  const q = await getQuote("ZZZZ");
+  assert.ok(q.price > 0);
+  assert.equal(q.synthetic, true);
+});
+
+test("synthetic quotes stay deterministic", async () => {
+  // The whole test suite, and every screenshot, depends on this.
+  const a = syntheticQuote("NVDA");
+  const b = syntheticQuote("NVDA");
+  assert.deepEqual(a, b);
+});
+
+test("the price and the previous close never contradict the change", () => {
+  for (const t of ["NVDA", "CCJ", "GLD", "SGOV", "TSM"]) {
+    const q = syntheticQuote(t);
+    const implied = ((q.price - q.previousClose) / q.previousClose) * 100;
+    assert.ok(
+      Math.abs(implied - q.changePct) < 0.05,
+      `${t}: change says ${q.changePct}% but the closes imply ${implied.toFixed(2)}%`
+    );
+  }
+});
+
+test("the sparkline is drawn only from points the quote actually reports", () => {
+  // The prototype drew twenty-six invented vertices. Three real ones is coarse
+  // and true; a plausible wiggle beside real prices is the same lie smaller.
+  const q = syntheticQuote("NVDA");
+  const d = sparkPath(q, 112, 26);
+  const vertices = d.split(/[ML]/).filter(Boolean).length;
+  assert.ok(vertices <= 3, `drew ${vertices} points from a 3-point quote`);
+  assert.match(d, /^M[\d.]+ [\d.]+/);
+  // Every y must sit inside the box.
+  for (const m of d.matchAll(/[ML]([\d.]+) ([\d.]+)/g)) {
+    assert.ok(Number(m[1]) >= 0 && Number(m[1]) <= 112, `x ${m[1]}`);
+    assert.ok(Number(m[2]) >= 0 && Number(m[2]) <= 26, `y ${m[2]}`);
+  }
+});
+
+test("a degenerate quote draws a flat line rather than crashing", () => {
+  const d = sparkPath({ ...syntheticQuote("X"), price: 0, previousClose: 0, open: 0 }, 100, 20);
+  assert.match(d, /^M0 10\.0 L100 10\.0$/);
+});
+
+test("formatting refuses to present a missing figure as a number", () => {
+  assert.equal(fmtPrice(0), "—");
+  assert.equal(fmtMcap(0), "—");
+  assert.equal(fmtPrice(NaN), "—");
+  assert.equal(fmtPrice(1052.876), "$1052.88");
+  assert.equal(fmtMcap(228), "$228B");
+  assert.equal(fmtMcap(3400), "$3.40T");
+});
+
+test("the tracking window follows the stated date and stays bounded", () => {
+  assert.equal(sessionsFor(null), 180);
+  assert.equal(sessionsFor(365), 252);
+  assert.equal(sessionsFor(0), 20);
+  assert.equal(sessionsFor(100000), 1260);
+  assert.ok(sessionsFor(30) < sessionsFor(365));
+});

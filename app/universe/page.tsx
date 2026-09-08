@@ -7,7 +7,7 @@ import Link from "next/link";
 import { FilterList } from "@/components/FilterList";
 import { nameHref } from "@/lib/names";
 import { bookHref } from "@/lib/routes";
-import { fmtMcap, mcapOf, priceOf } from "@/lib/market";
+import { fmtMcap, fmtPrice, getQuotes } from "@/lib/market";
 import { NAMES, REVIEWED, THEMES, UNIVERSE_VERSION } from "@/lib/universe";
 
 export const metadata: Metadata = {
@@ -23,7 +23,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", images: [pageOg("universe")] },
 };
 
-export default function UniversePage() {
+export default async function UniversePage() {
+  const quotes = await getQuotes(THEMES.flatMap((t) => t.assets.map((a) => a.t)));
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
       <span className="kick rv">The universe</span>
@@ -93,8 +94,8 @@ export default function UniversePage() {
                         <span className="hn">{a.n}</span>
                         <div className="hy">{a.why}</div>
                         <div className="hm">
-                          {a.k} · ${priceOf(a.t).toFixed(2)} · {fmtMcap(mcapOf(a.t))} · conviction{" "}
-                          {a.c}/100
+                          {a.k} · {fmtPrice(quotes.get(a.t)?.price ?? 0)} ·{" "}
+                          {fmtMcap(quotes.get(a.t)?.marketCap ?? 0)} · conviction {a.c}/100
                         </div>
                       </span>
                     </div>

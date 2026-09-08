@@ -17,7 +17,7 @@ import {
   today,
   trackHref,
 } from "../lib/routes";
-import { sessionsFor } from "../components/TrackChart";
+import { sessionsFor } from "../lib/track";
 import { CHANGELOG, THEMES, UNIVERSE_VERSION } from "../lib/universe";
 
 test("a book URL records the universe it was built against", () => {

@@ -72,8 +72,19 @@ npm test --silent || die "Tes gagal. Tidak akan men-deploy build yang tidak lulu
 
 # ── 6. pm2, tanpa mengganggu tetangga ───────────────────────────────────────
 say "6/8  Menjalankan lewat pm2"
+# Kunci vendor dibaca saat runtime, bukan saat build. Taruh di /var/www/igitur/.env
+#   MARKET_PROVIDER=fmp
+#   MARKET_API_KEY=...
+# Tanpa itu situs jalan dengan angka sintetis dan mengatakannya di setiap halaman.
+MARKET_ENV=""
+if [ -f "$APP/.env" ]; then
+  # shellcheck disable=SC2046
+  MARKET_ENV=$(grep -E '^MARKET_(PROVIDER|API_KEY)=' "$APP/.env" | tr '\n' ' ')
+  [ -n "$MARKET_ENV" ] && echo "  kunci vendor ditemukan di $APP/.env"
+fi
+[ -z "$MARKET_ENV" ] && echo "  tanpa kunci vendor — situs memakai angka sintetis dan menyatakannya"
 pm2 delete "$PM2_NAME" 2>/dev/null || true
-NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" \
+env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" $MARKET_ENV \
   pm2 start "$APP/.next/standalone/server.js" --name "$PM2_NAME" --cwd "$APP/.next/standalone"
 pm2 save
 sleep 3

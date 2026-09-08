@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { fmtMcap, mcapOf, moveFor, priceOf, sparkPath, SYNTHETIC } from "@/lib/market";
+import { fmtMcap, fmtPrice, getQuote, isLive, sparkPath } from "@/lib/market";
 import { lookupName, nameHref, NAMES_INDEX } from "@/lib/names";
 import { pageOg } from "@/lib/og-pages";
 import { bookHref } from "@/lib/routes";
@@ -61,8 +61,9 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
   const n = lookupName(ticker);
   if (!n) notFound();
 
-  const move = moveFor(n.ticker);
-  const price = priceOf(n.ticker);
+  const q = await getQuote(n.ticker);
+  const move = q.changePct;
+  const live = isLive();
   const best = n.positions[0];
 
   return (
@@ -84,7 +85,7 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
 
       <div className="stats rv" style={{ marginTop: "clamp(26px,3.5vw,44px)" }}>
         <div>
-          <div className="sn">${price.toFixed(2)}</div>
+          <div className="sn">{fmtPrice(q.price)}</div>
           <div className="sl">last price</div>
         </div>
         <div>
@@ -95,7 +96,7 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
           <div className="sl">session</div>
         </div>
         <div>
-          <div className="sn">{fmtMcap(mcapOf(n.ticker))}</div>
+          <div className="sn">{fmtMcap(q.marketCap)}</div>
           <div className="sl">market cap</div>
         </div>
         <div>
@@ -125,7 +126,7 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
             aria-label={`${n.ticker} session chart, ${move.toFixed(2)} percent`}
           >
             <path
-              d={sparkPath(n.ticker, 640, 90)}
+              d={sparkPath(q, 640, 90)}
               fill="none"
               stroke={move >= 0 ? "#FAFAFA" : "#AEB6FF"}
               strokeWidth="2"
@@ -201,7 +202,7 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
         </div>
       )}
 
-      {SYNTHETIC ? (
+      {!live ? (
         <p className="notice warn rv" style={{ marginTop: 22 }}>
           Prototype figures. The price, session move, market cap and chart above are generated
           deterministically from the ticker text. They are not live quotes. The conviction scores

@@ -132,6 +132,30 @@ Do **not** add security headers in nginx. The app already sends CSP,
 produces duplicates, and browsers apply the most restrictive of each — which
 is how sites break in ways that are painful to debug.
 
+## 5b. Market data
+
+Without a vendor key the site runs on figures generated from the ticker text and
+says so on every page that carries a number. To make them real, put a key on the
+server — at runtime, not build time, so this needs no rebuild:
+
+```bash
+cat > /var/www/igitur/.env <<'ENV'
+MARKET_PROVIDER=fmp
+MARKET_API_KEY=your-key-here
+ENV
+chmod 600 /var/www/igitur/.env
+pm2 restart igitur --update-env
+```
+
+Financial Modeling Prep is the default because it batches: all 163 tickers in
+one request, which is what makes a free tier workable for a page that renders
+the whole universe. A key is free at
+<https://site.financialmodelingprep.com/developer/docs>.
+
+Confirm it took by loading `/status` — the "Live market data" line moves from
+the second list to the first on its own, because it is derived from the data
+rather than written by hand.
+
 ## 6. HTTPS
 
 ```bash
