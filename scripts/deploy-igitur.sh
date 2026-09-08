@@ -103,7 +103,10 @@ curl -fsS "http://127.0.0.1:$PORT/" -o /dev/null && echo "  aplikasi menjawab di
 # ── 7. nginx — satu file baru, yang lain tidak disentuh ─────────────────────
 say "7/8  Menambah blok nginx"
 CONF="/etc/nginx/sites-available/$DOMAIN"
-if grep -rlq "server_name .*$DOMAIN" /etc/nginx/sites-enabled/ 2>/dev/null; then
+# -R, bukan -r: sites-enabled berisi symlink, dan `grep -r` melewatkannya. Dengan
+# -r pemeriksaan ini gagal melihat konfigurasi yang sudah ada, lalu blok di bawah
+# menimpa berkas yang sudah disunting certbot — HTTPS mati.
+if grep -Rlq "server_name .*$DOMAIN" /etc/nginx/sites-enabled/ /etc/nginx/sites-available/ 2>/dev/null; then
   echo "  $DOMAIN sudah punya blok nginx — dilewati"
 else
   cat > "$CONF" <<NGINX

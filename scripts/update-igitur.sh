@@ -24,10 +24,21 @@ DOMAIN="${DOMAIN:-igitur.xyz}"
 PM2_NAME="${PM2_NAME:-igitur}"
 NGINX_DIR="${NGINX_DIR:-/etc/nginx/sites-enabled}"
 
+# `set -e` menghentikan skrip tanpa sepatah kata pun. Pada skrip deploy itu
+# kegagalan terburuk: operator melihat sebuah judul, lalu prompt, dan tidak tahu
+# apakah situsnya sudah tersentuh. Apa pun yang keluar tidak nol tanpa pesan
+# kami sendiri, disebutkan di sini.
+FAILED_CMD=""; FAILED_LINE=""; DIED=""
+trap 'FAILED_CMD=$BASH_COMMAND; FAILED_LINE=$LINENO' ERR
+trap 'rc=$?; if [ "$rc" -ne 0 ] && [ -z "$DIED" ]; then
+        printf "\n\033[1;31mBERHENTI mendadak di baris %s (kode %s):\n  %s\n  Situs TIDAK diubah oleh kegagalan ini.\033[0m\n" \
+          "${FAILED_LINE:-?}" "$rc" "${FAILED_CMD:-?}" >&2
+      fi' EXIT
+
 say()  { printf '\n\033[1;36m=== %s\033[0m\n' "$*"; }
 ok()   { printf '  \033[1;32m✓\033[0m %s\n' "$*"; }
 warn() { printf '  \033[1;33m!\033[0m %s\n' "$*"; }
-die()  { printf '\n\033[1;31mBERHENTI: %s\033[0m\n' "$*" >&2; exit 1; }
+die()  { DIED=1; printf '\n\033[1;31mBERHENTI: %s\033[0m\n' "$*" >&2; exit 1; }
 
 # ── 1. Ini memang pemasangan yang sudah jalan? ──────────────────────────────
 say "1/7  Memeriksa pemasangan yang ada"
@@ -36,10 +47,22 @@ pm2 describe "$PM2_NAME" >/dev/null 2>&1 || die "pm2 tidak mengenal '$PM2_NAME'.
 
 # Port diambil dari nginx, bukan ditebak. Inilah satu-satunya sumber kebenaran:
 # ke sinilah lalu lintas sungguhan dikirim.
-CONF=$(grep -rl "server_name .*$DOMAIN" "$NGINX_DIR/" 2>/dev/null | head -1)
-[ -n "$CONF" ] || die "Tidak menemukan blok nginx untuk $DOMAIN. Jangan diperbarui membabi buta."
-PORT=$(grep -oE 'proxy_pass +https?://127\.0\.0\.1:[0-9]+' "$CONF" | grep -oE '[0-9]+$' | head -1)
-[ -n "$PORT" ] || die "Tidak bisa membaca port dari $CONF. Periksa manual sebelum lanjut."
+# -R, bukan -r: sites-enabled berisi symlink ke sites-available, dan `grep -r`
+# melewatkan symlink yang ditemuinya saat menelusuri. Dengan -r skrip ini tidak
+# menemukan apa pun di server sungguhan meski konfigurasinya ada.
+# `|| true` supaya kegagalan grep memunculkan pesan di bawah, bukan `set -e`
+# yang mematikan skrip tanpa penjelasan.
+CONF=$(grep -Rl "server_name .*$DOMAIN" "$NGINX_DIR/" 2>/dev/null | head -1 || true)
+[ -n "$CONF" ] || CONF=$(grep -Rl "server_name .*$DOMAIN" /etc/nginx/sites-available/ 2>/dev/null | head -1 || true)
+if [ -z "$CONF" ]; then
+  die "Tidak menemukan blok nginx untuk $DOMAIN di $NGINX_DIR atau sites-available.
+       Lihat sendiri:  grep -Rl \"$DOMAIN\" /etc/nginx/"
+fi
+PORT=$(grep -oE 'proxy_pass +https?://127\.0\.0\.1:[0-9]+' "$CONF" 2>/dev/null | grep -oE '[0-9]+$' | head -1 || true)
+if [ -z "$PORT" ]; then
+  die "Tidak bisa membaca port dari $CONF. Periksa manual sebelum lanjut:
+       grep proxy_pass $CONF"
+fi
 ok "nginx  : $CONF → 127.0.0.1:$PORT"
 ok "commit : $(git -C "$APP" log --oneline -1)"
 
