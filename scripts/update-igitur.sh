@@ -178,7 +178,10 @@ sleep 4
 # ── 7. Membuktikan, bukan menganggap ────────────────────────────────────────
 say "7/7  Memverifikasi"
 FAIL=0
-for path in / /status /universe /trending /token /legal; do
+# Setiap rute yang dipakai orang, termasuk yang baru. Daftar ini pernah
+# menyatakan sebuah deploy berhasil tanpa pernah menyentuh halaman yang justru
+# baru saja di-deploy — tambahkan rute baru ke sini, bukan ke ingatan.
+for path in / /status /universe /trending /token /legal /ledger /compose /changes; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "http://127.0.0.1:$PORT$path" || true)
   if [ "$code" = "200" ]; then printf '  \033[1;32m✓\033[0m %-12s %s\n' "$path" "$code"
   else printf '  \033[1;31m✗\033[0m %-12s %s\n' "$path" "$code"; FAIL=1; fi
