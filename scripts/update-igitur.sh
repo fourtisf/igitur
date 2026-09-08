@@ -76,16 +76,34 @@ fi
 
 # ── 2. Kode ─────────────────────────────────────────────────────────────────
 say "2/7  Mengambil kode"
-PREV_COMMIT=$(git -C "$APP" rev-parse HEAD)
+
+# Pertanyaannya bukan "apakah git berubah barusan", melainkan "apakah yang
+# TERPASANG cocok dengan yang TERBANGUN". Versi pertama skrip ini membandingkan
+# HEAD sebelum dan sesudah fetch — dan siapa pun yang menjalankan
+# `git reset --hard origin/HEAD` lebih dulu membuat keduanya sama, sehingga
+# skrip menyatakan "sudah terbaru" sementara .next masih build lama. Kode baru
+# di disk, kode lama yang disajikan. Jadi commit yang dibangun dicap ke dalam
+# build itu sendiri, dan itulah yang dibandingkan.
+BUILT_STAMP="$APP/.next/BUILT_COMMIT"
+BUILT=$(cat "$BUILT_STAMP" 2>/dev/null || true)
+
 git -C "$APP" fetch --all --quiet
 git -C "$APP" reset --hard origin/HEAD --quiet
 NEW_COMMIT=$(git -C "$APP" rev-parse HEAD)
-if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
-  ok "sudah versi terbaru — tidak ada yang perlu dibangun"
+
+# Dipakai kalau harus mundur: kode yang cocok dengan .next yang tersimpan.
+ROLLBACK_COMMIT="${BUILT:-$NEW_COMMIT}"
+
+if [ -z "$BUILT" ]; then
+  warn "build yang ada tidak bercap — dibangun ulang supaya cap bisa dipercaya nanti"
+elif [ "$BUILT" = "$NEW_COMMIT" ] && [ "${FORCE:-}" != "1" ]; then
+  ok "sudah terbaru: build cocok dengan ${NEW_COMMIT:0:7}"
+  echo "  (untuk membangun ulang paksa: FORCE=1 bash scripts/update-igitur.sh)"
   exit 0
+else
+  ok "terpasang ${NEW_COMMIT:0:7}, terbangun ${BUILT:0:7} — perlu dibangun"
+  git -C "$APP" log --oneline "$BUILT..$NEW_COMMIT" 2>/dev/null | sed 's/^/      /' || true
 fi
-ok "dari ${PREV_COMMIT:0:7} ke ${NEW_COMMIT:0:7}"
-git -C "$APP" log --oneline "$PREV_COMMIT..$NEW_COMMIT" | sed 's/^/      /'
 
 cd "$APP"
 
@@ -114,7 +132,7 @@ restore() {
   warn "mengembalikan build lama"
   rm -rf .next
   [ -d .next.prev ] && mv .next.prev .next
-  git reset --hard "$PREV_COMMIT" --quiet
+  git reset --hard "$ROLLBACK_COMMIT" --quiet
   # shellcheck disable=SC2086
   env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" $MARKET_ENV \
     pm2 restart "$PM2_NAME" --update-env >/dev/null 2>&1 || true
@@ -135,7 +153,8 @@ fi
 # .next/static tidak ikut ke dalam standalone. Tanpa ini situs terbuka tanpa CSS.
 cp -r .next/static .next/standalone/.next/static
 [ -d public ] && cp -r public .next/standalone/public
-ok "standalone siap: $(du -sh .next/standalone | cut -f1)"
+echo "$NEW_COMMIT" > "$BUILT_STAMP"
+ok "standalone siap: $(du -sh .next/standalone | cut -f1), dicap ${NEW_COMMIT:0:7}"
 
 # ── 5. Tes ──────────────────────────────────────────────────────────────────
 say "5/7  Menjalankan tes"

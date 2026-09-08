@@ -137,8 +137,21 @@ is how sites break in ways that are painful to debug.
 `deploy-igitur.sh` adalah untuk pemasangan **pertama**. Untuk memperbarui:
 
 ```bash
-cd /var/www/igitur && git fetch --all && git reset --hard origin/HEAD
+cd /var/www/igitur
 bash scripts/update-igitur.sh
+```
+
+Cukup itu. **Jangan** menjalankan `git fetch`/`git reset` sendiri lebih dulu —
+skripnya sudah melakukannya, dan mendahuluinya pernah membuat versi awal skrip
+ini menyimpulkan "tidak ada yang berubah" lalu keluar tanpa membangun. Skrip
+sekarang membandingkan commit yang **tercap di dalam build** (`.next/BUILT_COMMIT`)
+dengan yang terpasang, jadi mendahuluinya tidak lagi berbahaya — tapi tetap
+tidak perlu.
+
+Untuk membangun ulang meski keduanya sama:
+
+```bash
+FORCE=1 bash scripts/update-igitur.sh
 ```
 
 Jangan menjalankan ulang `deploy-igitur.sh` pada situs yang hidup. Ia memilih
