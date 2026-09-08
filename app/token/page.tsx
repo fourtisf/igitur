@@ -182,7 +182,9 @@ export default function TokenPage() {
 
       <div className="cta rv" style={{ marginTop: "clamp(40px,5vw,70px)" }}>
         <h2 style={{ maxWidth: "18ch", marginInline: "auto" }}>
-          The address drops in the channels first.
+          {SITE.x || SITE.telegram
+            ? "The address drops in the channels first."
+            : "The address will appear on this domain first."}
         </h2>
         <p className="sub" style={{ margin: "16px auto 0", textAlign: "center", maxWidth: "42ch" }}>
           {SITE.x || SITE.telegram
