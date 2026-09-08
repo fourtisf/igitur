@@ -1,4 +1,4 @@
-import { fmpProvider } from "./fmp";
+import { fmpLastError, fmpProvider } from "./fmp";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
 import type { Bar, MarketProvider, Quote } from "./types";
 
@@ -36,13 +36,26 @@ function get(): MarketProvider {
   return provider;
 }
 
-/** True when a real vendor is configured. Read by the UI to drop the warnings. */
+/**
+ * True when a real vendor is *configured* — not that it answers. A key can be
+ * set and rejected, so pages decide their warnings from `quote.synthetic`
+ * instead; this only says which provider was selected.
+ */
 export function isLive(): boolean {
   return get().live;
 }
 
 export function providerName(): string {
   return get().name;
+}
+
+/**
+ * Why the vendor last failed, or null. Shown on /status so a rejected key is
+ * diagnosable from the site itself rather than only from the server logs.
+ * Never contains the key.
+ */
+export function vendorError(): string | null {
+  return get().name === "fmp" ? fmpLastError() : null;
 }
 
 // ── Caching ──────────────────────────────────────────────────────────────────

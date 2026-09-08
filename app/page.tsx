@@ -11,6 +11,14 @@ import { pageOg } from "@/lib/og-pages";
 import { FEATURED, HOST, SITE } from "@/lib/site";
 import { NAMES, THEMES } from "@/lib/universe";
 
+/**
+ * Market figures on this page are fetched on the server, and the vendor key is
+ * set at runtime rather than at build time. Without this the page would be
+ * baked once — during a build that had no key — and would go on serving
+ * synthetic numbers for ever, however the server was later configured.
+ */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: `${SITE.name} — ${SITE.tagline}`,
   description: SITE.description,

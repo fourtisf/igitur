@@ -147,14 +147,34 @@ chmod 600 /var/www/igitur/.env
 pm2 restart igitur --update-env
 ```
 
-Financial Modeling Prep is the default because it batches: all 163 tickers in
-one request, which is what makes a free tier workable for a page that renders
-the whole universe. A key is free at
+Financial Modeling Prep is the default because it batches: the whole universe
+in a handful of requests, which is what makes a free tier workable for a page
+that renders 163 tickers. A key is free at
 <https://site.financialmodelingprep.com/developer/docs>.
 
-Confirm it took by loading `/status` — the "Live market data" line moves from
-the second list to the first on its own, because it is derived from the data
-rather than written by hand.
+The code calls FMP's `/stable` API. The older `/api/v3` is legacy, is no longer
+in the public documentation, and a key created today does not reach it — a
+build pointed there returns 403 for every ticker and leaves the site quietly
+synthetic.
+
+The pages carrying numbers are prerendered and then regenerated on a timer —
+five minutes, and one minute for `/status`. So after a restart the first load
+still shows the old page; the next one after that interval has the real
+figures. That is the whole delay, and it is why no rebuild is needed.
+
+Confirm it took by loading `/status`. That page does not trust the
+configuration: it asks the vendor for one real quote and reports what came
+back. Three outcomes, and it distinguishes them:
+
+- **"Live market data from fmp"** — working.
+- **"a vendor key is configured but fmp is not answering"** — the key is set and
+  being rejected. The line prints the vendor's own response: `401`/`403` is a
+  bad key, `402` a plan that excludes batch quotes, `429` the daily quota.
+- **"the market data is still synthetic"** — no key is set at all.
+
+Everything else on the site derives its warning the same way, per quote rather
+than per site, so a vendor that covers 158 of 163 names flags the other five
+instead of letting them pass as real.
 
 ## 6. HTTPS
 

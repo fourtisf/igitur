@@ -3,29 +3,63 @@ import type { Bar, MarketProvider, Quote } from "./types";
 /**
  * Financial Modeling Prep.
  *
- * Chosen from the three vendors HANDOFF.md §5 names because it batches: all 163
- * tickers arrive in one request, which is what makes the free tier viable for a
- * site that renders the whole universe on a single page.
+ * Chosen from the three vendors HANDOFF.md §5 names because it batches: the
+ * whole universe arrives in a handful of requests, which is what makes a free
+ * tier viable for a site that renders 163 tickers on one page.
  *
  * Configure with:
  *   MARKET_PROVIDER=fmp
  *   MARKET_API_KEY=...
  *
- * ⚠ This path has not been exercised against the live API — no key was
- * available when it was written. The response shapes below follow FMP's
- * documented `/quote` and `/historical-price-full` formats, and every field is
- * read defensively: a missing or malformed value falls back to the synthetic
- * figure for that one ticker rather than rendering a zero as if it were a price.
+ * ── What is verified, and what is not (checked 2026-09-08) ──────────────────
+ *
+ * This targets FMP's `/stable` API, not the older `/api/v3`. That matters: v3
+ * is legacy, no longer in the public documentation, and reachable only by
+ * accounts that already had it — a key created today would have got 401 or 403
+ * from every v3 call, and the site would have silently stayed synthetic.
+ *
+ * The endpoint paths and the parameter names below come from FMP's current
+ * documentation. The exact JSON field names could not be confirmed against a
+ * live response, because no key was available and the vendor's domain is not
+ * reachable from the machine this was written on. So the parser accepts both
+ * spellings wherever the two API generations disagree — `changePercentage`
+ * (stable) and `changesPercentage` (v3), a bare array and `{historical: []}` —
+ * and every field is read defensively. A field that is missing or malformed
+ * falls back to the synthetic figure for that one ticker rather than putting a
+ * zero on the page as though it were a price.
+ *
+ * If the vendor is configured and the site still reports synthetic data,
+ * /status names the reason; the likely one is a plan that excludes batch
+ * quotes.
  */
 
-const BASE = "https://financialmodelingprep.com/api/v3";
+const BASE = "https://financialmodelingprep.com/stable";
 
-/** FMP rejects very long symbol lists; batch well under any documented cap. */
+/** Batch size. FMP documents no cap; stay well under whatever it is. */
 const BATCH = 50;
+
+/** A vendor call that hangs must not hold a page render open. */
+const TIMEOUT_MS = 8_000;
+
+/**
+ * How long Next may reuse a vendor response, per call kind. These mirror the
+ * in-process TTLs in ./index.ts rather than competing with them: the same
+ * intent stated at the two layers that each need to hear it.
+ *
+ * Passing `cache: "no-store"` here instead would be a quiet disaster. It makes
+ * Next throw DynamicServerError inside a statically rendered route, so on the
+ * prerendered pages the vendor would never be reached at all — with a valid
+ * key configured, the whole universe would still render synthetic.
+ */
+const QUOTE_TTL_S = 60;
+const HISTORY_TTL_S = 6 * 60 * 60;
 
 interface FmpQuote {
   symbol?: string;
   price?: number;
+  /** `/stable` spelling. */
+  changePercentage?: number;
+  /** `/api/v3` spelling, kept so a legacy-shaped response still parses. */
   changesPercentage?: number;
   marketCap?: number;
   previousClose?: number;
@@ -33,32 +67,68 @@ interface FmpQuote {
   timestamp?: number;
 }
 
-interface FmpHistorical {
-  historical?: { date?: string; close?: number }[];
+interface FmpBar {
+  date?: string;
+  close?: number;
 }
+
+/** `/stable` returns a bare array; `/api/v3` wrapped it in `historical`. */
+type FmpHistory = FmpBar[] | { historical?: FmpBar[] };
 
 function num(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-async function getJson<T>(url: string, signal?: AbortSignal): Promise<T | null> {
+/**
+ * The last vendor failure, so a misconfiguration is discoverable instead of
+ * mysterious. Read by /status. Never contains the key.
+ */
+let lastError: string | null = null;
+export function fmpLastError(): string | null {
+  return lastError;
+}
+
+/**
+ * The key travels in the query string, because that is the only way FMP
+ * accepts it. So anything derived from a failed request — and error messages
+ * from fetch and from Next both quote the whole URL — has to be scrubbed
+ * before it can go anywhere a person might read it. /status prints this.
+ */
+function scrub(text: string, apiKey: string): string {
+  return text
+    .split(apiKey)
+    .join("***")
+    .replace(/apikey=[^&\s]*/gi, "apikey=***")
+    // A whole URL in a user-facing message is noise at best and a second
+    // chance to leak at worst.
+    .replace(/https?:\/\/\S+/g, "the vendor endpoint")
+    .slice(0, 200);
+}
+
+async function getJson<T>(url: string, ttl: number, apiKey: string): Promise<T | null> {
   try {
     const res = await fetch(url, {
-      signal,
-      // Caching is handled a layer up, keyed by ticker set, so the fetch itself
-      // must not be cached separately or the TTLs fight each other.
-      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      next: { revalidate: ttl },
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // 401/403: key rejected. 402: endpoint needs a paid plan. 429: quota.
+      lastError = `HTTP ${res.status} from ${new URL(url).pathname}`;
+      return null;
+    }
+    lastError = null;
     return (await res.json()) as T;
-  } catch {
+  } catch (e) {
     // A vendor outage must degrade to synthetic, never take the page down.
+    lastError = scrub(e instanceof Error ? e.message : "request failed", apiKey);
     return null;
   }
 }
 
 export function fmpProvider(apiKey: string): MarketProvider {
+  const key = encodeURIComponent(apiKey);
+
   return {
     name: "fmp",
     live: true,
@@ -69,8 +139,8 @@ export function fmpProvider(apiKey: string): MarketProvider {
 
       for (let i = 0; i < tickers.length; i += BATCH) {
         const slice = tickers.slice(i, i + BATCH);
-        const url = `${BASE}/quote/${slice.join(",")}?apikey=${encodeURIComponent(apiKey)}`;
-        const rows = await getJson<FmpQuote[]>(url);
+        const url = `${BASE}/batch-quote?symbols=${slice.map(encodeURIComponent).join(",")}&apikey=${key}`;
+        const rows = await getJson<FmpQuote[]>(url, QUOTE_TTL_S, apiKey);
         if (!Array.isArray(rows)) continue;
 
         for (const row of rows) {
@@ -80,7 +150,7 @@ export function fmpProvider(apiKey: string): MarketProvider {
           // fall back for this ticker alone.
           if (!ticker || price === null || price <= 0) continue;
 
-          const changePct = num(row.changesPercentage) ?? 0;
+          const changePct = num(row.changePercentage) ?? num(row.changesPercentage) ?? 0;
           const previousClose =
             num(row.previousClose) ?? Math.round((price / (1 + changePct / 100)) * 100) / 100;
 
@@ -102,10 +172,10 @@ export function fmpProvider(apiKey: string): MarketProvider {
 
     async history(ticker, from) {
       const url =
-        `${BASE}/historical-price-full/${encodeURIComponent(ticker)}` +
-        `?from=${encodeURIComponent(from)}&apikey=${encodeURIComponent(apiKey)}`;
-      const body = await getJson<FmpHistorical>(url);
-      const rows = body?.historical;
+        `${BASE}/historical-price-eod/full?symbol=${encodeURIComponent(ticker)}` +
+        `&from=${encodeURIComponent(from)}&apikey=${key}`;
+      const body = await getJson<FmpHistory>(url, HISTORY_TTL_S, apiKey);
+      const rows = Array.isArray(body) ? body : body?.historical;
       if (!Array.isArray(rows)) return [];
 
       const bars: Bar[] = [];

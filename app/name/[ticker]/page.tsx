@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { fmtMcap, fmtPrice, getQuote, isLive, sparkPath } from "@/lib/market";
+import { fmtMcap, fmtPrice, getQuote, sparkPath } from "@/lib/market";
 import { lookupName, nameHref, NAMES_INDEX } from "@/lib/names";
 import { pageOg } from "@/lib/og-pages";
 import { bookHref } from "@/lib/routes";
@@ -20,6 +20,14 @@ import { THEMES, UNIVERSE_VERSION } from "@/lib/universe";
  */
 
 type Params = { ticker: string };
+
+/**
+ * Market figures on this page are fetched on the server, and the vendor key is
+ * set at runtime rather than at build time. Without this the page would be
+ * baked once — during a build that had no key — and would go on serving
+ * synthetic numbers for ever, however the server was later configured.
+ */
+export const revalidate = 300;
 
 export function generateStaticParams(): Params[] {
   return NAMES_INDEX.map((n) => ({ ticker: n.ticker.toLowerCase() }));
@@ -63,7 +71,8 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
 
   const q = await getQuote(n.ticker);
   const move = q.changePct;
-  const live = isLive();
+  // Per quote, not per site: this name is real only if this quote is.
+  const live = !q.synthetic;
   const best = n.positions[0];
 
   return (

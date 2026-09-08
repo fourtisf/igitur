@@ -10,6 +10,14 @@ import { bookHref } from "@/lib/routes";
 import { fmtMcap, fmtPrice, getQuotes } from "@/lib/market";
 import { NAMES, REVIEWED, THEMES, UNIVERSE_VERSION } from "@/lib/universe";
 
+/**
+ * Market figures on this page are fetched on the server, and the vendor key is
+ * set at runtime rather than at build time. Without this the page would be
+ * baked once — during a build that had no key — and would go on serving
+ * synthetic numbers for ever, however the server was later configured.
+ */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "The universe",
   description: `Every name a Igitur book can hold — ${NAMES} across ${THEMES.length} themes — published with the reason it can earn weight and the conviction score that sets its size.`,

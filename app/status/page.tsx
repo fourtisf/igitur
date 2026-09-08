@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
 
-import { isLive, providerName } from "@/lib/market";
+import { getQuote, isLive, providerName, vendorError } from "@/lib/market";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
+
+/**
+ * Market figures on this page are fetched on the server, and the vendor key is
+ * set at runtime rather than at build time. Without this the page would be
+ * baked once — during a build that had no key — and would go on serving
+ * synthetic numbers for ever, however the server was later configured.
+ */
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "What is built",
@@ -56,10 +64,15 @@ const ALWAYS_MISSING = [
   "Every utility listed on the token page",
 ];
 
-export default function StatusPage() {
+export default async function StatusPage() {
   // The market-data line moves by itself. Writing it by hand is how a status
   // page drifts from the thing it describes.
-  const live = isLive();
+  // Ask the vendor for one real quote rather than trusting the configuration.
+  // A key that is set but rejected leaves every figure synthetic, and this page
+  // of all pages must not be the one that gets that wrong.
+  const configured = isLive();
+  const live = configured && !(await getQuote("SPY")).synthetic;
+  const rejected = configured && !live;
   const LIVE = live
     ? [`Live market data from ${providerName()}`, ...ALWAYS_LIVE]
     : ALWAYS_LIVE;
@@ -117,11 +130,16 @@ export default function StatusPage() {
              to a generated one and is flagged individually, rather than the whole page claiming to
              be real. Tracking pages stay out of the sitemap until their history has been checked
              against a second source.`
-          : `The market data is still synthetic. Prices, moves, market caps and the whole return
-             series are generated from the ticker text and reflect nothing. The vendor layer is
-             built and waiting on a key — set MARKET_API_KEY and this line moves by itself. The
-             tracking pages are deliberately kept out of search engines and out of the sitemap
-             while this is true; a fabricated return has no business in a search result.`}
+          : rejected
+            ? `A vendor key is configured but ${providerName()} is not answering, so every figure on
+               the site is synthetic and flagged as such. The last thing the vendor said was:
+               ${vendorError() ?? "no response"}. A 401 or 403 means the key is wrong; a 402 means
+               the plan does not include batch quotes; a 429 means the daily quota is spent.`
+            : `The market data is still synthetic. Prices, moves, market caps and the whole return
+               series are generated from the ticker text and reflect nothing. The vendor layer is
+               built and waiting on a key — set MARKET_API_KEY and this line moves by itself. The
+               tracking pages are deliberately kept out of search engines and out of the sitemap
+               while this is true; a fabricated return has no business in a search result.`}
       </p>
       <p className="notice rv" style={{ marginTop: 14 }}>
         Order routing is the hardest line on this page. It needs a broker relationship and custody,

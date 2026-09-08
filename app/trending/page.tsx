@@ -5,9 +5,17 @@ import Link from "next/link";
 
 import { FilterList } from "@/components/FilterList";
 import { nameHref } from "@/lib/names";
-import { fmtPrice, getQuotes, isLive, sparkPath } from "@/lib/market";
+import { fmtPrice, getQuotes, sparkPath } from "@/lib/market";
 import { HOST, SITE } from "@/lib/site";
 import { UNIVERSE } from "@/lib/universe";
+
+/**
+ * Market figures on this page are fetched on the server, and the vendor key is
+ * set at runtime rather than at build time. Without this the page would be
+ * baked once — during a build that had no key — and would go on serving
+ * synthetic numbers for ever, however the server was later configured.
+ */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Trending",
@@ -28,7 +36,11 @@ export const metadata: Metadata = {
 export default async function TrendingPage() {
   // One request for the whole universe, not one per row.
   const quotes = await getQuotes(UNIVERSE.map((a) => a.t));
-  const live = isLive();
+  // Read from the quotes, not from whether a key is set. A key the vendor
+  // rejects still leaves every figure synthetic, and a page that dropped its
+  // warning on the strength of the configuration alone would be the one
+  // dishonest thing here.
+  const live = [...quotes.values()].some((q) => !q.synthetic);
   const rows = UNIVERSE.map((a) => {
     const q = quotes.get(a.t)!;
     return { ...a, q, m: q.changePct };
