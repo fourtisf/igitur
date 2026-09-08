@@ -28,17 +28,33 @@ workaround that keeps the features.
 
 ---
 
+## 0. This box is shared
+
+`31.97.66.123` already runs two other projects — `heirlom-server`, `heirlom-web`,
+`sunmil-api` and `sunmil-web` are online under pm2. Everything below is written
+so that Igitur lands beside them without touching them.
+
+Three rules follow from that:
+
+- **Do not reinstall Node, nginx or pm2.** They are there and other apps depend
+  on them. Check versions instead: `node -v` needs to be 22 or newer.
+- **Do not assume port 3000 is free.** Pick one nothing is listening on:
+  `ss -ltnp | grep -E ":(3000|3001|3002|3003)"`. This guide uses `3100`; change
+  it if that is taken.
+- **Do not edit or reset the existing nginx config.** Add one new file for
+  igitur.xyz and leave `sites-enabled/` otherwise alone. `nginx -t` before every
+  reload — a syntax error takes the other two sites down with yours.
+
 ## 1. Server preparation, once
 
-SSH in as root, then:
+Only what is missing:
 
 ```bash
-# Node 22 + a process manager + a reverse proxy
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-apt-get install -y nodejs nginx
-npm install -g pm2
+node -v                    # need >= 22; if older, upgrade carefully — the
+                           # other apps run on it too
+command -v pm2 nginx rsync # all should already be present
 
-# A non-root user to run the app
+# A non-root user, so Igitur cannot reach the other projects' files
 adduser --disabled-password --gecos "" igitur
 ```
 
@@ -73,14 +89,18 @@ and the site loads with no CSS and no fonts.
 ```bash
 ssh igitur@31.97.66.123
 cd ~/app
-NEXT_PUBLIC_SITE_URL=https://igitur.xyz PORT=3000 pm2 start server.js --name igitur
-pm2 save
-pm2 startup          # run the line it prints, as root, so it survives reboot
+NEXT_PUBLIC_SITE_URL=https://igitur.xyz PORT=3100 pm2 start server.js --name igitur
+pm2 save             # this rewrites the saved list — it will now include
+                     # heirlom and sunmil as well, which is what you want
 ```
+
+`pm2 startup` is already configured on this box for the existing apps; running
+it again is unnecessary and can duplicate the systemd unit.
 
 ## 5. Nginx in front
 
-`/etc/nginx/sites-available/igitur.xyz`:
+A **new** file, `/etc/nginx/sites-available/igitur.xyz`. Do not add this to an
+existing site's config:
 
 ```nginx
 server {
@@ -88,7 +108,7 @@ server {
     server_name igitur.xyz www.igitur.xyz;
 
     location / {
-        proxy_pass         http://127.0.0.1:3000;
+        proxy_pass         http://127.0.0.1:3100;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
@@ -100,8 +120,11 @@ server {
 
 ```bash
 ln -s /etc/nginx/sites-available/igitur.xyz /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
+nginx -t && systemctl reload nginx     # never reload without -t passing first
 ```
+
+If `nginx -t` fails, fix it before reloading. A bad config does not fail
+gracefully — it takes heirlom and sunmil offline along with Igitur.
 
 Do **not** add security headers in nginx. The app already sends CSP,
 `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS and
@@ -112,9 +135,13 @@ is how sites break in ways that are painful to debug.
 ## 6. HTTPS
 
 ```bash
-apt-get install -y certbot python3-certbot-nginx
+# certbot is likely already installed for the other domains
+command -v certbot || apt-get install -y certbot python3-certbot-nginx
 certbot --nginx -d igitur.xyz -d www.igitur.xyz
 ```
+
+Certbot only rewrites the server block matching these names, so the other
+sites' certificates are untouched.
 
 This matters beyond the padlock: the app sends HSTS with `preload`, which is
 meaningless — and browsers ignore it — until the site actually serves HTTPS.
@@ -157,7 +184,8 @@ Then paste a book URL into the X post composer and confirm the card renders.
 NEXT_PUBLIC_SITE_URL=https://igitur.xyz npm run build
 rsync -az --delete .next/standalone/ igitur@31.97.66.123:/home/igitur/app/
 rsync -az --delete .next/static/     igitur@31.97.66.123:/home/igitur/app/.next/static/
-ssh igitur@31.97.66.123 "pm2 restart igitur"
+ssh igitur@31.97.66.123 "pm2 restart igitur"   # named, so the other apps
+                                              # are not restarted
 ```
 
 ## Before you launch the token
