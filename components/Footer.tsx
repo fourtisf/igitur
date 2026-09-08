@@ -32,6 +32,7 @@ export function Footer() {
           <Link href="/universe">The universe</Link>
           <Link href="/changes">Universe changes</Link>
           <Link href="/method">Methodology</Link>
+          <Link href="/ledger">The record</Link>
           <Link href="/token">Token</Link>
           <Link href="/status">What is built</Link>
         </div>

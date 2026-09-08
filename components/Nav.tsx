@@ -13,7 +13,7 @@ const LINKS: [string, string][] = [
   ["/compose", "Compose"],
   ["/compare", "Compare"],
   ["/history", "History"],
-  ["/trending", "Trending"],
+  ["/ledger", "Record"], ["/trending", "Trending"],
   ["/track", "Track"],
   ["/universe", "Universe"],
   ["/token", "Token"],

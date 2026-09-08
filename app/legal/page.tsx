@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { twitterCard } from "@/lib/twitter-card";
 
 import { marketIsReal, providerName } from "@/lib/market";
@@ -12,15 +13,15 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
   title: "Terms, disclosures and privacy",
   description: live
-    ? "Igitur is research output, not investment advice. Market data is third-party and may be delayed, there is no account or tracking, and the site never requests a signature or a private key."
-    : "Igitur is research output, not investment advice. The data is synthetic, there is no account or tracking, and the site never requests a signature or a private key.",
+    ? "Igitur is research output, not investment advice. Market data is third-party and may be delayed, there are no accounts and no tracking, claims are recorded only when you ask, and the site never requests a signature or a private key."
+    : "Igitur is research output, not investment advice. The data is synthetic, there are no accounts and no tracking, claims are recorded only when you ask, and the site never requests a signature or a private key.",
   alternates: { canonical: "/legal" },
   openGraph: {
     url: "/legal",
     title: `Terms, disclosures and privacy — ${SITE.name}`,
     description: live
-      ? "Not advice, third-party market data, no tracking, and the wallet rules — in plain language."
-      : "Not advice, synthetic data, no tracking, and the wallet rules — in plain language.",
+      ? "Not advice, third-party market data, no tracking, a public record you opt into, and the wallet rules — in plain language."
+      : "Not advice, synthetic data, no tracking, a public record you opt into, and the wallet rules — in plain language.",
     images: [{ url: pageOg("legal"), width: 1200, height: 630 }],
   },
   twitter: twitterCard(pageOg("legal")),
@@ -86,6 +87,16 @@ export default async function LegalPage() {
           <p className="p" style={{ marginTop: 8 }}>
             No account, no login, no cookies, no analytics. What you type stays in your browser.
             Session history is held in memory and disappears when you close the tab.
+          </p>
+          <p className="p" style={{ marginTop: 10 }}>
+            One exception, and it only happens when you ask for it. Pressing{" "}
+            <b>Put this on the record</b> writes your claim and that day&rsquo;s date to a{" "}
+            <Link href="/ledger">public page</Link>. Stored with it: the claim, the date, the theme
+            it matched and the universe version. Not stored: your name, your address, any
+            identifier, or anything that could connect the claim back to you. Because nothing links
+            it to you, there is no account through which it could be withdrawn — a record that could
+            be deleted once it went badly would not be a record. Do not put anything in a premise
+            you would not publish.
           </p>
           <p className="p" style={{ marginTop: 10 }}>
             Book addresses encode your premise in the URL, so anything you share is visible to

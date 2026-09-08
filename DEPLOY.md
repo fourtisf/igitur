@@ -241,6 +241,29 @@ pm2 restart igitur
 These are `NEXT_PUBLIC_*`, so they are baked in at build time — a restart alone
 will not pick them up, unlike `MARKET_API_KEY`.
 
+## 5d. The record
+
+Committed claims are appended to a plain file, one JSON object per line. It is
+the only state the site keeps, and it is not in git — back it up like any other
+data you cannot regenerate:
+
+```bash
+cat /var/www/igitur/data/ledger.jsonl        # read it
+cp  /var/www/igitur/data/ledger.jsonl ~/ledger-$(date +%F).jsonl   # keep a copy
+```
+
+`LEDGER_PATH` **must** point outside `.next`. The standalone server's working
+directory is `.next/standalone`, and every update replaces `.next` wholesale, so
+a ledger left to its default there would be destroyed by the next deploy —
+silently. Both deploy scripts set it to `/var/www/igitur/data/ledger.jsonl`, and
+the app logs a warning if it ever resolves to a path inside the build output.
+
+The commit endpoint is the only thing on this site that writes. It is guarded
+three ways: the claim must produce a book, the same claim is never recorded
+twice, and one address may commit five times an hour. The rate limit is in
+memory and resets when pm2 restarts, which is the accepted cost of not keeping
+another store.
+
 ## 6. HTTPS
 
 ```bash

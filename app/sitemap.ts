@@ -33,6 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/method", 0.8, "monthly"],
     ["/changes", 0.6, "weekly"],
     ["/trending", 0.7, "daily"],
+    ["/ledger", 0.8, "daily"],
     ["/token", 0.6, "weekly"],
     ["/status", 0.6, "weekly"],
     ["/about", 0.4, "monthly"],

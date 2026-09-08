@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
+import { CommitPremise } from "@/components/CommitPremise";
 import { ShareBook } from "@/components/ShareBook";
 import { Holdings } from "@/components/Holdings";
 import { NoMatch } from "@/components/NoMatch";
@@ -326,6 +327,21 @@ export default async function BookPage({
             >
               Track this book
             </Link>
+          </div>
+
+          {/* A shared link proves nothing about when it was written — the date
+              in it is whatever the sender typed. This is the one way to fix a
+              claim to a date the reader can trust, because the server writes
+              it and nobody can edit it afterwards. */}
+          <div className="cell" style={{ padding: 16, marginTop: 12 }}>
+            <h3 style={{ fontSize: 14 }}>Or fix it to a date</h3>
+            <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
+              Put the claim on the public record and it is measured from the day the server saw
+              it — win or lose, permanently.
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <CommitPremise premise={b.premise} />
+            </div>
           </div>
         </div>
       </div>

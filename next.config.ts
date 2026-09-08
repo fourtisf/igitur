@@ -56,6 +56,17 @@ const config: NextConfig = {
   // Emits .next/standalone — a self-contained server with only the node_modules
   // it actually uses. That is what gets copied to the VPS; see DEPLOY.md.
   output: "standalone",
+
+  /**
+   * The ledger reads a path from the environment, which Next cannot resolve
+   * statically, so it traces the whole project into the standalone output as a
+   * precaution. That swept in 4.5MB the server never opens: the brand assets,
+   * the prototype the fidelity test reads at build time, and the lockfile.
+   * Excluding them is safe precisely because nothing at runtime reads them.
+   */
+  outputFileTracingExcludes: {
+    "*": ["brand/**", "premise.html", "package-lock.json", "tests/**", "scripts/**", "docs/**"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
