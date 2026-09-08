@@ -110,8 +110,20 @@ fi
 
 # Satu salah ketik di sini menjatuhkan heirlom dan sunmil juga.
 nginx -t || die "Konfigurasi nginx tidak valid. TIDAK di-reload — situs lain aman."
-systemctl reload nginx
-echo "  nginx di-reload"
+# `reload` hanya bekerja pada layanan yang sudah hidup. Di mesin yang nginx-nya
+# mati — karena reboot tanpa enable, atau pernah gagal start — reload selalu
+# gagal meski konfigurasinya sempurna. Jadi periksa dulu.
+if systemctl is-active --quiet nginx; then
+  systemctl reload nginx
+  echo "  nginx di-reload"
+else
+  echo "  nginx tidak berjalan — menyalakan"
+  systemctl start nginx || die "nginx gagal dinyalakan. Lihat sebabnya:
+       systemctl status nginx --no-pager -l
+       journalctl -u nginx -n 30 --no-pager"
+  systemctl enable nginx >/dev/null 2>&1 || true
+  echo "  nginx dinyalakan, dan diaktifkan supaya hidup lagi setelah reboot"
+fi
 
 # ── 8. HTTPS ────────────────────────────────────────────────────────────────
 say "8/8  Sertifikat"

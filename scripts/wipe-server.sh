@@ -137,8 +137,12 @@ done
 nginx -t || die "Konfigurasi nginx tidak valid. TIDAK di-reload, jadi nginx
        masih berjalan dengan konfigurasi lama. Kembalikan tautan yang perlu:
          ln -s /etc/nginx/sites-available/<nama> /etc/nginx/sites-enabled/"
-systemctl reload nginx
-echo "  nginx di-reload"
+if systemctl is-active --quiet nginx; then
+  systemctl reload nginx
+  echo "  nginx di-reload"
+else
+  echo "  nginx memang tidak berjalan — dibiarkan, deploy-igitur.sh yang menyalakannya"
+fi
 
 # ── 6. Selesai ───────────────────────────────────────────────────────────────
 say "6/6  Selesai"
