@@ -135,8 +135,20 @@ export function scoreThemes<T extends MatchableTheme>(
  * @param premise  the user's sentence
  * @param drop     tickers the reader removed by hand; the book reweights around them
  */
-export function buildBook(premise: string, drop: string[] = []): BookResult {
-  const ranked = scoreThemes(premise, THEMES);
+/**
+ * @param universe the themes to match against. Defaults to the published
+ *        universe, and exists so the fidelity test can run this algorithm over
+ *        the prototype's own data. That separates the two questions it must not
+ *        confuse: did the code drift, and did the data change. The universe is
+ *        meant to grow — v2 added vocabulary — and a test welded to v1 data
+ *        would have made growing it look like a regression.
+ */
+export function buildBook(
+  premise: string,
+  drop: string[] = [],
+  universe: readonly Theme[] = THEMES
+): BookResult {
+  const ranked = scoreThemes(premise, universe);
 
   // Refusing is a correct answer. Keep it.
   if (!ranked[0] || ranked[0].score === 0) {

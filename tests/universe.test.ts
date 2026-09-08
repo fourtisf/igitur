@@ -163,7 +163,7 @@ test("no theme is unreachable behind another", () => {
  *
  * Do all three, in that order. Skipping the first is what breaks shared links.
  */
-const FINGERPRINT = { version: 1, hash: "s38clo" };
+const FINGERPRINT = { version: 2, hash: "1fp0yd0" };
 
 test("the universe cannot be edited without bumping its version", () => {
   const hash = fnv(JSON.stringify({ THEMES, BALLAST })).toString(36);

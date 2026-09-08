@@ -34,7 +34,7 @@ export const REVIEWED = "1 September 2026";
  * a new name, a dropped name, a reworded reason, a moved conviction score. Then
  * add the release to CHANGELOG below, which is what /changes publishes.
  */
-export const UNIVERSE_VERSION = 1;
+export const UNIVERSE_VERSION = 2;
 
 export interface UniverseRelease {
   version: number;
@@ -47,6 +47,22 @@ export interface UniverseRelease {
 
 /** Newest first. Published at /changes. */
 export const CHANGELOG: UniverseRelease[] = [
+  {
+    version: 2,
+    date: "8 September 2026",
+    summary:
+      "Vocabulary only. Five themes learned words for claims they already carried, so ordinary beliefs stop being refused. No theme, holding or conviction score moved.",
+    changes: [
+      "Cyber defence recognises cybercrime, cyberattack, data breach, privacy and surveillance — \u201ccyber\u201d alone never matched \u201ccybercrime\u201d, because matching is on whole words.",
+      "Healthspan recognises antibiotics, antimicrobial resistance, superbugs and vaccines.",
+      "Payments rewiring recognises cash and cashless, with cash flow, cash burn, cash pile and cash reserves excluded so financial boilerplate does not match.",
+      "Food and agriculture recognises meat, protein, lab-grown and cultivated meat, dairy and poultry.",
+      "Manufacturing relocation recognises Africa, Nigeria and Brazil, and the phrases that carry direction \u2014 out of China, China plus one, decoupling, de-risking.",
+      "Deliberately not added: \u201cchina\u201d on its own. This theme holds India, Vietnam and Mexico and is a bet on manufacturing leaving China; \u201cChina will overtake the US\u201d is the opposite claim, and would have produced a book arguing against its own premise.",
+      "Still refused, correctly: inflation, the dollar losing reserve status, remote work and car subscriptions. No theme in this universe carries them, and guessing is the one thing this tool must not do.",
+      "Measured on 40 beliefs written the way people actually write them: 28 of 40 matched before, 34 after. Every book that already existed is byte-identical \u2014 checked across all 26 published theses and 24 further premises.",
+    ],
+  },
   {
     version: 1,
     date: "1 September 2026",
@@ -190,7 +206,8 @@ export const THEMES: Theme[] = [
       "longevity", "aging", "ageing", "healthspan", "biotech", "gene", "genetic",
       "genome", "obesity", "drug", "pharma", "crispr", "cancer", "therapeutic",
       "clinical trial", "sequencing", "medicine", "disease", "healthy", "healthcare",
-      "treatment", "patient"
+      "treatment", "patient",
+      "antibiotic", "antibiotics", "antimicrobial", "superbug", "vaccine", "vaccines", "infectious"
     ],
     neg: [],
     assets: [
@@ -581,7 +598,8 @@ export const THEMES: Theme[] = [
     kw: [
       "cyber", "cybersecurity", "hacking", "ransomware", "breach", "zero trust",
       "encryption", "phishing", "malware", "infosec", "attack surface",
-      "security spending", "security software", "intrusion"
+      "security spending", "security software", "intrusion",
+      "cybercrime", "cyberattack", "cyberattacks", "cyber attack", "cyberwar", "data breach", "privacy", "surveillance", "data protection", "identity theft"
     ],
     neg: [],
     assets: [
@@ -612,9 +630,14 @@ export const THEMES: Theme[] = [
       "The card networks have survived every disruption for forty years and own the fraud and dispute infrastructure nobody wants to rebuild. Interchange regulation cuts both ways.",
     kw: [
       "payment", "payments", "fintech", "interchange", "checkout", "merchant",
-      "transaction", "remittance", "instant payment", "card network"
+      "transaction", "remittance", "instant payment", "card network",
+      "cashless", "physical cash", "banknote", "banknotes", "digital wallet", "mobile money", "contactless", "tap to pay", "cash"
     ],
-    neg: [],
+    neg: [
+      // "cash" sendirian membawa tema ini, tapi juga muncul di basa-basi
+      // keuangan yang tidak ada hubungannya dengan cara orang membayar.
+      "cash flow", "cash burn", "cash rich", "cash pile", "cash reserves",
+    ],
     assets: [
       a("V", "Visa", "Equity", 86,
         "The toll booth; wins on volume even when rates are squeezed."),
@@ -645,7 +668,8 @@ export const THEMES: Theme[] = [
       "india", "indian", "indonesia", "indonesian", "vietnam", "vietnamese", "mexico",
       "mexican", "emerging market", "emerging markets", "reshoring", "friendshoring",
       "manufacturing hub", "asean", "southeast asia", "south-east asia", "relocation",
-      "tariff", "tariffs"
+      "tariff", "tariffs",
+      "out of china", "china plus one", "leaving china", "decoupling", "de-risking", "africa", "african", "nigeria", "brazil", "brazilian", "frontier market", "frontier markets", "supply chain shift"
     ],
     neg: [],
     assets: [
@@ -676,7 +700,8 @@ export const THEMES: Theme[] = [
       "Agriculture is brutally cyclical and politically managed everywhere. One good harvest resets prices, and subsidy regimes can rewrite the economics overnight.",
     kw: [
       "food", "agriculture", "farming", "farm", "crop", "crops", "harvest", "fertiliser",
-      "fertilizer", "seed", "coffee", "grain", "livestock", "soil", "arable"
+      "fertilizer", "seed", "coffee", "grain", "livestock", "soil", "arable",
+      "meat", "protein", "lab grown", "lab-grown", "cultivated meat", "plant-based", "dairy", "poultry", "calories"
     ],
     neg: [],
     assets: [

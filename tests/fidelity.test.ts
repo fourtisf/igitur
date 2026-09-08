@@ -8,6 +8,13 @@
  *
  * When the generator is deliberately changed (the LLM matcher of §4, say),
  * this test is the thing that should be updated last and on purpose.
+ *
+ * Both sides run over the PROTOTYPE's themes, not the published ones. The
+ * universe is meant to grow — v2 taught five themes words for claims they
+ * already carried — and a premise the prototype refused may rightly produce a
+ * book today. Comparing over shared data keeps this test answering the question
+ * it exists for, which is whether the algorithm drifted, and stops a deliberate
+ * data change from reading as a code regression.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -16,6 +23,7 @@ import path from "node:path";
 
 import { buildBook, scoreThemes } from "../lib/generator";
 import { THEMES } from "../lib/universe";
+import type { Theme } from "../lib/types";
 
 const html = fs.readFileSync(
   path.join(import.meta.dirname, "..", "premise.html"),
@@ -58,6 +66,9 @@ interface ProtoBook {
 type Proto = {
   buildBook: (p: string, drop?: string[]) => ProtoBook;
   scoreThemes: (t: string) => { th: { id: string }; score: number; hits: string[]; first: number }[];
+  /** The prototype's own universe — v1, frozen in premise.html. Both sides are
+   *  run over it so this test measures the algorithm, not the data. */
+  THEMES: Theme[];
 };
 
 const prototype: Proto = new Function(
@@ -66,12 +77,18 @@ const prototype: Proto = new Function(
     between("var BALLAST=[", SECTION_MATCHING) +
     "\n" +
     between("function scoreThemes(text)", SECTION_RENDER) +
-    "\nreturn { buildBook: buildBook, scoreThemes: scoreThemes };"
+    "\nreturn { buildBook: buildBook, scoreThemes: scoreThemes, THEMES: THEMES };"
 )() as Proto;
 
 const CORPUS: string[] = [
   ...THEMES.map((t) => t.claim),
   "drones will replace delivery vans in cities",
+  // These exercise the negative-keyword penalty, which decides between two
+  // themes that share the word "drone". Without them a change to that penalty
+  // passed this whole corpus unnoticed — found by deliberately breaking it.
+  "drones for battlefield resupply will outpace parcel delivery",
+  "military drones and missile defence beat courier drones",
+  "last mile grocery delivery is a combat between couriers",
   "banks will be disintermediated by stablecoin rails",
   "the ledger rails of finance",
   "copper supply cannot keep up with electrification",
@@ -111,7 +128,7 @@ function shape(x: ProtoBook): string {
 test("scoreThemes matches the prototype exactly", () => {
   for (const p of CORPUS) {
     const a = prototype.scoreThemes(p).map((r) => [r.th.id, r.score, r.hits, r.first]);
-    const b = scoreThemes(p).map((r) => [r.th.id, r.score, r.hits, r.first]);
+    const b = scoreThemes(p, prototype.THEMES).map((r) => [r.th.id, r.score, r.hits, r.first]);
     assert.equal(JSON.stringify(b), JSON.stringify(a), `scoring drifted for ${JSON.stringify(p)}`);
   }
 });
@@ -121,7 +138,7 @@ test("buildBook matches the prototype exactly, including hand-dropped holdings",
   for (const p of CORPUS) {
     for (const d of DROPS) {
       const a = shape(prototype.buildBook(p, d.slice()));
-      const b = shape(buildBook(p, d.slice()) as unknown as ProtoBook);
+      const b = shape(buildBook(p, d.slice(), prototype.THEMES) as unknown as ProtoBook);
       assert.equal(b, a, `book drifted for ${JSON.stringify(p)} drop=${JSON.stringify(d)}`);
       compared++;
     }
