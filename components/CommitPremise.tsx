@@ -11,7 +11,17 @@ import { useRouter } from "next/navigation";
  * the site a person cannot take back — the button says so before they press it,
  * rather than after.
  */
-export function CommitPremise({ premise }: { premise: string }) {
+export function CommitPremise({
+  premise,
+  drop = [],
+  weights = "",
+}: {
+  premise: string;
+  /** Holdings the author removed — part of what makes this book theirs. */
+  drop?: string[];
+  /** Reader-set weights, `NVDA:12,TSM:8`. */
+  weights?: string;
+}) {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "confirm" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +33,7 @@ export function CommitPremise({ premise }: { premise: string }) {
       const res = await fetch("/api/commit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ premise }),
+        body: JSON.stringify({ premise, drop, weights }),
       });
       const body = (await res.json()) as { id?: string; error?: string };
       if (!res.ok || !body.id) {
@@ -50,9 +60,10 @@ export function CommitPremise({ premise }: { premise: string }) {
     <div className="cell" style={{ padding: 18, maxWidth: 520 }}>
       <h3 style={{ fontSize: 15 }}>This cannot be undone.</h3>
       <p className="p" style={{ marginTop: 8, fontSize: 13.5 }}>
-        The claim and today&rsquo;s date go on a public page. Anyone can read it, and it stays there
-        whether the book goes on to beat the index or lose to it. Nothing about you is stored — no
-        name, no email, no identifier — which is also why it cannot be removed later.
+        The claim, this book&rsquo;s exact weights and today&rsquo;s date go on a public page.
+        Anyone can read it, and it stays there whether the book goes on to beat the index or lose
+        to it. Nothing about you is stored — no name, no email, no identifier — which is also why
+        it cannot be removed later.
       </p>
       {error ? (
         <p className="notice warn" style={{ marginTop: 12, fontSize: 13 }}>

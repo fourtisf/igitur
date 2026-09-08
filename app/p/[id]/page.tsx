@@ -6,12 +6,13 @@ import { Bar } from "@/components/Bar";
 import { Holdings } from "@/components/Holdings";
 import { TrackChart } from "@/components/TrackChart";
 import { buildBook } from "@/lib/generator";
+import { applyPins, parsePins } from "@/lib/reweight";
 import { get } from "@/lib/ledger";
 import { getQuotes } from "@/lib/market";
 import { bookHref, daysSince } from "@/lib/routes";
 import { trackBook } from "@/lib/track";
 import { twitterCard } from "@/lib/twitter-card";
-import { pageOg } from "@/lib/og-pages";
+import { recordOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 
 /**
@@ -42,9 +43,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       url: `/p/${id}`,
       title: `On the record — ${SITE.name}`,
       description: entry.premise,
-      images: [{ url: pageOg("home"), width: 1200, height: 630 }],
+      images: [{ url: recordOg(id), width: 1200, height: 630, alt: entry.premise }],
     },
-    twitter: twitterCard(pageOg("home")),
+    twitter: twitterCard(recordOg(id)),
   };
 }
 
@@ -62,7 +63,13 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
   const entry = await get(id);
   if (!entry) notFound();
 
-  const book = buildBook(entry.premise);
+  // Rebuild the book exactly as it was committed. Rendering the generator's
+  // default here instead would show a book the author never stated, and measure
+  // it as though they had.
+  const generated = buildBook(entry.premise, entry.drop ?? []);
+  const book = generated.ok && entry.weights
+    ? applyPins(generated, parsePins(entry.weights, new Set(generated.holdings.map((h) => h.t))))
+    : generated;
   // A claim recorded under an older universe could stop matching if a theme
   // were ever removed. Say so rather than 500.
   if (!book.ok) {
@@ -103,6 +110,9 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
         measured ever since. That date was written by the server when this claim was committed. It
         is not in the link and cannot be changed — which is what makes the figure below worth
         anything.
+        {entry.weights || entry.drop?.length
+          ? " These are the author's own weights, not the generator's defaults."
+          : ""}
       </p>
 
       {track.live ? (
@@ -133,8 +143,17 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
       </div>
 
       <div className="hero-cta rv" style={{ justifyContent: "flex-start", marginTop: 34 }}>
-        <Link className="b2" href={bookHref(entry.premise, [], { universe: entry.universe })}>
-          Open as a working book
+        {/* The fork. Opening this book with its weights intact is the start of
+            someone else's version: change the sizing, commit that, and both
+            stand side by side on the record under the same belief. */}
+        <Link
+          className="b1"
+          href={bookHref(entry.premise, entry.drop ?? [], {
+            universe: entry.universe,
+            weights: entry.weights || undefined,
+          })}
+        >
+          Fork this book
         </Link>
         <Link className="b2" href="/ledger">
           Every claim on the record

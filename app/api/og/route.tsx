@@ -2,10 +2,13 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
 import { buildBook } from "@/lib/generator";
+import { applyPins, parsePins } from "@/lib/reweight";
+import { get as getRecord } from "@/lib/ledger";
+import { trackBook } from "@/lib/track";
 import { seedOf } from "@/lib/hash";
 import { isPageCardId, PAGE_CARDS, type PageCard } from "@/lib/og-pages";
 import { normalizePremise } from "@/lib/premise";
-import { parseDrop } from "@/lib/routes";
+import { daysSince, parseDrop } from "@/lib/routes";
 import { FEATURED, SITE } from "@/lib/site";
 
 /**
@@ -134,6 +137,112 @@ export async function GET(req: NextRequest) {
     const buf = new Uint8Array(await image.arrayBuffer());
     remember(key, buf);
     return png(buf, pageId, false);
+  }
+
+  // ---- Record card ---------------------------------------------------------
+  // The most shareable page on the site is a dated public claim, and it was
+  // sharing as the generic home card. What makes it worth posting is precisely
+  // what a generic card hides: the date somebody committed to, and what has
+  // happened since.
+  const recordId = params.get("record");
+  if (recordId) {
+    const entry = await getRecord(recordId);
+    if (!entry) return new Response("No such record", { status: 404 });
+
+    // The card must draw the book that was committed, weights and all, or the
+    // image travelling around the internet shows a different allocation from
+    // the page it links to.
+    const generated = buildBook(entry.premise, entry.drop ?? []);
+    const book = generated.ok && entry.weights
+      ? applyPins(generated, parsePins(entry.weights, new Set(generated.holdings.map((h) => h.t))))
+      : generated;
+    if (!book.ok) return new Response("Record no longer builds a book", { status: 404 });
+
+    // The figures move daily, so the day is part of the key. Without it the
+    // card would be cached at whatever it said the first time it was shared.
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `record:${recordId}|${today}`;
+    const hit = cache.get(key);
+    if (hit) return png(hit, recordId, true);
+
+    const track = await trackBook(book, entry.statedAt, daysSince(entry.statedAt));
+    const claim = entry.premise.length > 130 ? entry.premise.slice(0, 129).trimEnd() + "…" : entry.premise;
+    const sign = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+    const stated = new Date(entry.statedAt + "T00:00:00Z").toLocaleDateString("en-GB", {
+      day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
+    });
+
+    const image = new ImageResponse(
+      (
+        <div style={{ ...shell, padding: 64 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Wordmark />
+            <div style={{ display: "flex", fontSize: 22, color: AC, marginTop: 30, letterSpacing: "0.05em" }}>
+              {`ON THE RECORD · STATED ${stated.toUpperCase()}`}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: claim.length > 90 ? 42 : 50,
+                color: FG,
+                marginTop: 18,
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {claim}
+            </div>
+          </div>
+
+          {/* Only shown when the figures are real. A share card is the one place
+              a synthetic number would travel without its warning attached. */}
+          {track.live ? (
+            <div style={{ display: "flex", gap: 56 }}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", fontSize: 20, color: FG3, letterSpacing: "0.04em" }}>
+                  BOOK
+                </div>
+                <div style={{ display: "flex", fontSize: 60, color: FG, letterSpacing: "-0.03em" }}>
+                  {sign(track.bookEnd)}
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", fontSize: 20, color: FG3, letterSpacing: "0.04em" }}>
+                  SPY
+                </div>
+                <div style={{ display: "flex", fontSize: 60, color: FG2, letterSpacing: "-0.03em" }}>
+                  {sign(track.indexEnd)}
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                <div style={{ display: "flex", fontSize: 27, color: FG2 }}>
+                  {track.bookEnd >= track.indexEnd ? "ahead of the index" : "behind the index"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", fontSize: 20, color: FG3, letterSpacing: "0.04em" }}>
+                {`WHY ${book.holdings[0].t} LEADS`}
+              </div>
+              <div style={{ display: "flex", fontSize: 27, color: FG2, marginTop: 12, lineHeight: 1.35 }}>
+                {book.holdings[0].why}
+              </div>
+            </div>
+          )}
+
+          <MiniBar
+            holdings={book.holdings}
+            caption="The date came from the server, not the link"
+            lead={`${book.theme.name} · ${book.holdings.length} holdings`}
+          />
+        </div>
+      ),
+      { width: W, height: H }
+    );
+    const buf = new Uint8Array(await image.arrayBuffer());
+    remember(key, buf);
+    return png(buf, recordId, false);
   }
 
   // ---- Book card -----------------------------------------------------------

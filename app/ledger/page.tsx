@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { LedgerControls } from "@/components/LedgerControls";
 import { buildBook } from "@/lib/generator";
 import { all } from "@/lib/ledger";
 import { marketIsReal } from "@/lib/market";
@@ -89,7 +90,8 @@ export default async function LedgerPage() {
               : "Performance is synthetic until a market data vendor is configured, so no standing is shown."}
           </p>
 
-          <div className="window rv" style={{ marginTop: 22 }}>
+          <LedgerControls>
+          <div className="window rv" style={{ marginTop: 18 }}>
             <div className="wbar">
               <div className="wdots">
                 <i /><i /><i />
@@ -104,8 +106,19 @@ export default async function LedgerPage() {
                 <span>Book</span>
                 <span>Index</span>
               </div>
-              {rows.map(({ e, book, track }) => (
-                <Link key={e.id} className="lrow" href={`/p/${e.id}`}>
+              {rows.map(({ e, book, track }, i) => (
+                <Link
+                  key={e.id}
+                  className="lrow"
+                  href={`/p/${e.id}`}
+                  // The sort and the filter both read these. `lead` is empty
+                  // rather than 0 when the figures are not real, so a claim with
+                  // nothing measured yet sorts last instead of outranking a
+                  // genuine loss.
+                  data-find={`${e.premise} ${book ? themeName(book.theme.id) : ""} ${e.statedAt}`.toLowerCase()}
+                  data-lead={track?.live ? (track.bookEnd - track.indexEnd).toFixed(4) : ""}
+                  data-order={i}
+                >
                   <span className="ldate">{e.statedAt}</span>
                   <span className="lclaim">{e.premise}</span>
                   <span className="ltheme">{book ? themeName(book.theme.id) : "—"}</span>
@@ -117,8 +130,16 @@ export default async function LedgerPage() {
                   </span>
                 </Link>
               ))}
+              <p
+                className="faint"
+                data-empty
+                style={{ display: "none", padding: "22px 4px", fontSize: 13 }}
+              >
+                No claim on the record matches that.
+              </p>
             </div>
           </div>
+          </LedgerControls>
         </>
       )}
     </section>

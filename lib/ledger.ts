@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { randomBytes } from "node:crypto";
 
 import { buildBook } from "./generator";
+import { applyPins, parsePins } from "./reweight";
 import { normalizePremise } from "./premise";
 import { UNIVERSE_VERSION } from "./universe";
 
@@ -49,6 +50,15 @@ export interface Entry {
   statedAt: string;
   /** The theme that won, stored so the ledger renders without rebuilding. */
   theme: string;
+  /**
+   * Holdings the author removed, and weights they set — the two things that
+   * make a book theirs rather than the generator's default.
+   *
+   * Both optional. Entries written before forking existed have neither, and
+   * must keep reading as the plain book they were.
+   */
+  drop?: string[];
+  weights?: string;
 }
 
 /**
@@ -79,6 +89,21 @@ export const MAX_PREMISE = 240;
 
 export class LedgerError extends Error {}
 
+/** What makes a book someone's own, beyond the premise. */
+export interface BookShape {
+  drop?: string[];
+  weights?: string;
+}
+
+/**
+ * Two entries are the same claim only if the premise AND the book match. The
+ * point of forking is that two people can hold the same belief and size it
+ * differently, and the record should show both.
+ */
+function shapeKey(premise: string, drop: string[], weights: string): string {
+  return [premise.toLowerCase(), [...drop].sort().join(","), weights].join("|");
+}
+
 function newId(): string {
   // 8 bytes of base64url: short enough to read aloud, wide enough that the
   // ledger cannot be walked by guessing.
@@ -92,20 +117,34 @@ function newId(): string {
  * tool cannot even build a book for would be a record of nothing, and it is the
  * obvious way to fill the file with junk.
  */
-export async function commit(raw: string): Promise<Entry> {
+export async function commit(raw: string, shape: BookShape = {}): Promise<Entry> {
   const premise = normalizePremise(raw);
   if (premise.length < 12) throw new LedgerError("Too short to be a claim about anything.");
   if (premise.length > MAX_PREMISE) throw new LedgerError("Too long. State one belief.");
 
-  const book = buildBook(premise);
-  if (!book.ok) {
+  const drop = (shape.drop ?? []).filter((t) => /^[A-Z.\-]{1,8}$/.test(t)).slice(0, 24);
+  const weights = typeof shape.weights === "string" ? shape.weights.slice(0, 200) : "";
+
+  const generated = buildBook(premise, drop);
+  if (!generated.ok) {
     throw new LedgerError("No theme in this universe carries that claim, so there is nothing to record.");
   }
+  // A fork is only a fork if the weights survive being applied. Storing a
+  // string the reader page cannot reproduce would put a book on the record that
+  // nobody, including this server, can rebuild.
+  const known = new Set(generated.holdings.map((h) => h.t));
+  const book = weights ? applyPins(generated, parsePins(weights, known)) : generated;
+  if (!book.holdings.length) {
+    throw new LedgerError("That leaves no holdings to record.");
+  }
 
-  // Same claim, already on the record: return the original rather than letting
-  // the ledger fill with duplicates of whatever is popular. The first person to
-  // state it keeps the date, which is the whole point of a record.
-  const existing = (await all()).find((e) => e.premise.toLowerCase() === premise.toLowerCase());
+  // The same claim with the same book, already recorded: return the original
+  // rather than letting the ledger fill with duplicates of whatever is popular.
+  // The first person to state it keeps the date, which is the whole point of a
+  // record. A different set of weights is a different claim about the same
+  // belief, so it gets its own entry.
+  const key = shapeKey(premise, drop, weights);
+  const existing = (await all()).find((e) => shapeKey(e.premise, e.drop ?? [], e.weights ?? "") === key);
   if (existing) return existing;
 
   const entry: Entry = {
@@ -115,7 +154,9 @@ export async function commit(raw: string): Promise<Entry> {
     // The server's date. A date the caller could set would make every
     // performance figure on this site unfalsifiable.
     statedAt: new Date().toISOString().slice(0, 10),
-    theme: book.theme.id,
+    theme: generated.theme.id,
+    ...(drop.length ? { drop } : {}),
+    ...(weights ? { weights } : {}),
   };
 
   const path = file();

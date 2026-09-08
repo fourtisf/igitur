@@ -77,3 +77,14 @@ export function isPageCardId(v: string): v is PageCardId {
 export function pageOg(id: PageCardId): string {
   return `/api/og?page=${id}`;
 }
+
+/**
+ * The share card for one committed claim.
+ *
+ * Its own card rather than the site's: a dated public claim is the most
+ * shareable thing here, and what makes it worth posting — the date and what has
+ * happened since — is exactly what a generic card leaves out.
+ */
+export function recordOg(id: string): string {
+  return `/api/og?record=${encodeURIComponent(id)}`;
+}

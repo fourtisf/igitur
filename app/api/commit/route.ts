@@ -53,9 +53,16 @@ export async function POST(req: Request) {
   }
 
   let premise = "";
+  let drop: string[] = [];
+  let weights = "";
   try {
-    const body = (await req.json()) as { premise?: unknown };
+    const body = (await req.json()) as { premise?: unknown; drop?: unknown; weights?: unknown };
     premise = typeof body.premise === "string" ? body.premise : "";
+    // A fork is the same belief sized differently, so the book's own shape is
+    // part of what gets recorded. Both are re-validated in the ledger; nothing
+    // from here is trusted as given.
+    drop = Array.isArray(body.drop) ? body.drop.filter((t): t is string => typeof t === "string") : [];
+    weights = typeof body.weights === "string" ? body.weights : "";
   } catch {
     return NextResponse.json({ error: "Expected JSON." }, { status: 400 });
   }
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const entry = await commit(premise);
+    const entry = await commit(premise, { drop, weights });
     // /ledger is prerendered on a five-minute timer. Without this, someone
     // commits a claim, is told it is on the record, follows the link and does
     // not see it — on the one page whose entire purpose is showing that it is.

@@ -336,11 +336,11 @@ export default async function BookPage({
           <div className="cell" style={{ padding: 16, marginTop: 12 }}>
             <h3 style={{ fontSize: 14 }}>Or fix it to a date</h3>
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
-              Put the claim on the public record and it is measured from the day the server saw
-              it — win or lose, permanently.
+              Put the claim on the public record — with these weights — and it is measured from
+              the day the server saw it, win or lose, permanently.
             </p>
             <div style={{ marginTop: 10 }}>
-              <CommitPremise premise={b.premise} />
+              <CommitPremise premise={b.premise} drop={drop} weights={formatPins(pins)} />
             </div>
           </div>
         </div>

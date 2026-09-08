@@ -102,3 +102,42 @@ test("a ledger written by a future version still reads", async () => {
   assert.equal(list[0].statedAt, "2030-01-01");
   process.env.LEDGER_PATH = old;
 });
+
+test("a fork is a separate entry, not a duplicate", async () => {
+  // Two people can hold the same belief and size it differently. The record
+  // should show both, or forking means nothing.
+  const claim = "compute is the binding constraint on artificial intelligence";
+  const plain = await commit(claim);
+  const forked = await commit(claim, { weights: "NVDA:12" });
+  assert.notEqual(forked.id, plain.id, "a different book must get its own entry");
+  assert.equal(forked.weights, "NVDA:12");
+  assert.equal(plain.weights, undefined, "an unforked entry stores no weights");
+
+  // But the same fork twice is still one entry.
+  const again = await commit(claim, { weights: "NVDA:12" });
+  assert.equal(again.id, forked.id);
+});
+
+test("a dropped holding is part of what makes the book someone's own", async () => {
+  const claim = "the grid cannot carry the datacentre load being built";
+  const a = await commit(claim);
+  const b = await commit(claim, { drop: ["GEV"] });
+  assert.notEqual(b.id, a.id);
+  assert.deepEqual(b.drop, ["GEV"]);
+});
+
+test("a shape the reader page cannot rebuild is refused", async () => {
+  // Junk tickers are dropped rather than stored, so the record never holds a
+  // book that this server itself could not reproduce.
+  const e = await commit("robots will do elder care in ageing countries", {
+    drop: ["../../etc/passwd", "<script>", "OK"],
+  });
+  assert.deepEqual(e.drop, ["OK"], "only ticker-shaped values survive");
+});
+
+test("entries written before forking existed still read as plain books", async () => {
+  // The two fields are optional precisely so the ledger written yesterday is
+  // not invalidated by the feature added today.
+  const older = (await all()).filter((e) => e.drop === undefined && e.weights === undefined);
+  assert.ok(older.length > 0, "the earlier entries in this file must still parse");
+});
