@@ -61,6 +61,21 @@ h1.wide{max-width:27ch}
 .foot .why b{color:var(--fg);font-weight:600;margin-right:14px;letter-spacing:-.01em}
 .foot .meta{color:var(--fg-4);white-space:nowrap;font-size:19px}
 
+/* Card 1: the introduction. A name, what it is, and its size — the three
+   things a stranger scrolling past has no way to know. */
+.intro-mark{display:flex;flex-direction:column;gap:10px;width:70px}
+.intro-mark .top{display:flex;gap:5px;height:14.5px}
+.intro-mark .p1{width:36.3px;background:rgba(255,255,255,.36);border-radius:8.5px}
+.intro-mark .p2{width:25.4px;background:var(--ac);border-radius:8.5px}
+.intro-mark .concl{width:70px;height:19.9px;background:var(--fg);border-radius:11.65px}
+.wordmark{font-size:88px;font-weight:600;letter-spacing:-.045em;line-height:1}
+.tagline{font-size:31px;color:var(--fg-2);font-weight:350;max-width:52ch;line-height:1.38}
+.stats{display:flex;gap:64px}
+.stat b{display:block;font-size:52px;font-weight:600;letter-spacing:-.035em;line-height:1}
+.stat span{display:block;font-size:18px;color:var(--fg-4);margin-top:9px;letter-spacing:.05em;
+  text-transform:uppercase}
+.stat.accent b{color:var(--ac-2)}
+
 /* Card 2: the reasons, which are the product. */
 .rows{display:flex;flex-direction:column;gap:2px}
 .row{display:grid;grid-template-columns:118px 1fr 96px;gap:26px;align-items:baseline;
@@ -121,20 +136,30 @@ h1.wide{max-width:27ch}
 </style>
 <div class="glow"></div><div class="grain"></div>
 <div class="wrap">
-  <div class="brand">
-    <div class="mark"><div class="top"><div class="p1"></div><div class="p2"></div></div><div class="concl"></div></div>
-    <div class="name">Igitur</div><div class="dot"></div><div class="url">igitur.xyz</div>
-    <div class="step">1 / 5</div>
-  </div>
+  <div class="brand"><div class="url">igitur.xyz</div><div class="step">1 / 5</div></div>
   
-  <div>
-    <h1>Write what you believe.<br><em>See what it holds.</em></h1>
-    <p class="sub">One sentence about the next decade becomes a weighted portfolio — and every
-      weight carries the reason it earned its size.</p>
+  <div style="display:flex;align-items:flex-start;gap:36px">
+    <div class="intro-mark" style="margin-top:20px">
+      <div class="top"><div class="p1"></div><div class="p2"></div></div>
+      <div class="concl"></div>
+    </div>
+    <div>
+      <p class="kick" style="margin-bottom:12px">Introducing</p>
+      <h1 class="wordmark">Igitur</h1>
+    </div>
   </div>
-  <div style="display:flex;flex-direction:column;gap:18px">
-    <p class="claim"><span class="kick">From one premise</span>“Compute is the binding constraint on artificial intelligence, not model design.”</p>
-    <div class="bar"><div class="lead" style="flex:20.5">
+
+  <p class="tagline">One stated belief about the next decade, turned into a weighted portfolio —
+    where every weight carries the reason it earned its size.</p>
+
+  <div class="stats">
+    <div class="stat"><b>26</b><span>Written theses</span></div>
+    <div class="stat"><b>160</b><span>Names, each with a reason</span></div>
+    <div class="stat accent"><b>0</b><span>Guesses</span></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="bar" style="height:104px"><div class="lead" style="flex:20.5">
       <b>NVDA</b><i>20.5%</i></div><div class="" style="flex:18.3">
       <b>TSM</b><i>18.3%</i></div><div class="" style="flex:15.7">
       <b>ASML</b><i>15.7%</i></div><div class="" style="flex:13.8">
@@ -144,7 +169,8 @@ h1.wide{max-width:27ch}
       <b>SGOV</b><i>10%</i></div></div>
     <div class="foot">
       <span class="why"><b>NVDA 20.5%</b>Sits on the critical path of nearly every frontier training run.</span>
-      <span class="meta">Compute buildout · widths are weights</span>
+      <span class="meta">From “Compute is the binding constraint on artificia…”</span>
     </div>
   </div>
+
 </div>

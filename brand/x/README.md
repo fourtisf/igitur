@@ -4,13 +4,13 @@
 
 | File | Post | What it carries |
 |---|---|---|
-| `01-statement.png` | 1/5 | The proposition, with the allocation bar |
+|  `01-intro.png` | 1/5 | The name, what it is, its size, and the bar |
 | `02-reasons.png` | 2/5 | The holdings and the reason under each weight |
 | `03-refusal.png` | 3/5 | A premise the generator genuinely refuses |
 | `04-benchmark.png` | 4/5 | Why half of all books lose to the index |
 | `05-record.png` | 5/5 | A dated claim on the public record |
 
-3200×1800 (16:9 at 2×). `x-post-banner.png` is the same as card 1, kept under
+3200×1800 (16:9 at 2×). `x-post-banner.png` is a copy of card 1, kept under
 its old name for a standalone post.
 
 Not the profile header — that is `../x-header.png`, 1500×500.
