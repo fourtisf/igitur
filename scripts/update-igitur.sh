@@ -87,9 +87,26 @@ say "2/7  Mengambil kode"
 BUILT_STAMP="$APP/.next/BUILT_COMMIT"
 BUILT=$(cat "$BUILT_STAMP" 2>/dev/null || true)
 
+# Skrip ini ada DI DALAM repo yang sebentar lagi ia perbarui, dan bash membaca
+# berkas skrip sambil menjalankannya. Kalau isinya berubah di tengah jalan,
+# sisa perintah dibaca dari offset yang sudah tidak cocok. Itu bukan teori:
+# pada satu update, langkah verifikasi dan laporan akhir yang dijalankan masih
+# milik versi lama, sehingga deploy terlihat sukses tanpa pernah menyentuh
+# pemeriksaan yang baru saja ditambahkan. Jadi sidik jarinya dicatat dulu.
+SELF="$APP/scripts/update-igitur.sh"
+SELF_SUM=$(cksum "$SELF" 2>/dev/null | awk '{print $1"-"$2}' || true)
+
 git -C "$APP" fetch --all --quiet
 git -C "$APP" reset --hard origin/HEAD --quiet
 NEW_COMMIT=$(git -C "$APP" rev-parse HEAD)
+
+# Kalau skrip ini sendiri ikut berubah, mulai lagi dari awal dengan isi yang
+# baru — sekali saja, dijaga oleh REEXEC supaya tidak berputar.
+if [ "${REEXEC:-}" != "1" ] && [ -n "$SELF_SUM" ] && [ -f "$SELF" ] \
+   && [ "$SELF_SUM" != "$(cksum "$SELF" | awk '{print $1"-"$2}')" ]; then
+  ok "skrip deploy ini ikut diperbarui — dijalankan ulang dengan versi barunya"
+  REEXEC=1 exec bash "$SELF"
+fi
 
 # Dipakai kalau harus mundur: kode yang cocok dengan .next yang tersimpan.
 ROLLBACK_COMMIT="${BUILT:-$NEW_COMMIT}"
