@@ -133,3 +133,13 @@ test("the card is attributed to the account that holds the name", () => {
   assert.equal(card.site, "@Igiturapp");
   assert.equal(card.creator, "@Igiturapp");
 });
+
+test("the contract-address strip never invents an address", () => {
+  // It is on every page, so it is the most-read sentence on the site. Nothing
+  // is deployed, and the strip must say so rather than showing a placeholder
+  // that could be mistaken for the real thing.
+  const src = readFileSync("components/TokenStrip.tsx", "utf8");
+  assert.match(src, /SITE\.token/, "the strip must read the address, not carry one");
+  assert.doesNotMatch(src, /0x[0-9a-fA-F]{6}/, "no address literal belongs in this component");
+  assert.equal(SITE.token.contractAddress, null, "nothing is deployed");
+});

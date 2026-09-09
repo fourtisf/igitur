@@ -260,6 +260,27 @@ twice, and one address may commit five times an hour. The rate limit is in
 memory and resets when pm2 restarts, which is the accepted cost of not keeping
 another store.
 
+## 5e. The contract address, after launch
+
+Until the token exists, a strip across the top of every page reads
+`$IGITUR · Contract address · Coming soon · Nothing is tradeable yet. Any
+address circulating now is fake.`
+
+On launch day, one line in `lib/site.ts` publishes it everywhere at once — the
+strip, `/token` and the home page all read the same value:
+
+```ts
+contractAddress: "0x…" as string | null,
+```
+
+The strip then shows the address and its own line changes to *Verify it here
+before you trade anything*. Nothing else needs editing, which is the point:
+/token promises the address appears here and on X at the same moment and
+nowhere else first, and that is only keepable if publishing it is a single
+change rather than three that can drift.
+
+It needs a rebuild — `bash scripts/update-igitur.sh` after pushing.
+
 ## 6. HTTPS
 
 ```bash

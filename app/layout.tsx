@@ -5,6 +5,7 @@ import { twitterCard } from "@/lib/twitter-card";
 
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
+import { TokenStrip } from "@/components/TokenStrip";
 import { Reveal } from "@/components/Reveal";
 import { Toast } from "@/components/Toast";
 import { pageOg } from "@/lib/og-pages";
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to content
         </a>
         <div className="wrap">
+          <TokenStrip />
           <Nav />
           <main id="app" tabIndex={-1}>
             {children}
