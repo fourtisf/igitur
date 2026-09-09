@@ -143,3 +143,28 @@ test("the contract-address strip never invents an address", () => {
   assert.doesNotMatch(src, /0x[0-9a-fA-F]{6}/, "no address literal belongs in this component");
   assert.equal(SITE.token.contractAddress, null, "nothing is deployed");
 });
+
+test("the status page never promises more than the generator does", () => {
+  // Over-claiming on /status is worse than anywhere else: it is the page that
+  // exists to be trusted about what works. "Any premise" in particular is the
+  // one sentence this product cannot say — refusing is the product.
+  const src = readFileSync("app/status/page.tsx", "utf8");
+  assert.doesNotMatch(src, /from any premise/i, '"any premise" contradicts the refusal');
+
+  // Nothing may sit in both lists.
+  const list = (name: string) =>
+    (src.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))?.[1] ?? "")
+      .split("\n").map((l) => l.trim().replace(/^"|",$/g, "")).filter((l) => l.length > 3);
+  const live = list("ALWAYS_LIVE");
+  const missing = list("ALWAYS_MISSING");
+  assert.ok(live.length > 0 && missing.length > 0, "both lists must parse");
+  const both = live.filter((l) => missing.includes(l));
+  assert.deepEqual(both, [], `claimed as built and not built at once: ${both.join(", ")}`);
+
+  // Forking shipped; the missing list must not still claim it did not.
+  assert.ok(
+    live.some((l) => /Forking/i.test(l)),
+    "forking is built — /p/<id> offers it and the ledger stores the weights"
+  );
+  assert.ok(!missing.some((l) => /forking/i.test(l)), "the missing list still claims forking is absent");
+});

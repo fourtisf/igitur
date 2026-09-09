@@ -37,7 +37,7 @@ export const metadata: Metadata = {
  * file, and both are now live — see §6.1 and §6.2.
  */
 const ALWAYS_LIVE = [
-  "Compose a book from any premise",
+  "Compose a book from a premise the universe carries — and a refusal when it does not",
   "Negative keywords to stop cross-sector mismatches",
   "Written case for and against, every time",
   "Remove a holding and reweight the book",
@@ -51,6 +51,7 @@ const ALWAYS_LIVE = [
   "Performance against the index, honestly centred",
   "A dated public record of any claim you choose to commit",
   "A permanent page per committed claim, measured from the server's date",
+  "Forking someone else's claim: same belief, your own weights, its own entry",
   "Published methodology with its own weak points",
   "Wallet connection for any EVM wallet",
   "Published tokenomics ahead of any launch",
@@ -60,7 +61,7 @@ const ALWAYS_MISSING = [
   "A language model reading the premise",
   "Reading filings and news at generation time",
   "Conviction scores tied to disclosed segment revenue",
-  "Following and forking other people's books",
+  "Following other people's books, and a feed of new claims",
   "Session history that survives a page refresh — only a committed claim persists",
   "Placing an order through a broker",
   "The token contract — not deployed",
