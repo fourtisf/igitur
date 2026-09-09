@@ -11,8 +11,16 @@ export interface Quote {
   ticker: string;
   /** Last traded price, or last close outside market hours. */
   price: number;
-  /** Session change, in percent. Negative for a fall. */
-  changePct: number;
+  /**
+   * Session change, in percent. Negative for a fall.
+   *
+   * Null when the provider supplies a price but no previous close, which is
+   * the ordinary case for the simplest free sources. Null is not zero: a
+   * flat 0.00% is a claim that the name did not move, and rendering an
+   * unknown as a calm zero across 163 rows would be the most convincing
+   * false thing on the site.
+   */
+  changePct: number | null;
   /** Market capitalisation in billions. */
   marketCap: number;
   /** Previous session's close. Used to draw an honest, coarse sparkline. */

@@ -140,10 +140,10 @@ export default async function StatusPage() {
                site is generated and flagged as such. The last thing it said was:
                ${vendorError() ?? "no response"}. From FMP, a 401 or 403 means the key is wrong, a
                402 means the plan excludes batch quotes and a 429 means the daily quota is spent;
-               from the keyless source, a 403 or 429 means it is refusing this server, and
-               configuring MARKET_API_KEY moves the site onto FMP instead. /api/market-probe walks
-               the source's own sequence live and reports what each step returned, so this can be
-               diagnosed from the site rather than from the server.`
+               from a keyless source, a 403 or 429 means it is refusing this server. Three
+               sources are tried in turn, because two that fail together are one source.
+               /api/market-probe walks each of their sequences live and reports what every step
+               returned, so this can be diagnosed from the site rather than from the server.`
             : `The market data is still synthetic. Prices, moves, market caps and the whole return
                series are generated from the ticker text and reflect nothing. The vendor layer is
                built and waiting on a key — set MARKET_API_KEY and this line moves by itself. The

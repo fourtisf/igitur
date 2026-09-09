@@ -71,7 +71,10 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
   if (!n) notFound();
 
   const q = await getQuote(n.ticker);
+  // Null, not zero: the simplest free sources price a name without supplying
+  // the previous close. A calm 0.00% would be a claim that it did not move.
   const move = q.changePct;
+  const moved = move !== null;
   // Per quote, not per site: this name is real only if this quote is.
   const live = !q.synthetic;
   const best = n.positions[0];
@@ -99,9 +102,8 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
           <div className="sl">last price</div>
         </div>
         <div>
-          <div className={"sn " + (move >= 0 ? "" : "ac")}>
-            {move >= 0 ? "+" : ""}
-            {move.toFixed(2)}%
+          <div className={"sn " + (!moved || move >= 0 ? "" : "ac")}>
+            {moved ? `${move >= 0 ? "+" : ""}${move.toFixed(2)}%` : "—"}
           </div>
           <div className="sl">session</div>
         </div>
@@ -133,12 +135,16 @@ export default async function NamePage({ params }: { params: Promise<Params> }) 
             preserveAspectRatio="none"
             style={{ width: "100%", height: 90 }}
             role="img"
-            aria-label={`${n.ticker} session chart, ${move.toFixed(2)} percent`}
+            aria-label={
+                moved
+                  ? `${n.ticker} session chart, ${move.toFixed(2)} percent`
+                  : `${n.ticker} session chart, move not supplied`
+              }
           >
             <path
               d={sparkPath(q, 640, 90)}
               fill="none"
-              stroke={move >= 0 ? "#FAFAFA" : "#AEB6FF"}
+              stroke={!moved || move >= 0 ? "#FAFAFA" : "#AEB6FF"}
               strokeWidth="2"
             />
           </svg>

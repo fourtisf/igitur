@@ -45,7 +45,9 @@ export default async function TrendingPage() {
   const rows = UNIVERSE.map((a) => {
     const q = quotes.get(a.t)!;
     return { ...a, q, m: q.changePct };
-  }).sort((x, y) => Math.abs(y.m) - Math.abs(x.m));
+    // An unknown move ranks last rather than as a dead calm at the top of the
+    // "barely moved" end, which is a position it has not earned.
+  }).sort((x, y) => Math.abs(y.m ?? -1) - Math.abs(x.m ?? -1));
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -83,7 +85,7 @@ export default async function TrendingPage() {
             </div>
             <div id="trows">
               {rows.map((a, i) => {
-                const stroke = a.m >= 0 ? "#fff" : "#AEB6FF";
+                const stroke = a.m === null || a.m >= 0 ? "#fff" : "#AEB6FF";
                 const body = (
                   <>
                     <span className="tr">{i + 1}</span>
@@ -99,9 +101,8 @@ export default async function TrendingPage() {
                         opacity=".8"
                       />
                     </svg>
-                    <span className={"tm " + (a.m >= 0 ? "up" : "down")}>
-                      {a.m >= 0 ? "+" : ""}
-                      {a.m.toFixed(2)}%
+                    <span className={"tm " + (a.m === null ? "" : a.m >= 0 ? "up" : "down")}>
+                      {a.m === null ? "—" : `${a.m >= 0 ? "+" : ""}${a.m.toFixed(2)}%`}
                     </span>
                   </>
                 );

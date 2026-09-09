@@ -28,24 +28,29 @@ import type { MarketProvider, Quote } from "./types";
 const STRIKES = 3;
 const COOL_OFF_MS = 30 * 60_000;
 
-export function fallbackProvider(
-  primary: MarketProvider,
-  secondary: MarketProvider
-): MarketProvider {
-  let strikes = 0;
-  let skipUntil = 0;
+interface Link {
+  provider: MarketProvider;
+  strikes: number;
+  skipUntil: number;
+}
+
+/**
+ * Sources in order of preference. Each is asked only for what the ones before
+ * it could not price, so the chain costs one request set in the ordinary case
+ * and reaches the end only when everything above it is failing.
+ */
+export function chainProviders(providers: MarketProvider[]): MarketProvider {
+  const links: Link[] = providers.map((provider) => ({ provider, strikes: 0, skipUntil: 0 }));
   let served: MarketProvider | null = null;
 
-  const primaryUsable = () => Date.now() >= skipUntil;
-
-  function record(gotAnything: boolean) {
+  function record(link: Link, gotAnything: boolean) {
     if (gotAnything) {
-      strikes = 0;
+      link.strikes = 0;
       return;
     }
-    if (++strikes >= STRIKES) {
-      strikes = 0;
-      skipUntil = Date.now() + COOL_OFF_MS;
+    if (++link.strikes >= STRIKES) {
+      link.strikes = 0;
+      link.skipUntil = Date.now() + COOL_OFF_MS;
     }
   }
 
@@ -56,42 +61,47 @@ export function fallbackProvider(
      * kind of small lie this whole file exists to avoid.
      */
     get name(): string {
-      if (served === secondary) return `${secondary.name} (fallback from ${primary.name})`;
-      return primary.name;
+      const first = links[0]?.provider;
+      if (!served || !first || served === first) return first?.name ?? "none";
+      return `${served.name} (fallback from ${first.name})`;
     },
 
     live: true,
 
     async quotes(tickers) {
       const out = new Map<string, Quote>();
-      let fromPrimary = 0;
+      let best = { count: 0, provider: null as MarketProvider | null };
 
-      if (primaryUsable()) {
-        const got = await primary.quotes(tickers);
-        record(got.size > 0);
+      for (const link of links) {
+        const missing = tickers.filter((t) => !out.has(t.toUpperCase()));
+        if (!missing.length) break;
+        if (Date.now() < link.skipUntil) continue;
+
+        const got = await link.provider.quotes(missing);
+        record(link, got.size > 0);
         for (const [k, v] of got) out.set(k, v);
-        fromPrimary = got.size;
+        if (got.size > best.count) best = { count: got.size, provider: link.provider };
       }
 
-      let fromSecondary = 0;
-      const missing = tickers.filter((t) => !out.has(t.toUpperCase()));
-      if (missing.length) {
-        const got = await secondary.quotes(missing);
-        for (const [k, v] of got) out.set(k, v);
-        fromSecondary = got.size;
-      }
-
-      // Whoever supplied more of what is on the page is the one named.
-      if (fromPrimary || fromSecondary) served = fromSecondary > fromPrimary ? secondary : primary;
+      if (best.provider) served = best.provider;
       return out;
     },
 
     async history(ticker, from) {
-      if (primaryUsable()) {
-        const bars = await primary.history(ticker, from);
+      for (const link of links) {
+        if (Date.now() < link.skipUntil) continue;
+        const bars = await link.provider.history(ticker, from);
         if (bars.length) return bars;
       }
-      return secondary.history(ticker, from);
+      return [];
     },
   };
+}
+
+/** Two sources. Kept because most of the site only ever needs the pair. */
+export function fallbackProvider(
+  primary: MarketProvider,
+  secondary: MarketProvider
+): MarketProvider {
+  return chainProviders([primary, secondary]);
 }

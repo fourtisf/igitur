@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cleanKey, marketIsReal, providerName, vendorError } from "@/lib/market";
+import { stooqProbe } from "@/lib/market/stooq";
 import { forgetYahooSession, yahooHoldingOff, yahooProbe, type ProbeStep } from "@/lib/market/yahoo";
 
 /**
@@ -83,6 +84,11 @@ export async function GET() {
     // would have got one.
     forgetYahooSession();
     steps.push(...(await yahooProbe()));
+
+    // The third source is the one that answers when the other two do not, so a
+    // probe that skipped it would omit the only good news available.
+    const st = await stooqProbe();
+    steps.push({ step: "stooq SPY", status: st.status, ok: st.ok, detail: st.detail });
   }
 
   const probe: Probe = {
@@ -96,8 +102,9 @@ export async function GET() {
     note:
       provider === "synthetic"
         ? "Generated figures were asked for explicitly (MARKET_PROVIDER=synthetic)."
-        : "Steps are the keyless source. A key, when set, is tried first and is " +
-          "described in lastVendorError by name only — it is never included.",
+        : "Steps are the keyless sources, in the order they are asked. A key, when " +
+          "set, is tried before them and is described in lastVendorError by name " +
+          "only — it is never included.",
   };
 
   cached = { at: Date.now(), probe };

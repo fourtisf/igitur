@@ -1,7 +1,8 @@
-import { fallbackProvider } from "./fallback";
+import { chainProviders } from "./fallback";
 import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
 import { remember, remembered } from "./store";
+import { stooqLastError, stooqProvider } from "./stooq";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
 import type { Bar, MarketProvider, Quote } from "./types";
 
@@ -45,18 +46,20 @@ export function pickProvider(env: MarketEnv = process.env): MarketProvider {
 
   // Named explicitly, so honour it — including asking for generated figures.
   if (named === "synthetic") return syntheticProvider;
-  if (named === "yahoo") return yahooProvider();
+  if (named === "yahoo") return chainProviders([yahooProvider(), stooqProvider()]);
+  if (named === "stooq") return stooqProvider();
 
   // A key is a preference for FMP, never a promise that the key works. This
   // site served generated figures behind `HTTP 401 from /stable/batch-quote`
-  // with the keyless source configured, working and never asked, because the
-  // selection treated a key being *present* as the decision. So FMP goes first
-  // and Yahoo catches whatever it cannot price — including everything, when
-  // the key is rejected.
-  if (key) return fallbackProvider(fmpProvider(key), yahooProvider());
-
-  // Nothing configured: real prices with no configuration beat generated ones.
-  return yahooProvider();
+  // with a keyless source configured, working and never asked, because the
+  // selection treated a key being *present* as the decision.
+  //
+  // Three sources, because two that fail together are one source — and they
+  // did: FMP rejecting a key it had never accepted, and Yahoo answering 429
+  // to this address for hours because data-centre ranges are throttled as a
+  // matter of policy. Stooq is a different company, network and rate limit.
+  const keyless = [yahooProvider(), stooqProvider()];
+  return chainProviders(key ? [fmpProvider(key), ...keyless] : keyless);
 }
 
 let provider: MarketProvider | null = null;
@@ -108,6 +111,8 @@ export function vendorError(): string | null {
   if (f) parts.push(`fmp: ${f}`);
   const y = yahooLastError();
   if (y) parts.push(`yahoo: ${y}`);
+  const st = stooqLastError();
+  if (st) parts.push(`stooq: ${st}`);
   return parts.length ? parts.join(" · ") : null;
 }
 
@@ -157,14 +162,38 @@ function retryDelay(): number {
   return Math.min(QUOTE_TTL, FIRST_RETRY_MS * 2 ** Math.max(0, failStreak - 1));
 }
 
+/**
+ * Fills in a session move the source could not supply, using the last real
+ * quote from an earlier day. Returns the quote untouched when the move is
+ * already known, or when nothing older is on record.
+ */
+function withPreviousClose(ticker: string, q: Quote): Quote {
+  if (q.changePct !== null || q.previousClose > 0) return q;
+  const prev = remembered(ticker);
+  if (!prev || prev.price <= 0) return q;
+  // Same session, so it is not a previous close — it is this one, again.
+  if (prev.asOf.slice(0, 10) >= q.asOf.slice(0, 10)) return q;
+
+  return {
+    ...q,
+    previousClose: prev.price,
+    changePct: Math.round(((q.price - prev.price) / prev.price) * 10_000) / 100,
+  };
+}
+
 const quoteCache = new Map<string, { at: number; ttl: number; quote: Quote }>();
 const historyCache = new Map<string, { at: number; ttl: number; bars: Bar[] }>();
 
-/** Exported for tests: the caches outlive a single case otherwise. */
+/**
+ * Exported for tests: the caches outlive a single case otherwise, and so does
+ * the chain — a source set aside after three empty rounds in one test would
+ * still be set aside in the next.
+ */
 export function resetMarketCache(): void {
   quoteCache.clear();
   historyCache.clear();
   failStreak = 0;
+  provider = null;
 }
 
 /** Exported for tests: how long a failure would be held before retrying. */
@@ -216,10 +245,18 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
     failStreak = sourceFailed ? Math.min(failStreak + 1, MAX_BACKOFF_STEPS) : 0;
     const ttl = sourceFailed ? retryDelay() : QUOTE_TTL;
 
+    // A source that prices a name without supplying the previous close leaves
+    // the session move unknown. But a real quote stored on an earlier date is
+    // exactly that previous close — so the move becomes knowable the day after
+    // the first successful fetch, with no extra request to anyone. Read before
+    // remembering, or the new quote overwrites the one being read.
+    const filled = new Map<string, Quote>();
+    for (const [t, q] of fetched) filled.set(t, withPreviousClose(t, q));
+
     // What did come back is worth keeping across a restart. Every deploy
     // restarts the server, and without this a vendor outage would put the site
     // back on generated figures however recently the last good fetch was.
-    remember(fetched.values());
+    remember(filled.values());
 
     for (const t of missing) {
       // A price that was real forty minutes ago is still a real price — a
@@ -227,7 +264,7 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
       // that, with the timestamp it actually carries, beats inventing one.
       // Only when nothing real is known does a generated figure appear, and it
       // says so.
-      const q = fetched.get(t) ?? remembered(t) ?? syntheticQuote(t);
+      const q = filled.get(t) ?? remembered(t) ?? syntheticQuote(t);
       quoteCache.set(t, { at: now, ttl, quote: q });
       out.set(t, q);
     }

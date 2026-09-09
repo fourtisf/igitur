@@ -91,8 +91,11 @@ test("the price and the previous close never contradict the change", () => {
   for (const t of ["NVDA", "CCJ", "GLD", "SGOV", "TSM"]) {
     const q = syntheticQuote(t);
     const implied = ((q.price - q.previousClose) / q.previousClose) * 100;
+    // A generated figure always states its own move; only real sources leave
+    // it unknown, and null there is the honest answer, not a gap in this test.
+    assert.notEqual(q.changePct, null, `${t}: a generated quote must state a move`);
     assert.ok(
-      Math.abs(implied - q.changePct) < 0.05,
+      Math.abs(implied - (q.changePct ?? 0)) < 0.05,
       `${t}: change says ${q.changePct}% but the closes imply ${implied.toFixed(2)}%`
     );
   }
@@ -247,4 +250,94 @@ test("with nothing remembered the figure is generated, and admits it", async () 
   forgetStore();
   const q = (await getQuotes(["ZZZZ"])).get("ZZZZ");
   assert.equal(q?.synthetic, true);
+});
+
+test("a move the source could not supply is filled in from the previous session", async () => {
+  // Stooq prices a name without a previous close. Yesterday's stored price is
+  // exactly that previous close, so the move becomes knowable the day after
+  // the first successful fetch, without asking anyone for anything more.
+  resetMarketCache();
+  forgetStore();
+  remember([
+    {
+      ticker: "NVDA",
+      price: 180,
+      changePct: 0,
+      marketCap: 0,
+      previousClose: 0,
+      open: 0,
+      asOf: "2026-09-08T20:00:00.000Z",
+      synthetic: false,
+    },
+  ]);
+
+  setHttpTransport(async (url) =>
+    url.includes("stooq.com")
+      ? {
+          status: 200,
+          cookies: [],
+          retryAfter: null,
+          error: null,
+          body:
+            "Symbol,Date,Time,Open,High,Low,Close,Volume\n" +
+            "NVDA.US,2026-09-09,22:00:04,178.10,185.00,177.50,189.00,1",
+        }
+      : { status: 429, body: "", cookies: [], retryAfter: null, error: null }
+  );
+  try {
+    const q = (await getQuotes(["NVDA"])).get("NVDA");
+    assert.equal(q?.price, 189);
+    assert.equal(q?.previousClose, 180, "yesterday's close, from the store");
+    assert.equal(q?.changePct, 5, "a real move, computed rather than guessed");
+  } finally {
+    setHttpTransport(async () => ({
+      status: 0,
+      body: "",
+      cookies: [],
+      retryAfter: null,
+      error: "offline in tests",
+    }));
+  }
+});
+
+test("a stored quote from the same session is not treated as a previous close", async () => {
+  resetMarketCache();
+  forgetStore();
+  remember([
+    {
+      ticker: "AAPL",
+      price: 180,
+      changePct: null,
+      marketCap: 0,
+      previousClose: 0,
+      open: 0,
+      asOf: "2026-09-09T14:00:00.000Z",
+      synthetic: false,
+    },
+  ]);
+  setHttpTransport(async (url) =>
+    url.includes("stooq.com")
+      ? {
+          status: 200,
+          cookies: [],
+          retryAfter: null,
+          error: null,
+          body:
+            "Symbol,Date,Time,Open,High,Low,Close,Volume\n" +
+            "AAPL.US,2026-09-09,22:00:04,178.10,185.00,177.50,189.00,1",
+        }
+      : { status: 429, body: "", cookies: [], retryAfter: null, error: null }
+  );
+  try {
+    const q = (await getQuotes(["AAPL"])).get("AAPL");
+    assert.equal(q?.changePct, null, "that is this session, not the one before it");
+  } finally {
+    setHttpTransport(async () => ({
+      status: 0,
+      body: "",
+      cookies: [],
+      retryAfter: null,
+      error: "offline in tests",
+    }));
+  }
 });
