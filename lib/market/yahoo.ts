@@ -36,16 +36,21 @@ const HOSTS = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"] as const;
 const TIMEOUT_MS = 8_000;
 
 /**
- * Yahoo answers a bare request with 403. These are a browser's headers, minus
- * the ones that would be a lie about the transport.
+ * Yahoo answers a bare request with 403, so it gets a browser's headers —
+ * minus the ones that would be a lie about the transport. The previous version
+ * said that and then sent `Origin: https://finance.yahoo.com` anyway. There is
+ * no origin: this is a server, not a page, and an Origin header with no
+ * preflight behind it is one of the cheaper things a bot filter looks for.
+ *
+ * This is the shape that was confirmed working from the deployment server
+ * before any of this was written: a browser User-Agent, and nothing claimed
+ * about where the request came from.
  */
 const HEADERS: Record<string, string> = {
   Accept: "application/json,text/plain,*/*",
   "Accept-Language": "en-US,en;q=0.9",
   "User-Agent":
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-  Referer: "https://finance.yahoo.com/",
-  Origin: "https://finance.yahoo.com",
 };
 
 /** The batch endpoint's limit is undocumented. Fifty is well inside it. */

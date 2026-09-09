@@ -152,7 +152,7 @@ restore() {
   git reset --hard "$ROLLBACK_COMMIT" --quiet
   # shellcheck disable=SC2086
   env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" \
-  LEDGER_PATH="$APP/data/ledger.jsonl" $MARKET_ENV \
+  LEDGER_PATH="$APP/data/ledger.jsonl" MARKET_CACHE_PATH="$APP/data/quotes.json" $MARKET_ENV \
     pm2 restart "$PM2_NAME" --update-env >/dev/null 2>&1 || true
   sleep 3
   if curl -fsS --max-time 10 "http://127.0.0.1:$PORT/" -o /dev/null 2>/dev/null; then
@@ -187,7 +187,7 @@ say "6/7  Menjalankan versi baru"
 # restart, bukan delete+start: entri pm2 yang ada dipertahankan berikut portnya.
 # shellcheck disable=SC2086
 env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" \
-  LEDGER_PATH="$APP/data/ledger.jsonl" $MARKET_ENV \
+  LEDGER_PATH="$APP/data/ledger.jsonl" MARKET_CACHE_PATH="$APP/data/quotes.json" $MARKET_ENV \
   pm2 restart "$PM2_NAME" --update-env
 pm2 save >/dev/null
 sleep 4

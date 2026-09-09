@@ -1,6 +1,7 @@
 import { fallbackProvider } from "./fallback";
 import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
+import { remember, remembered } from "./store";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
 import type { Bar, MarketProvider, Quote } from "./types";
 
@@ -215,8 +216,18 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
     failStreak = sourceFailed ? Math.min(failStreak + 1, MAX_BACKOFF_STEPS) : 0;
     const ttl = sourceFailed ? retryDelay() : QUOTE_TTL;
 
+    // What did come back is worth keeping across a restart. Every deploy
+    // restarts the server, and without this a vendor outage would put the site
+    // back on generated figures however recently the last good fetch was.
+    remember(fetched.values());
+
     for (const t of missing) {
-      const q = fetched.get(t) ?? syntheticQuote(t);
+      // A price that was real forty minutes ago is still a real price — a
+      // stock's last close is its price until the next session opens. Serving
+      // that, with the timestamp it actually carries, beats inventing one.
+      // Only when nothing real is known does a generated figure appear, and it
+      // says so.
+      const q = fetched.get(t) ?? remembered(t) ?? syntheticQuote(t);
       quoteCache.set(t, { at: now, ttl, quote: q });
       out.set(t, q);
     }

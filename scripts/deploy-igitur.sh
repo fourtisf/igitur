@@ -94,7 +94,7 @@ fi
 [ -z "$MARKET_ENV" ] && echo "  tanpa kunci vendor — situs memakai angka sintetis dan menyatakannya"
 pm2 delete "$PM2_NAME" 2>/dev/null || true
 env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" PORT="$PORT" HOSTNAME="127.0.0.1" \
-  LEDGER_PATH="$APP/data/ledger.jsonl" $MARKET_ENV \
+  LEDGER_PATH="$APP/data/ledger.jsonl" MARKET_CACHE_PATH="$APP/data/quotes.json" $MARKET_ENV \
   pm2 start "$APP/.next/standalone/server.js" --name "$PM2_NAME" --cwd "$APP/.next/standalone"
 pm2 save
 sleep 3

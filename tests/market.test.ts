@@ -22,7 +22,12 @@ import {
   resetMarketCache,
   sparkPath,
 } from "../lib/market";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { setHttpTransport } from "../lib/market/http";
+import { forgetStore, remember } from "../lib/market/store";
 import { syntheticQuote } from "../lib/market/synthetic";
 import { sessionsFor } from "../lib/track";
 import { UNIVERSE } from "../lib/universe";
@@ -30,6 +35,9 @@ import { UNIVERSE } from "../lib/universe";
 // These pin the synthetic path, so the vendor must not actually be reached: a
 // test that depends on Yahoo answering is a test that fails on a train.
 setHttpTransport(async () => ({ status: 0, body: "", cookies: [], retryAfter: null, error: "offline in tests" }));
+
+// And they must not read or write the real server's remembered prices.
+process.env.MARKET_CACHE_PATH = join(mkdtempSync(join(tmpdir(), "igitur-mkt-")), "quotes.json");
 
 test("with nothing configured the site still reaches for real prices", () => {
   // It used to fall back to generated figures, which meant real data was
@@ -206,4 +214,37 @@ test("a key wrapped in quotes in .env is still the key", () => {
   assert.equal(cleanKey('""'), undefined, "an empty key is no key, not an empty string");
   assert.equal(cleanKey(undefined), undefined);
   assert.equal(cleanKey("   "), undefined);
+});
+
+test("a vendor outage falls back to the last real price, not to a made-up one", async () => {
+  // The whole reason the store exists. During the outage this was written for,
+  // NVDA showed $7.24 — a number generated from the letters of its ticker —
+  // while a real price from an hour earlier was sitting unused.
+  resetMarketCache();
+  forgetStore();
+  remember([
+    {
+      ticker: "NVDA",
+      price: 184.22,
+      changePct: 2.41,
+      marketCap: 4490,
+      previousClose: 179.88,
+      open: 180.5,
+      asOf: "2026-09-09T17:42:00.000Z",
+      synthetic: false,
+    },
+  ]);
+
+  // The transport is offline for every test in this file.
+  const q = (await getQuotes(["NVDA"])).get("NVDA");
+  assert.equal(q?.price, 184.22);
+  assert.equal(q?.synthetic, false, "a stored real price is real, and says so");
+  assert.equal(q?.asOf, "2026-09-09T17:42:00.000Z", "shown as of when it was true");
+});
+
+test("with nothing remembered the figure is generated, and admits it", async () => {
+  resetMarketCache();
+  forgetStore();
+  const q = (await getQuotes(["ZZZZ"])).get("ZZZZ");
+  assert.equal(q?.synthetic, true);
 });
