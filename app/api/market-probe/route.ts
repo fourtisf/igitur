@@ -47,7 +47,11 @@ export async function GET() {
   const provider = providerName();
   const steps: ProbeStep[] = [];
 
-  if (provider === "yahoo") {
+  // Yahoo is in the chain whenever figures are meant to be real — on its own,
+  // or as the fallback behind a key. Probing it only when it is the *named*
+  // provider is how this endpoint answered `"steps": []` on the one run that
+  // mattered, and left the question open for another round trip.
+  if (provider !== "synthetic") {
     // A probe that reads a warm session cannot tell you whether a cold render
     // would have got one.
     forgetYahooSession();
@@ -61,9 +65,10 @@ export async function GET() {
     lastVendorError: vendorError(),
     steps,
     note:
-      provider === "yahoo"
-        ? "Each step is one request Yahoo answered. A 200 with ok:false means it answered with something other than a price."
-        : `No step-by-step probe for ${provider}; lastVendorError names the failure. The key is never included.`,
+      provider === "synthetic"
+        ? "Generated figures were asked for explicitly (MARKET_PROVIDER=synthetic)."
+        : "Steps are the keyless source. A key, when set, is tried first and is " +
+          "described in lastVendorError by name only — it is never included.",
   };
 
   cached = { at: Date.now(), probe };

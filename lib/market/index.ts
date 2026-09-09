@@ -1,3 +1,4 @@
+import { fallbackProvider } from "./fallback";
 import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
@@ -17,28 +18,36 @@ export { bookDrift, series, SPY_DRIFT } from "./synthetic";
  *   MARKET_PROVIDER=fmp
  *   MARKET_API_KEY=your-key
  */
-function pick(): MarketProvider {
-  const key = process.env.MARKET_API_KEY?.trim();
-  const named = process.env.MARKET_PROVIDER?.trim().toLowerCase();
+/** Only the two variables that decide this, so a test can pass them plainly. */
+export interface MarketEnv {
+  MARKET_API_KEY?: string | undefined;
+  MARKET_PROVIDER?: string | undefined;
+  [key: string]: string | undefined;
+}
+
+export function pickProvider(env: MarketEnv = process.env): MarketProvider {
+  const key = env.MARKET_API_KEY?.trim();
+  const named = env.MARKET_PROVIDER?.trim().toLowerCase();
 
   // Named explicitly, so honour it — including asking for generated figures.
   if (named === "synthetic") return syntheticProvider;
   if (named === "yahoo") return yahooProvider();
-  if (named === "fmp") {
-    // Asking for FMP without a key is a configuration mistake, not a request
-    // for made-up numbers. Say so by falling back to the keyless source rather
-    // than silently serving figures generated from the ticker text.
-    return key ? fmpProvider(key) : yahooProvider();
-  }
 
-  // Nothing named. A key means FMP was intended; otherwise the keyless source,
-  // because real prices with no configuration beat generated ones with none.
-  return key ? fmpProvider(key) : yahooProvider();
+  // A key is a preference for FMP, never a promise that the key works. This
+  // site served generated figures behind `HTTP 401 from /stable/batch-quote`
+  // with the keyless source configured, working and never asked, because the
+  // selection treated a key being *present* as the decision. So FMP goes first
+  // and Yahoo catches whatever it cannot price — including everything, when
+  // the key is rejected.
+  if (key) return fallbackProvider(fmpProvider(key), yahooProvider());
+
+  // Nothing configured: real prices with no configuration beat generated ones.
+  return yahooProvider();
 }
 
 let provider: MarketProvider | null = null;
 function get(): MarketProvider {
-  provider ??= pick();
+  provider ??= pickProvider();
   return provider;
 }
 
@@ -77,10 +86,15 @@ export async function marketIsReal(): Promise<boolean> {
  * Never contains the key.
  */
 export function vendorError(): string | null {
-  const n = get().name;
-  if (n === "fmp") return fmpLastError();
-  if (n === "yahoo") return yahooLastError();
-  return null;
+  // Both, not whichever matches the provider's name: with a fallback in place
+  // the interesting failure is usually the one the site routed *around*. A
+  // rejected key that nothing reports is a rejected key nobody fixes.
+  const parts: string[] = [];
+  const f = fmpLastError();
+  if (f) parts.push(`fmp: ${f}`);
+  const y = yahooLastError();
+  if (y) parts.push(`yahoo: ${y}`);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 // ── Caching ──────────────────────────────────────────────────────────────────
