@@ -105,3 +105,23 @@ test("the tracking window follows the stated date and stays bounded", () => {
   assert.equal(sessionsFor(100000), 1260);
   assert.ok(sessionsFor(30) < sessionsFor(365));
 });
+
+test("the cache TTL fits the vendor's free daily allowance", async () => {
+  // The reason this matters is not tidiness. FMP's free tier is 250 requests a
+  // day and one refresh of the universe costs 4, so a 60-second TTL — which is
+  // what this started at — spends the whole allowance in about an hour and the
+  // site silently falls back to synthetic for the rest of the day. Anyone
+  // configuring a key would have concluded it did not work.
+  const { UNIVERSE } = await import("../lib/universe");
+  const BATCH = 50;
+  const FREE_TIER_PER_DAY = 250;
+
+  const perRefresh = Math.ceil(UNIVERSE.length / BATCH);
+  const ttlSeconds = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600);
+  const perDay = (86_400 / ttlSeconds) * perRefresh;
+
+  assert.ok(
+    perDay <= FREE_TIER_PER_DAY,
+    `${perDay.toFixed(0)} requests/day at a ${ttlSeconds}s TTL exceeds the ${FREE_TIER_PER_DAY} free tier`
+  );
+});

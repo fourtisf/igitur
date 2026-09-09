@@ -189,6 +189,13 @@ chmod 600 /var/www/igitur/.env
 pm2 restart igitur --update-env
 ```
 
+The free tier is 250 requests a day. Quotes are therefore cached for an hour,
+which costs 96 — one refresh of the universe is 4 requests, and 24 of those fit
+comfortably with room for the tracking pages. `MARKET_TTL_S` lowers it on a paid
+plan. Do not lower it on the free one: at 60 seconds the allowance is gone
+within the hour and the site falls back to synthetic for the rest of the day,
+which looks exactly like a key that does not work.
+
 Financial Modeling Prep is the default because it batches: the whole universe
 in a handful of requests, which is what makes a free tier workable for a page
 that renders 163 tickers. A key is free at

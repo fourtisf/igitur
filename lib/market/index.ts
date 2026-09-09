@@ -75,9 +75,28 @@ export function vendorError(): string | null {
 }
 
 // ── Caching ──────────────────────────────────────────────────────────────────
-// A page renders 163 quotes; a reader refreshing must not cost 163 more.
-const QUOTE_TTL = 60_000;
-const HISTORY_TTL = 6 * 60 * 60_000;
+//
+// A page renders 163 quotes; a reader refreshing must not cost 163 more. But
+// the TTL is set by the vendor's daily allowance, not by taste.
+//
+// One full refresh of the universe costs 4 requests — 163 tickers, batched 50
+// at a time. FMP's free tier allows 250 requests a day, so:
+//
+//   60s   → 5,760/day   23× over. The key dies within the hour.
+//   5min  → 1,152/day    5× over.
+//   30min →   192/day    fits.
+//   1h    →    96/day    fits, with room for /track and the record.
+//
+// An hour is also honest for what this is. These are not trading prices; a
+// research tool that says a holding moved 2.4% today does not become wrong
+// because the figure is fifty minutes old, and the page prints the timestamp.
+//
+// MARKET_TTL_S overrides it for a paid plan, where a minute is affordable.
+const QUOTE_TTL = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600) * 1000;
+
+// Daily closes change once a day. Six hours meant four identical fetches for
+// every holding on every tracked claim, against the same allowance.
+const HISTORY_TTL = 24 * 60 * 60_000;
 
 const quoteCache = new Map<string, { at: number; quote: Quote }>();
 const historyCache = new Map<string, { at: number; bars: Bar[] }>();

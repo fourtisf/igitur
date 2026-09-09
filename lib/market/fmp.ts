@@ -51,8 +51,11 @@ const TIMEOUT_MS = 8_000;
  * prerendered pages the vendor would never be reached at all — with a valid
  * key configured, the whole universe would still render synthetic.
  */
-const QUOTE_TTL_S = 60;
-const HISTORY_TTL_S = 6 * 60 * 60;
+// These mirror ./index.ts, which sets them from the vendor's daily allowance —
+// see the arithmetic there. Next must not refetch sooner than the layer above
+// asks, or the allowance is spent twice over.
+const QUOTE_TTL_S = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600);
+const HISTORY_TTL_S = 24 * 60 * 60;
 
 interface FmpQuote {
   symbol?: string;
