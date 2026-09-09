@@ -1,0 +1,63 @@
+{
+  "premise": "Compute is the binding constraint on artificial intelligence, not model design.",
+  "theme": "Compute buildout",
+  "confidence": 54,
+  "holdings": [
+    {
+      "t": "NVDA",
+      "n": "Nvidia",
+      "pct": 20.5,
+      "why": "Sits on the critical path of nearly every frontier training run.",
+      "lead": true,
+      "ballast": false
+    },
+    {
+      "t": "TSM",
+      "n": "Taiwan Semiconductor",
+      "pct": 18.3,
+      "why": "Leading-edge dies are fabricated here or they are not fabricated.",
+      "lead": false,
+      "ballast": false
+    },
+    {
+      "t": "ASML",
+      "n": "ASML",
+      "pct": 15.7,
+      "why": "Sole supplier of EUV lithography; there is no second source.",
+      "lead": false,
+      "ballast": false
+    },
+    {
+      "t": "AVGO",
+      "n": "Broadcom",
+      "pct": 13.8,
+      "why": "Custom accelerators for buyers who want off a single vendor's price list.",
+      "lead": false,
+      "ballast": false
+    },
+    {
+      "t": "MU",
+      "n": "Micron",
+      "pct": 12,
+      "why": "High-bandwidth memory is the second bottleneck after the die.",
+      "lead": false,
+      "ballast": false
+    },
+    {
+      "t": "VRT",
+      "n": "Vertiv",
+      "pct": 9.7,
+      "why": "Power and cooling inside the rack, where density fails first.",
+      "lead": false,
+      "ballast": false
+    },
+    {
+      "t": "SGOV",
+      "n": "0–3 Month Treasury Bill ETF",
+      "pct": 10,
+      "why": "Cash that still earns while the thesis is early.",
+      "lead": false,
+      "ballast": true
+    }
+  ]
+}
