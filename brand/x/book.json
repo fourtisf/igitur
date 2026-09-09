@@ -2,6 +2,9 @@
   "premise": "Compute is the binding constraint on artificial intelligence, not model design.",
   "theme": "Compute buildout",
   "confidence": 54,
+  "refused": "the dollar will lose reserve status",
+  "themeCount": 26,
+  "nameCount": 160,
   "holdings": [
     {
       "t": "NVDA",

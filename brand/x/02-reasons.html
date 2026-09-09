@@ -1,0 +1,121 @@
+<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/5476f68d60460930-s.2uwcyprjm3xu3.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/9c72aa0f40e4eef8-s.1y4-pdgsjb-pw.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/premise/.next/static/media/ad66f9afd8947f86-s.3lvt2whj97whp.woff2") format("woff2");font-weight:100 900;font-display:block}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0B;--fg:#FAFAFA;--fg-2:#9E9EA6;--fg-3:#8A8A92;--fg-4:#7A7A82;
+  --ac:#7C8CFF;--ac-2:#AEB6FF;--bd:rgba(255,255,255,.068);--bd-2:rgba(255,255,255,.115)}
+html,body{width:1600px;height:900px}
+body{background:var(--bg);font-family:Inter,system-ui,sans-serif;color:var(--fg);
+  -webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
+.glow{position:absolute;inset:0;
+  background:radial-gradient(900px 560px at 46% -10%,rgba(124,140,255,.17),transparent 64%),
+             radial-gradient(640px 460px at 92% 8%,rgba(160,140,255,.08),transparent 62%)}
+.grain{position:absolute;inset:0;opacity:.30;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{position:relative;z-index:2;height:100%;padding:74px 86px 66px;
+  display:flex;flex-direction:column;justify-content:space-between}
+
+.brand{display:flex;align-items:center;gap:18px}
+.mark{display:flex;flex-direction:column;gap:6.5px;width:44px}
+.mark .top{display:flex;gap:3.2px;height:9px}
+.mark .p1{width:22.8px;background:rgba(255,255,255,.36);border-radius:4.5px}
+.mark .p2{width:16px;background:var(--ac);border-radius:4.5px}
+.mark .concl{width:44px;height:12.5px;background:var(--fg);border-radius:6.25px}
+.name{font-size:34px;font-weight:600;letter-spacing:-.025em}
+.dot{width:4px;height:4px;border-radius:50%;background:var(--fg-4);margin:0 4px}
+.url{font-size:21px;color:var(--fg-4)}
+.step{margin-left:auto;font-size:19px;color:var(--fg-4);letter-spacing:.06em}
+
+h1{font-size:96px;line-height:1.02;letter-spacing:-.04em;font-weight:600;max-width:24ch}
+h1 em{font-style:normal;color:var(--ac-2)}
+h1.mid{font-size:78px;max-width:20ch}
+/* The refusal runs two lines at this measure. Three, with "claim." alone on
+   the last, made a confident sentence look like it had run out of room. */
+h1.wide{max-width:27ch}
+.sub{margin-top:26px;font-size:29px;line-height:1.4;color:var(--fg-2);width:1180px;font-weight:350}
+.kick{font-size:15px;letter-spacing:.14em;color:var(--fg-4);text-transform:uppercase}
+
+.bar{display:flex;gap:5px;height:168px}
+.bar>div{position:relative;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:12px 13px 13px;min-width:0;overflow:hidden;border-radius:11px;
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.075)}
+.bar .lead{background:linear-gradient(180deg,#fff,#C9CEFF 55%,#8B95E8);color:#0A0A0B;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.6),0 0 46px -8px rgba(174,182,255,.6)}
+.bar .bal{background:linear-gradient(180deg,rgba(124,140,255,.5),rgba(76,88,180,.28));
+  box-shadow:inset 0 0 0 1px rgba(124,140,255,.35)}
+.bar b{font-size:17px;font-weight:600;letter-spacing:-.01em;display:block;white-space:nowrap}
+.bar i{font-style:normal;font-size:15px;opacity:.66;display:block;margin-top:3px}
+.bar .lead i{opacity:.62}
+
+.claim{font-size:25px;color:var(--fg);font-weight:350;display:flex;align-items:baseline;margin-bottom:2px}
+.claim .kick{margin-right:18px}
+.foot{display:flex;justify-content:space-between;align-items:baseline;gap:40px;
+  border-top:1px solid var(--bd);padding-top:22px;font-size:20px}
+.foot .why{color:var(--fg-2);font-weight:350}
+.foot .why b{color:var(--fg);font-weight:600;margin-right:14px;letter-spacing:-.01em}
+.foot .meta{color:var(--fg-4);white-space:nowrap;font-size:19px}
+
+/* Card 2: the reasons, which are the product. */
+.rows{display:flex;flex-direction:column;gap:2px}
+.row{display:grid;grid-template-columns:118px 1fr 96px;gap:26px;align-items:baseline;
+  padding:17px 20px;border-radius:10px;background:rgba(255,255,255,.026);
+  box-shadow:inset 0 0 0 1px var(--bd)}
+.row.is-lead{background:rgba(124,140,255,.10);box-shadow:inset 0 0 0 1px rgba(124,140,255,.28)}
+.row .t{font-size:23px;font-weight:600;letter-spacing:-.02em}
+.row .w{font-size:22px;color:var(--fg-2);font-weight:350}
+.row .pct{font-size:23px;font-weight:600;text-align:right;letter-spacing:-.02em}
+.row.is-bal .t,.row.is-bal .pct{color:var(--ac-2)}
+
+/* Card 3: the refusal. Mostly empty on purpose. */
+.badge{display:inline-flex;align-items:center;gap:12px;padding:9px 18px;border-radius:99px;
+  font-size:17px;color:var(--fg-2);background:rgba(255,255,255,.04);
+  box-shadow:inset 0 0 0 1px var(--bd-2)}
+.badge b{color:var(--fg);font-weight:600}
+.typed{font-size:30px;color:var(--fg-3);font-weight:350}
+.typed span{color:var(--fg)}
+
+/* Card 5: one line of the record. */
+.rec{display:flex;flex-direction:column;gap:20px;padding:34px 38px;border-radius:16px;
+  background:rgba(255,255,255,.026);box-shadow:inset 0 0 0 1px var(--bd-2)}
+.rec .date{font-size:19px;color:var(--ac-2);letter-spacing:.06em;text-transform:uppercase}
+.rec .said{font-size:38px;line-height:1.25;letter-spacing:-.025em;font-weight:500}
+.rec .note{font-size:21px;color:var(--fg-3);font-weight:350}
+</style>
+<div class="glow"></div><div class="grain"></div>
+<div class="wrap">
+  <div class="brand">
+    <div class="mark"><div class="top"><div class="p1"></div><div class="p2"></div></div><div class="concl"></div></div>
+    <div class="name">Igitur</div><div class="dot"></div><div class="url">igitur.xyz</div>
+    <div class="step">2 / 5</div>
+  </div>
+  
+  <div>
+    <p class="kick" style="margin-bottom:16px">The premise</p>
+    <h1 class="mid" style="font-size:44px;max-width:44ch;line-height:1.2">“Compute is the binding constraint on artificial intelligence, not model design.”</h1>
+  </div>
+  <div class="rows"><div class="row is-lead">
+      <span class="t">NVDA</span><span class="w">Sits on the critical path of nearly every frontier training run.</span><span class="pct">20.5%</span>
+    </div><div class="row">
+      <span class="t">TSM</span><span class="w">Leading-edge dies are fabricated here or they are not fabricated.</span><span class="pct">18.3%</span>
+    </div><div class="row">
+      <span class="t">ASML</span><span class="w">Sole supplier of EUV lithography; there is no second source.</span><span class="pct">15.7%</span>
+    </div><div class="row">
+      <span class="t">AVGO</span><span class="w">Custom accelerators for buyers who want off a single vendor's price list.</span><span class="pct">13.8%</span>
+    </div><div class="row">
+      <span class="t">MU</span><span class="w">High-bandwidth memory is the second bottleneck after the die.</span><span class="pct">12%</span>
+    </div><div class="row">
+      <span class="t">VRT</span><span class="w">Power and cooling inside the rack, where density fails first.</span><span class="pct">9.7%</span>
+    </div><div class="row is-bal">
+      <span class="t">SGOV</span><span class="w">Cash that still earns while the thesis is early.</span><span class="pct">10%</span>
+    </div></div>
+  <div class="foot">
+    <span class="why">Every weight carries the reason it earned its size.</span>
+    <span class="meta">Compute buildout · 7 holdings · total 100%</span>
+  </div>
+</div>
