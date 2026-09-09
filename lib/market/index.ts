@@ -25,8 +25,21 @@ export interface MarketEnv {
   [key: string]: string | undefined;
 }
 
+/**
+ * A key as .env actually holds it, rather than as it was meant to be written.
+ *
+ * `MARKET_API_KEY="abc"` is the ordinary way to write a shell variable and the
+ * quotes are part of the value here, so the vendor sees `"abc"` and answers
+ * 401 — indistinguishable, from the site, from a key that is simply wrong.
+ * Same for a stray carriage return out of a Windows editor.
+ */
+export function cleanKey(raw: string | undefined): string | undefined {
+  const k = raw?.trim().replace(/^["']|["']$/g, "").trim();
+  return k ? k : undefined;
+}
+
 export function pickProvider(env: MarketEnv = process.env): MarketProvider {
-  const key = env.MARKET_API_KEY?.trim();
+  const key = cleanKey(env.MARKET_API_KEY);
   const named = env.MARKET_PROVIDER?.trim().toLowerCase();
 
   // Named explicitly, so honour it — including asking for generated figures.

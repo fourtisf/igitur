@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 
 import {
   cachedTtlMs,
+  cleanKey,
   fmtMcap,
   fmtPrice,
   getQuote,
@@ -28,7 +29,7 @@ import { UNIVERSE } from "../lib/universe";
 
 // These pin the synthetic path, so the vendor must not actually be reached: a
 // test that depends on Yahoo answering is a test that fails on a train.
-setHttpTransport(async () => ({ status: 0, body: "", cookies: [], error: "offline in tests" }));
+setHttpTransport(async () => ({ status: 0, body: "", cookies: [], retryAfter: null, error: "offline in tests" }));
 
 test("with nothing configured the site still reaches for real prices", () => {
   // It used to fall back to generated figures, which meant real data was
@@ -179,6 +180,7 @@ test("a source answering for most names is not retried for the few it lacks", as
   setHttpTransport(async (url) => ({
     status: 200,
     cookies: url.includes("fc.yahoo.com") ? ["A1=d=abc"] : [],
+    retryAfter: null,
     body: url.includes("getcrumb")
       ? "crumb1"
       : JSON.stringify({
@@ -190,6 +192,18 @@ test("a source answering for most names is not retried for the few it lacks", as
     await getQuotes(["NVDA", "NOTLISTED"]);
     assert.equal(cachedTtlMs("NOTLISTED"), QUOTE_TTL_MS);
   } finally {
-    setHttpTransport(async () => ({ status: 0, body: "", cookies: [], error: "offline in tests" }));
+    setHttpTransport(async () => ({ status: 0, body: "", cookies: [], retryAfter: null, error: "offline in tests" }));
   }
+});
+
+test("a key wrapped in quotes in .env is still the key", () => {
+  // `MARKET_API_KEY="abc"` is the ordinary way to write a shell variable, and
+  // the quotes end up in the value. The vendor then answers 401, which from
+  // the site is indistinguishable from a key that is simply wrong.
+  assert.equal(cleanKey('"abc123"'), "abc123");
+  assert.equal(cleanKey("'abc123'"), "abc123");
+  assert.equal(cleanKey(" abc123\r\n"), "abc123");
+  assert.equal(cleanKey('""'), undefined, "an empty key is no key, not an empty string");
+  assert.equal(cleanKey(undefined), undefined);
+  assert.equal(cleanKey("   "), undefined);
 });

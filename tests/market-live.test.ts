@@ -26,7 +26,7 @@ async function withHttp(stub: Stub, run: (seen: () => string) => Promise<void>) 
   let lastUrl = "";
   setHttpTransport(async (url) => {
     lastUrl = url;
-    return { status: 200, body: "", cookies: [], error: null, ...(await stub(url)) };
+    return { status: 200, body: "", cookies: [], retryAfter: null, error: null, ...(await stub(url)) };
   });
   try {
     await run(() => lastUrl);

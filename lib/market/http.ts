@@ -45,6 +45,8 @@ export interface HttpResponse {
   body: string;
   /** Raw Set-Cookie lines, for the endpoints that need a session. */
   cookies: string[];
+  /** Retry-After, when the server sent one. A 429 usually says how long. */
+  retryAfter: string | null;
   error: string | null;
 }
 
@@ -90,13 +92,13 @@ function attempt(url: string, opts: HttpOptions, depth: number): Promise<HttpRes
     try {
       target = new URL(url);
     } catch {
-      resolve({ status: 0, body: "", cookies: [], error: "bad url" });
+      resolve({ status: 0, body: "", cookies: [], retryAfter: null, error: "bad url" });
       return;
     }
     if (target.protocol !== "https:") {
       // Vendor traffic carries no secrets on this site, but an http: redirect
       // is still a downgrade and there is no reason to follow one.
-      resolve({ status: 0, body: "", cookies: [], error: "not https" });
+      resolve({ status: 0, body: "", cookies: [], retryAfter: null, error: "not https" });
       return;
     }
 
@@ -119,6 +121,7 @@ function attempt(url: string, opts: HttpOptions, depth: number): Promise<HttpRes
       (res) => {
         const status = res.statusCode ?? 0;
         const cookies = res.headers["set-cookie"] ?? [];
+        const retryAfter = res.headers["retry-after"] ?? null;
         const location = res.headers.location;
 
         if (status >= 300 && status < 400 && location && depth < MAX_REDIRECTS) {
@@ -139,25 +142,25 @@ function attempt(url: string, opts: HttpOptions, depth: number): Promise<HttpRes
           size += c.length;
           if (size > MAX_BYTES) {
             res.destroy();
-            done({ status, body: "", cookies, error: "response too large" });
+            done({ status, body: "", cookies, retryAfter, error: "response too large" });
             return;
           }
           chunks.push(c);
         });
         res.on("end", () => {
           const enc = String(res.headers["content-encoding"] ?? "").toLowerCase();
-          done({ status, body: decode(Buffer.concat(chunks), enc), cookies, error: null });
+          done({ status, body: decode(Buffer.concat(chunks), enc), cookies, retryAfter, error: null });
         });
-        res.on("error", (e: Error) => done({ status, body: "", cookies, error: e.message }));
+        res.on("error", (e: Error) => done({ status, body: "", cookies, retryAfter, error: e.message }));
       }
     );
 
     req.on("timeout", () => {
       req.destroy();
-      done({ status: 0, body: "", cookies: [], error: "timeout" });
+      done({ status: 0, body: "", cookies: [], retryAfter: null, error: "timeout" });
     });
     req.on("error", (e: Error) =>
-      done({ status: 0, body: "", cookies: [], error: e.message.slice(0, 160) })
+      done({ status: 0, body: "", cookies: [], retryAfter: null, error: e.message.slice(0, 160) })
     );
     req.end();
   });

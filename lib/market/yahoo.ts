@@ -64,6 +64,45 @@ export function yahooLastError(): string | null {
   return lastError;
 }
 
+// ── Believing a refusal ──────────────────────────────────────────────────────
+
+/**
+ * A 429 is the endpoint saying stop. Asking again immediately is how a short
+ * throttle becomes a long one, and this deployment earned exactly that: the
+ * first version asked once per ticker, so a single failed batch turned into
+ * 163 more requests, on every prerender, on every deploy. `curl` from the same
+ * server still worked; the site had simply made itself unwelcome.
+ *
+ * So a refusal is honoured for as long as it asks, or a quarter of an hour.
+ */
+const COOL_OFF_MS = 15 * 60_000;
+let refuseUntil = 0;
+
+export function yahooHoldingOff(): string | null {
+  return Date.now() < refuseUntil ? new Date(refuseUntil).toISOString() : null;
+}
+
+/** Exported for tests, and for the probe, which must be able to look anyway. */
+export function clearYahooCoolOff(): void {
+  refuseUntil = 0;
+}
+
+/**
+ * The probe is a diagnostic, capped at one run a minute, and its job is to
+ * find out whether a refusal has lifted. If its own requests extended the
+ * cool-off, every check would push recovery further away — a thermometer that
+ * raises the temperature.
+ */
+let probing = false;
+
+function noteRefusal(status: number, retryAfter: string | null): void {
+  if (probing) return;
+  if (status !== 429 && status !== 403) return;
+  const secs = Number(retryAfter);
+  const wait = Number.isFinite(secs) && secs > 0 ? Math.min(secs, 3600) * 1000 : COOL_OFF_MS;
+  refuseUntil = Math.max(refuseUntil, Date.now() + wait);
+}
+
 // ── Session ──────────────────────────────────────────────────────────────────
 
 interface Session {
@@ -216,10 +255,12 @@ async function getAcrossHosts(
       timeoutMs: TIMEOUT_MS,
     });
     if (res.status === 200) return res;
+    noteRefusal(res.status, res.retryAfter);
     last = { status: res.status, body: res.body, error: res.error };
     // 404 is an answer: the symbol does not exist. Asking the other host is
-    // just another request for the same no.
-    if (res.status === 404) break;
+    // just another request for the same no. A refusal is an answer too, and
+    // both hosts share the backend that issued it.
+    if (res.status === 404 || res.status === 429 || res.status === 403) break;
   }
   return last;
 }
@@ -260,12 +301,14 @@ async function pool<T, R>(items: T[], work: (t: T) => Promise<R>): Promise<R[]> 
   return out;
 }
 
-async function batchQuotes(tickers: string[], into: Map<string, Quote>): Promise<void> {
+async function batchQuotes(tickers: string[], into: Map<string, Quote>): Promise<boolean> {
   const s = await getSession();
   if (!s) {
     lastError = lastError ?? "no session: Yahoo did not hand out a cookie";
-    return;
+    return false;
   }
+
+  let answered = false;
 
   for (let i = 0; i < tickers.length; i += BATCH) {
     const slice = tickers.slice(i, i + BATCH);
@@ -279,21 +322,23 @@ async function batchQuotes(tickers: string[], into: Map<string, Quote>): Promise
       // one instead of repeating a request that cannot now succeed.
       if (res.status === 401 || res.status === 403) session = null;
       lastError = `batch: HTTP ${res.status}${res.error ? ` (${res.error})` : ""}`;
-      return;
+      return answered;
     }
 
     const body = parseJson<{ quoteResponse?: { result?: V7Row[] } }>(res.body);
     const rows = body?.quoteResponse?.result;
     if (!Array.isArray(rows)) {
       lastError = "batch: unexpected response shape";
-      return;
+      return answered;
     }
+    answered = true;
     for (const row of rows) {
       const q = quoteFromV7(row);
       if (q) into.set(q.ticker, q);
     }
     lastError = null;
   }
+  return answered;
 }
 
 export function yahooProvider(): MarketProvider {
@@ -303,25 +348,52 @@ export function yahooProvider(): MarketProvider {
 
     async quotes(tickers) {
       const out = new Map<string, Quote>();
-      await batchQuotes(tickers, out);
+      const holding = yahooHoldingOff();
+      if (holding) {
+        // Every figure falls back to a generated one, flagged as generated,
+        // and /status says why. That is the honest shape of being throttled.
+        lastError = `holding off after a refusal until ${holding}`;
+        return out;
+      }
 
-      // Whatever the batch could not price, ask for one at a time. When the
-      // batch failed outright this is the whole list, which is slow — but slow
-      // and true beats fast and generated.
+      const answered = await batchQuotes(tickers, out);
+
       const missing = tickers.filter((t) => !out.has(t.toUpperCase()));
-      if (missing.length) {
-        const results = await pool(missing, (t) => chart(t, "range=5d&interval=1d"));
+      if (!missing.length) {
+        lastError = null;
+        return out;
+      }
+
+      // The per-ticker path is for coverage gaps, not for outages. Ask about
+      // one name first: if the endpoint refuses, 162 more requests will not
+      // change its mind — and that fan-out is what kept the refusal alive
+      // last time. When the batch answered, this is a handful of names and
+      // the canary is one of them rather than an extra request.
+      const [canary, ...rest] = missing;
+      const first = await chart(canary, "range=5d&interval=1d");
+      if (!first) return out;
+      const q = quoteFromChart(canary, first);
+      if (q) out.set(q.ticker, q);
+
+      // Without a session the batch never ran, so this is the whole universe
+      // one at a time. It is slow and it is true, and the canary has already
+      // shown the endpoint is willing.
+      if (rest.length) {
+        const results = await pool(rest, (t) => chart(t, "range=5d&interval=1d"));
         results.forEach((r, i) => {
           if (!r) return;
-          const q = quoteFromChart(missing[i], r);
-          if (q) out.set(q.ticker, q);
+          const each = quoteFromChart(rest[i], r);
+          if (each) out.set(each.ticker, each);
         });
       }
+
       if (out.size) lastError = null;
+      else if (answered) lastError = lastError ?? "the batch answered but priced nothing";
       return out;
     },
 
     async history(ticker, from) {
+      if (yahooHoldingOff()) return [];
       const p1 = Math.floor(Date.parse(from + "T00:00:00Z") / 1000);
       if (!Number.isFinite(p1)) return [];
       const p2 = Math.floor(Date.now() / 1000);
@@ -360,6 +432,15 @@ export interface ProbeStep {
  */
 export async function yahooProbe(): Promise<ProbeStep[]> {
   const steps: ProbeStep[] = [];
+  probing = true;
+  try {
+    return await probeSteps(steps);
+  } finally {
+    probing = false;
+  }
+}
+
+async function probeSteps(steps: ProbeStep[]): Promise<ProbeStep[]> {
 
   const seed = await httpGet("https://fc.yahoo.com/", { headers: HEADERS, timeoutMs: TIMEOUT_MS });
   const cookie = cookieHeader(seed.cookies);

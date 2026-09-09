@@ -10,7 +10,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { cookieHeader, setHttpTransport, type HttpResponse } from "../lib/market/http";
-import { forgetYahooSession, yahooLastError, yahooProbe, yahooProvider } from "../lib/market/yahoo";
+import {
+  clearYahooCoolOff,
+  forgetYahooSession,
+  yahooHoldingOff,
+  yahooLastError,
+  yahooProbe,
+  yahooProvider,
+} from "../lib/market/yahoo";
 
 type Reply = Partial<HttpResponse> | ((url: string) => Partial<HttpResponse>);
 
@@ -23,9 +30,9 @@ function serve(routes: [string, Reply][], onUrl?: (u: string) => void) {
     for (const [needle, reply] of routes) {
       if (!url.includes(needle)) continue;
       const r = typeof reply === "function" ? reply(url) : reply;
-      return { status: 200, body: "", cookies: [], error: null, ...r };
+      return { status: 200, body: "", cookies: [], retryAfter: null, error: null, ...r };
     }
-    return { status: 404, body: "", cookies: [], error: null };
+    return { status: 404, body: "", cookies: [], retryAfter: null, error: null };
   });
   return () => urls;
 }
@@ -85,6 +92,9 @@ const chartBody = (over: Record<string, unknown> = {}) =>
 test.afterEach(() => {
   setHttpTransport(null);
   forgetYahooSession();
+  // A 429 in one case is meant to outlive that request — that is the whole
+  // point of it — so it has to be cleared between cases explicitly.
+  clearYahooCoolOff();
 });
 
 test("the batch endpoint prices a name, in the site's own units", async () => {
@@ -155,12 +165,12 @@ test("the fallback does not become the burst it replaced", async () => {
       peak = Math.max(peak, inFlight);
       await new Promise((r) => setTimeout(r, 3));
       inFlight--;
-      return { status: 200, body: chartBody(), cookies: [], error: null };
+      return { status: 200, body: chartBody(), cookies: [], retryAfter: null, error: null };
     }
-    if (url.includes("getcrumb")) return { status: 200, body: "Xy9zQ2p", cookies: [], error: null };
+    if (url.includes("getcrumb")) return { status: 200, body: "Xy9zQ2p", cookies: [], retryAfter: null, error: null };
     if (url.includes("fc.yahoo.com"))
-      return { status: 404, body: "", cookies: ["A1=d=abc"], error: null };
-    return { status: 500, body: "", cookies: [], error: null };
+      return { status: 404, body: "", cookies: ["A1=d=abc"], retryAfter: null, error: null };
+    return { status: 500, body: "", cookies: [], retryAfter: null, error: null };
   });
 
   await yahooProvider().quotes(Array.from({ length: 60 }, (_, i) => `T${i}`));
@@ -276,4 +286,69 @@ test("cookies are reduced to name=value pairs, last one winning", () => {
     ]),
     "A1=d=third; A3=second"
   );
+});
+
+test("a 429 is believed, and stops the next render asking again", async () => {
+  // Not honouring this is how a short throttle becomes a long one. The site
+  // earned exactly that: one failed batch became 163 more requests, on every
+  // prerender, on every deploy.
+  forgetYahooSession();
+  const seen = serve([["", { status: 429, body: "Too Many Requests" }]]);
+  await yahooProvider().quotes(["NVDA"]);
+  const asked = seen().length;
+
+  assert.ok(yahooHoldingOff(), "the refusal is remembered");
+  await yahooProvider().quotes(["NVDA", "AAPL", "CCJ"]);
+  assert.equal(seen().length, asked, "nothing more was sent");
+  assert.match(yahooLastError() ?? "", /holding off/);
+  assert.deepEqual(await yahooProvider().history("NVDA", "2026-09-01"), []);
+});
+
+test("Retry-After is taken at its word when it is shorter than the default", async () => {
+  forgetYahooSession();
+  serve([["", { status: 429, retryAfter: "120" }]]);
+  await yahooProvider().quotes(["NVDA"]);
+  const until = Date.parse(yahooHoldingOff() ?? "");
+  const secs = (until - Date.now()) / 1000;
+  assert.ok(secs > 60 && secs <= 130, `held off for ${Math.round(secs)}s`);
+});
+
+test("a refused batch does not become 163 requests one at a time", async () => {
+  // This is the amplification that kept the throttle alive: the fallback fired
+  // hardest exactly when the vendor was asking for less.
+  forgetYahooSession();
+  const seen = serve([
+    ...SESSION,
+    ["/v7/finance/quote", { status: 500 }],
+    ["/v8/finance/chart", { status: 503 }],
+  ]);
+  await yahooProvider().quotes(Array.from({ length: 163 }, (_, i) => `T${i}`));
+  const charts = seen().filter((u) => u.includes("/v8/finance/chart")).length;
+  assert.equal(charts, 2, "one canary per host, then it stops");
+});
+
+test("a canary that succeeds lets the rest through", async () => {
+  forgetYahooSession();
+  const seen = serve([
+    ...SESSION,
+    ["/v7/finance/quote", { status: 500 }],
+    ["/v8/finance/chart", { body: chartBody() }],
+  ]);
+  const q = await yahooProvider().quotes(["A", "B", "C"]);
+  assert.equal(q.size, 3, "all three priced through the fallback");
+  assert.equal(seen().filter((u) => u.includes("/v8/finance/chart")).length, 3);
+});
+
+test("probing does not push the recovery it is checking for further away", async () => {
+  // A thermometer that raises the temperature: every check would extend the
+  // cool-off, so the site could never be observed recovering.
+  forgetYahooSession();
+  serve([["", { status: 429 }]]);
+  await yahooProvider().quotes(["NVDA"]);
+  const before = yahooHoldingOff();
+  assert.ok(before);
+
+  await new Promise((r) => setTimeout(r, 5));
+  await yahooProbe();
+  assert.equal(yahooHoldingOff(), before, "the probe left the deadline where it was");
 });

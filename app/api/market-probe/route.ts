@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { marketIsReal, providerName, vendorError } from "@/lib/market";
-import { forgetYahooSession, yahooProbe, type ProbeStep } from "@/lib/market/yahoo";
+import { cleanKey, marketIsReal, providerName, vendorError } from "@/lib/market";
+import { forgetYahooSession, yahooHoldingOff, yahooProbe, type ProbeStep } from "@/lib/market/yahoo";
 
 /**
  * Why the market data is, or is not, real — from the server's own point of view.
@@ -28,13 +28,40 @@ export const dynamic = "force-dynamic";
 
 const THROTTLE_MS = 60_000;
 
+/**
+ * The shape of the configured key, never the key. Length and whether it is
+ * wrapped in quotes are what separate "wrong key" from "the .env line is wrong"
+ * — an FMP key is 32 characters, so 34 with quotes is its own diagnosis — and
+ * neither reveals anything usable.
+ */
+interface KeyShape {
+  configured: boolean;
+  length: number;
+  quotedInEnv: boolean;
+  hasInnerWhitespace: boolean;
+}
+
 interface Probe {
   at: string;
   provider: string;
   serving: "real" | "generated";
   lastVendorError: string | null;
+  /** Set while a refusal is being honoured, rather than argued with. */
+  holdingOffUntil: string | null;
+  key: KeyShape;
   steps: ProbeStep[];
   note: string;
+}
+
+function keyShape(): KeyShape {
+  const raw = process.env.MARKET_API_KEY ?? "";
+  const clean = cleanKey(raw) ?? "";
+  return {
+    configured: clean.length > 0,
+    length: clean.length,
+    quotedInEnv: /^["']|["']$/.test(raw.trim()),
+    hasInnerWhitespace: /\s/.test(clean),
+  };
 }
 
 let cached: { at: number; probe: Probe } | null = null;
@@ -63,6 +90,8 @@ export async function GET() {
     provider,
     serving: (await marketIsReal()) ? "real" : "generated",
     lastVendorError: vendorError(),
+    holdingOffUntil: yahooHoldingOff(),
+    key: keyShape(),
     steps,
     note:
       provider === "synthetic"

@@ -134,14 +134,15 @@ test("a key that FMP rejects still leaves the site on real prices", async () => 
   // socket.
   setHttpTransport(async (url) => {
     if (url.includes("financialmodelingprep.com"))
-      return { status: 401, body: "Invalid API KEY", cookies: [], error: null };
+      return { status: 401, body: "Invalid API KEY", cookies: [], retryAfter: null, error: null };
     if (url.includes("fc.yahoo.com"))
-      return { status: 404, body: "", cookies: ["A1=d=abc"], error: null };
+      return { status: 404, body: "", cookies: ["A1=d=abc"], retryAfter: null, error: null };
     if (url.includes("getcrumb"))
-      return { status: 200, body: "Xy9zQ2p", cookies: [], error: null };
+      return { status: 200, body: "Xy9zQ2p", cookies: [], retryAfter: null, error: null };
     return {
       status: 200,
       cookies: [],
+      retryAfter: null,
       error: null,
       body: JSON.stringify({
         quoteResponse: {
