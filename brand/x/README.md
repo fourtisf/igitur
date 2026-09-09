@@ -10,8 +10,18 @@
 | `04-benchmark.png` | 4/5 | Why half of all books lose to the index |
 | `05-record.png` | 5/5 | A dated claim on the public record |
 
+`06-token.png` is not part of the five — it is a standalone card for the
+contract address, which does not exist yet. Post it on its own, never inside the
+product thread.
+
 3200×1800 (16:9 at 2×). `x-post-banner.png` is a copy of card 1, kept under
 its old name for a standalone post.
+
+The token card carries the anti-scam warning verbatim from /token. A launch
+image that shows a ticker and "coming soon" without it is the exact shape a
+scammer copies, and the site's own promise — that the address appears here and
+on X at the same moment and nowhere else first — is only enforceable if it
+travels with the announcement.
 
 Not the profile header — that is `../x-header.png`, 1500×500.
 

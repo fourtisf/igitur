@@ -159,6 +159,28 @@ h1.wide{max-width:27ch}
 .pnote{font-size:19px;color:var(--fg-2);margin-top:16px;font-weight:350}
 .panel svg{display:block;width:100%;height:150px;margin-top:16px}
 
+/* Card 6: the contract address, which does not exist yet. The placeholder is
+   the real one from lib/site.ts, and the warning is the same sentence /token
+   carries — a launch card without it is the exact shape a scammer copies. */
+.ticker{font-size:78px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.ticker em{font-style:normal;color:var(--ac-2)}
+.soon-pill{display:inline-flex;align-items:center;padding:9px 20px;border-radius:99px;
+  font-size:18px;font-weight:600;color:var(--ac-2);background:rgba(124,140,255,.14);
+  box-shadow:inset 0 0 0 1px rgba(124,140,255,.34);letter-spacing:.04em}
+.addrbox{display:flex;align-items:center;justify-content:space-between;gap:24px;
+  padding:22px 26px;border-radius:13px;background:rgba(255,255,255,.026);
+  box-shadow:inset 0 0 0 1px var(--bd-2)}
+.addrbox code{font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;font-size:27px;
+  color:var(--fg-3);letter-spacing:.01em}
+.addrbox span{font-size:17px;color:var(--fg-4)}
+.facts{display:flex;gap:56px}
+.facts div b{display:block;font-size:27px;font-weight:600;letter-spacing:-.02em}
+.facts div span{display:block;font-size:16px;color:var(--fg-4);margin-top:7px;
+  letter-spacing:.05em;text-transform:uppercase}
+.warn-box{padding:20px 24px;border-radius:13px;background:rgba(255,138,107,.07);
+  box-shadow:inset 0 0 0 1px rgba(255,138,107,.26);font-size:21px;color:#FFB9A5;
+  line-height:1.4;font-weight:350}
+
 /* Card 5: one committed claim, inside the frame. */
 .rec-date{display:block;font-size:17px;color:var(--ac-2);letter-spacing:.06em;text-transform:uppercase}
 .rec-said{font-size:34px;line-height:1.25;letter-spacing:-.025em;font-weight:500;margin-top:12px}
@@ -330,6 +352,34 @@ const CARDS = {
   <div class="foot">
     <span class="why">Measured against the index from that date. Win or lose, it stays up.</span>
     <span class="meta">igitur.xyz/ledger</span>
+  </div>
+`),
+  "06-token": shell("Token", `
+  <div>
+    <p class="kick" style="margin-bottom:14px">The tool is free · the token is for the expensive part</p>
+    <h1 class="ticker">$<em>${book.token.ticker}</em></h1>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;gap:20px">
+      <span style="font-size:26px;color:var(--fg-2);font-weight:350">Contract address</span>
+      <span class="soon-pill">COMING SOON</span>
+    </div>
+    <div class="addrbox">
+      <code>${book.token.address ?? "0x0000…0000 — not deployed"}</code>
+      <span>Copy · disabled</span>
+    </div>
+    <div class="facts">
+      <div><b>${book.token.supply === "1B" ? "1 billion" : book.token.supply}</b><span>Fixed supply</span></div>
+      <div><b>${book.token.chain}</b><span>Chain</span></div>
+      <div><b>None</b><span>Presale · whitelist · team wallet</span></div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    Any contract address for this project circulating right now is fake. When the pool opens, the
+    address appears on igitur.xyz and on @Igiturapp at the same moment — and nowhere else first.
+    Nobody from this project will ever message you first.
   </div>
 `),
 };

@@ -194,5 +194,11 @@
       "lead": false,
       "ballast": true
     }
-  ]
+  ],
+  "token": {
+    "ticker": "IGITUR",
+    "supply": "1B",
+    "chain": "Robinhood Chain",
+    "address": null
+  }
 }
