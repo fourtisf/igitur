@@ -44,14 +44,25 @@ export const SITE = {
    * open invitation to whoever registers it — the exact impersonation the two
    * pages exist to prevent.
    *
-   * To turn them on, set these in the server environment once the accounts are
-   * held. Nothing else needs to change.
+   * Both accounts are now held, so the defaults below are the truth rather than
+   * a guess, and the code says so. They were environment-only while the handles
+   * were still invented — the point being not to ship links nobody owned — but
+   * keeping that after they exist turns a forgotten variable into a silent
+   * regression: any build without them drops every social link and flips /token
+   * and /about back to "there are no official channels yet", on a live site
+   * whose accounts are real.
    *
-   *   NEXT_PUBLIC_X_HANDLE=igiturxyz
-   *   NEXT_PUBLIC_TELEGRAM_HANDLE=igiturxyz
+   * The environment still wins, so a fork or a staging deploy can point
+   * elsewhere:
+   *
+   *   NEXT_PUBLIC_X_HANDLE=someoneelse
+   *   NEXT_PUBLIC_TELEGRAM_HANDLE=someoneelse
+   *
+   * Set either to a value that is not handle-shaped — a single space will do —
+   * and that link disappears again, prose included.
    */
-  xHandle: handleFor(process.env.NEXT_PUBLIC_X_HANDLE),
-  telegramHandle: handleFor(process.env.NEXT_PUBLIC_TELEGRAM_HANDLE),
+  xHandle: handleFor(process.env.NEXT_PUBLIC_X_HANDLE ?? "Igiturapp"),
+  telegramHandle: handleFor(process.env.NEXT_PUBLIC_TELEGRAM_HANDLE ?? "igiturchannel"),
   get x(): string | null {
     return this.xHandle ? `https://x.com/${this.xHandle}` : null;
   },

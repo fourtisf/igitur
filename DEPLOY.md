@@ -226,20 +226,16 @@ honest state while the handles are unclaimed — the alternative is a public pag
 directing people to an account someone else could register, next to a promise
 that the token contract address will be announced there.
 
-Once the accounts are held, add them to the **build** environment and rebuild:
+Both accounts now exist — `@Igiturapp` on X and `t.me/igiturchannel` — and are
+defaults in `lib/site.ts`, so a normal deploy picks them up with nothing to
+remember. They were environment-only while the handles were still invented;
+leaving them that way afterwards would have meant one forgotten variable
+silently removing every social link and putting "there are no official channels
+yet" back on a site whose channels are real.
 
-```bash
-cd /var/www/igitur
-NEXT_PUBLIC_SITE_URL=https://igitur.xyz \
-NEXT_PUBLIC_X_HANDLE=yourhandle \
-NEXT_PUBLIC_TELEGRAM_HANDLE=yourhandle \
-  npm run build
-cp -r .next/static .next/standalone/.next/static
-pm2 restart igitur
-```
-
-These are `NEXT_PUBLIC_*`, so they are baked in at build time — a restart alone
-will not pick them up, unlike `MARKET_API_KEY`.
+`NEXT_PUBLIC_X_HANDLE` and `NEXT_PUBLIC_TELEGRAM_HANDLE` still override, for a
+fork or a staging deploy. They are `NEXT_PUBLIC_*`, so they are baked in at
+build time — a restart alone will not pick them up, unlike `MARKET_API_KEY`.
 
 ## 5d. The record
 

@@ -87,12 +87,22 @@ test("a track page enters the index only on real figures", () => {
   assert.doesNotMatch(src, /robots: \{ index: true/, "never unconditionally indexable");
 });
 
-test("with no handle configured the site links to no social account", () => {
-  // The site is public. Linking a handle nobody here owns hands the project's
-  // name — and /token's contract-address promise — to whoever registers it.
-  assert.equal(SITE.x, null);
-  assert.equal(SITE.telegram, null);
-  assert.equal(SITE.xHandle, null);
+test("the site links to the accounts that are actually held", () => {
+  // These were null while the handles were invented, because linking a handle
+  // nobody owns hands the project's name — and /token's contract-address
+  // promise — to whoever registers it. Both are claimed now, so they are
+  // defaults in code rather than environment-only: a deploy that forgets a
+  // variable must not silently un-launch the channels on a live site.
+  assert.equal(SITE.x, "https://x.com/Igiturapp");
+  assert.equal(SITE.telegram, "https://t.me/igiturchannel");
+});
+
+test("a handle that is not handle-shaped still yields no link", () => {
+  // The guard that made the placeholders safe has to keep working, or a typo in
+  // the environment produces a link to nowhere rather than no link.
+  assert.equal(handleFor(" "), null);
+  assert.equal(handleFor("not a handle"), null);
+  assert.equal(handleFor("https://x.com/"), null);
 });
 
 test("a configured handle is accepted however it is written", () => {
@@ -116,7 +126,10 @@ test("no page hand-writes its own Twitter card", () => {
   assert.deepEqual(offenders, [], `hand-written twitter cards in:\n  ${offenders.join("\n  ")}`);
 });
 
-test("the card carries no attribution when no handle is held", () => {
-  assert.equal("site" in twitterCard("/x.png"), false);
-  assert.equal("creator" in twitterCard("/x.png"), false);
+test("the card is attributed to the account that holds the name", () => {
+  // Without this, a post about this site credits nobody — and on X an
+  // unattributed card is one anyone can claim by posting the link first.
+  const card = twitterCard("/x.png") as { site?: string; creator?: string };
+  assert.equal(card.site, "@Igiturapp");
+  assert.equal(card.creator, "@Igiturapp");
 });
