@@ -1,4 +1,5 @@
 import { fmpLastError, fmpProvider } from "./fmp";
+import { yahooLastError, yahooProvider } from "./yahoo";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
 import type { Bar, MarketProvider, Quote } from "./types";
 
@@ -18,16 +19,21 @@ export { bookDrift, series, SPY_DRIFT } from "./synthetic";
  */
 function pick(): MarketProvider {
   const key = process.env.MARKET_API_KEY?.trim();
-  if (!key) return syntheticProvider;
+  const named = process.env.MARKET_PROVIDER?.trim().toLowerCase();
 
-  switch ((process.env.MARKET_PROVIDER ?? "fmp").toLowerCase()) {
-    case "fmp":
-      return fmpProvider(key);
-    default:
-      // An unrecognised provider name is a configuration mistake. Falling back
-      // is safer than guessing, and the site will say its data is synthetic.
-      return syntheticProvider;
+  // Named explicitly, so honour it — including asking for generated figures.
+  if (named === "synthetic") return syntheticProvider;
+  if (named === "yahoo") return yahooProvider();
+  if (named === "fmp") {
+    // Asking for FMP without a key is a configuration mistake, not a request
+    // for made-up numbers. Say so by falling back to the keyless source rather
+    // than silently serving figures generated from the ticker text.
+    return key ? fmpProvider(key) : yahooProvider();
   }
+
+  // Nothing named. A key means FMP was intended; otherwise the keyless source,
+  // because real prices with no configuration beat generated ones with none.
+  return key ? fmpProvider(key) : yahooProvider();
 }
 
 let provider: MarketProvider | null = null;
@@ -71,7 +77,10 @@ export async function marketIsReal(): Promise<boolean> {
  * Never contains the key.
  */
 export function vendorError(): string | null {
-  return get().name === "fmp" ? fmpLastError() : null;
+  const n = get().name;
+  if (n === "fmp") return fmpLastError();
+  if (n === "yahoo") return yahooLastError();
+  return null;
 }
 
 // ── Caching ──────────────────────────────────────────────────────────────────

@@ -176,8 +176,11 @@ dengan aplikasi yang benar-benar berjalan, bukan hanya diperiksa sintaksnya.
 
 ## 5b. Market data
 
-Without a vendor key the site runs on figures generated from the ticker text and
-says so on every page that carries a number. To make them real, put a key on the
+With nothing configured the site reads Yahoo's public chart endpoint — no key,
+no account, no signup — and shows real prices. Market capitalisation is not in
+that response and renders as an em dash. It is not a supported API, so if it
+ever starts refusing this server, /status says so and a key moves the site onto
+FMP. To make them real, put a key on the
 server — at runtime, not build time, so this needs no rebuild:
 
 ```bash

@@ -75,6 +75,8 @@ export default async function StatusPage() {
   // but rejected leaves every figure synthetic, and this page of all pages must
   // not be the one that gets that wrong.
   const live = await marketIsReal();
+  // "Configured" is the wrong word for the keyless default — nothing was
+  // configured. This is simply the source failing.
   const rejected = isLive() && !live;
   const LIVE = live
     ? [`Live market data from ${providerName()}`, ...ALWAYS_LIVE]
@@ -134,10 +136,12 @@ export default async function StatusPage() {
              be real. Tracking pages stay out of the sitemap until their history has been checked
              against a second source.`
           : rejected
-            ? `A vendor key is configured but ${providerName()} is not answering, so every figure on
-               the site is synthetic and flagged as such. The last thing the vendor said was:
-               ${vendorError() ?? "no response"}. A 401 or 403 means the key is wrong; a 402 means
-               the plan does not include batch quotes; a 429 means the daily quota is spent.`
+            ? `The market data source, ${providerName()}, is not answering, so every figure on the
+               site is generated and flagged as such. The last thing it said was:
+               ${vendorError() ?? "no response"}. From FMP, a 401 or 403 means the key is wrong, a
+               402 means the plan excludes batch quotes and a 429 means the daily quota is spent;
+               from the keyless source, a 403 or 429 means it is refusing this server, and
+               configuring MARKET_API_KEY moves the site onto FMP instead.`
             : `The market data is still synthetic. Prices, moves, market caps and the whole return
                series are generated from the ticker text and reflect nothing. The vendor layer is
                built and waiting on a key — set MARKET_API_KEY and this line moves by itself. The

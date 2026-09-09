@@ -13,12 +13,15 @@ import { syntheticQuote } from "../lib/market/synthetic";
 import { sessionsFor } from "../lib/track";
 import { UNIVERSE } from "../lib/universe";
 
-test("with no key configured the provider is synthetic and says so", () => {
-  // A site that quietly served made-up prices without flagging them would be
-  // the one dishonest thing on an otherwise honest product.
+test("with nothing configured the site still reaches for real prices", () => {
+  // It used to fall back to generated figures, which meant real data was
+  // gated behind an account signup — the obstacle that kept this deployment on
+  // invented numbers for weeks. The keyless source is the default now, and
+  // generated figures are what happens when that source fails, not what
+  // happens when nobody configured anything.
   assert.equal(process.env.MARKET_API_KEY ?? "", "");
-  assert.equal(isLive(), false);
-  assert.equal(providerName(), "synthetic");
+  assert.equal(providerName(), "yahoo");
+  assert.equal(isLive(), true);
 });
 
 test("every quote carries its own honesty flag", async () => {
