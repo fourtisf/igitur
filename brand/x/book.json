@@ -5,6 +5,138 @@
   "refused": "the dollar will lose reserve status",
   "themeCount": 26,
   "nameCount": 160,
+  "themes": [
+    {
+      "name": "Compute buildout",
+      "n": 9,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Grid and load growth",
+      "n": 8,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Nuclear restart",
+      "n": 7,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Healthspan",
+      "n": 8,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Physical labour automation",
+      "n": 7,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Last-mile logistics",
+      "n": 7,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Orbital logistics",
+      "n": 7,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Error-corrected quantum",
+      "n": 7,
+      "risk": "Speculative"
+    },
+    {
+      "name": "Rearmament",
+      "n": 7,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Water scarcity",
+      "n": 6,
+      "risk": "Conservative"
+    },
+    {
+      "name": "Tokenised markets",
+      "n": 7,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Media consolidation",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Banking and credit",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Housing shortage",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Critical minerals",
+      "n": 6,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Cyber defence",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Payments rewiring",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Manufacturing relocation",
+      "n": 6,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Food and agriculture",
+      "n": 6,
+      "risk": "Conservative"
+    },
+    {
+      "name": "Climate risk repricing",
+      "n": 6,
+      "risk": "Conservative"
+    },
+    {
+      "name": "Attention and brands",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Software after agents",
+      "n": 6,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Experience spending",
+      "n": 6,
+      "risk": "Moderate"
+    },
+    {
+      "name": "Ageing societies",
+      "n": 6,
+      "risk": "Conservative"
+    },
+    {
+      "name": "Storage and flexibility",
+      "n": 6,
+      "risk": "Aggressive"
+    },
+    {
+      "name": "Skills and training",
+      "n": 6,
+      "risk": "Moderate"
+    }
+  ],
   "holdings": [
     {
       "t": "NVDA",

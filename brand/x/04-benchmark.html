@@ -80,12 +80,44 @@ h1.wide{max-width:27ch}
 .typed{font-size:30px;color:var(--fg-3);font-weight:350}
 .typed span{color:var(--fg)}
 
-/* Card 5: one line of the record. */
-.rec{display:flex;flex-direction:column;gap:20px;padding:34px 38px;border-radius:16px;
-  background:rgba(255,255,255,.026);box-shadow:inset 0 0 0 1px var(--bd-2)}
-.rec .date{font-size:19px;color:var(--ac-2);letter-spacing:.06em;text-transform:uppercase}
-.rec .said{font-size:38px;line-height:1.25;letter-spacing:-.025em;font-weight:500}
-.rec .note{font-size:21px;color:var(--fg-3);font-weight:350}
+/* The site's own product frame. Cards 3 and 5 show the interface rather than
+   describing it — the refusal page really does list every theme underneath, and
+   a committed claim really does look like this. */
+.window{border-radius:16px;overflow:hidden;text-align:left;
+  background:linear-gradient(180deg,#141417,#0C0C0E);
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 60px 120px -50px rgba(0,0,0,1),
+             0 0 90px -40px rgba(124,140,255,.35)}
+.wbar{display:flex;align-items:center;gap:14px;padding:14px 18px;
+  border-bottom:1px solid var(--bd);background:rgba(255,255,255,.02)}
+.wdots{display:flex;gap:7px}
+.wdots i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.075);display:block}
+.wurl{flex:1;font-size:15px;color:var(--fg-4);background:rgba(255,255,255,.026);border-radius:7px;
+  padding:7px 13px;box-shadow:inset 0 0 0 1px var(--bd);white-space:nowrap}
+.wbody{padding:22px 24px}
+
+/* Card 3: the 26 themes the universe does hold, none of which matched. */
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.gcell{padding:11px 13px;border-radius:10px;background:rgba(255,255,255,.026);
+  box-shadow:inset 0 0 0 1px var(--bd);min-width:0}
+.gcell h4{font-size:15px;font-weight:600;letter-spacing:-.012em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.gcell p{font-size:12.5px;color:var(--fg-4);margin-top:4px;font-weight:350}
+.gmore{display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--fg-3)}
+
+/* Card 4: the correction, drawn. No axis and no figures — this is a diagram of
+   how the benchmark is positioned, not a claim about what anything returned. */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.panel{padding:24px 26px 20px;border-radius:14px;background:rgba(255,255,255,.022);
+  box-shadow:inset 0 0 0 1px var(--bd)}
+.panel.now{background:rgba(124,140,255,.07);box-shadow:inset 0 0 0 1px rgba(124,140,255,.26)}
+.plabel{font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-4)}
+.panel.now .plabel{color:var(--ac-2)}
+.pnote{font-size:19px;color:var(--fg-2);margin-top:16px;font-weight:350}
+.panel svg{display:block;width:100%;height:150px;margin-top:16px}
+
+/* Card 5: one committed claim, inside the frame. */
+.rec-date{display:block;font-size:17px;color:var(--ac-2);letter-spacing:.06em;text-transform:uppercase}
+.rec-said{font-size:34px;line-height:1.25;letter-spacing:-.025em;font-weight:500;margin-top:12px}
 </style>
 <div class="glow"></div><div class="grain"></div>
 <div class="wrap">
@@ -96,12 +128,25 @@ h1.wide{max-width:27ch}
   </div>
   
   <div>
-    <h1>Roughly half of all books <em>lose</em> to the index.</h1>
-    <p class="sub">That is deliberate. An earlier build gave every book a higher drift than the
-      benchmark, so everything beat the market — a claim the interface was making on its own.</p>
+    <h1 class="mid" style="max-width:26ch">Roughly half of all books <em>lose</em> to the index.</h1>
+  </div>
+  <div class="panels">
+    <div class="panel">
+      <span class="plabel">An earlier build</span>
+      <svg viewBox="0 0 460 150" preserveAspectRatio="none"><line x1="0" y1="75" x2="460" y2="75" stroke="rgba(255,255,255,.30)" stroke-width="2" stroke-dasharray="4 6"/><polyline points="0.0,71.9 46.0,62.9 92.0,56.2 138.0,52.1 184.0,49.9 230.0,48.2 276.0,45.5 322.0,40.5 368.0,33.0 414.0,23.4 460.0,13.2" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,69.3 46.0,63.1 92.0,59.4 138.0,57.8 184.0,57.2 230.0,55.8 276.0,52.3 322.0,46.3 368.0,38.1 414.0,28.8 460.0,20.3" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,81.9 46.0,76.9 92.0,69.6 138.0,61.0 184.0,52.7 230.0,46.2 276.0,42.3 322.0,40.7 368.0,40.4 414.0,40.0 460.0,37.9" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,75.4 46.0,65.6 92.0,57.2 138.0,51.3 184.0,47.8 230.0,46.1 276.0,44.6 322.0,41.9 368.0,36.7 414.0,29.1 460.0,19.6" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <p class="pnote">Every book drifted above the benchmark. Everything beat the market — a
+        claim the interface was making on its own.</p>
+    </div>
+    <div class="panel now">
+      <span class="plabel">Now</span>
+      <svg viewBox="0 0 460 150" preserveAspectRatio="none"><line x1="0" y1="75" x2="460" y2="75" stroke="rgba(255,255,255,.30)" stroke-width="2" stroke-dasharray="4 6"/><polyline points="0.0,71.9 46.0,63.3 92.0,56.9 138.0,53.1 184.0,51.3 230.0,49.9 276.0,47.5 322.0,42.9 368.0,35.7 414.0,26.5 460.0,16.6" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,69.3 46.0,71.4 92.0,76.1 138.0,82.9 184.0,90.6 230.0,97.5 276.0,102.5 322.0,104.8 368.0,104.9 414.0,104.0 460.0,103.8" fill="none" stroke="#7A7A82" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,81.9 46.0,79.1 92.0,74.0 138.0,67.7 184.0,61.6 230.0,57.3 276.0,55.6 322.0,56.2 368.0,58.2 414.0,60.0 460.0,60.1" fill="none" stroke="#AEB6FF" stroke-width="2.6" stroke-linecap="round"/><polyline points="0.0,75.4 46.0,76.2 92.0,78.4 138.0,83.1 184.0,90.2 230.0,99.1 276.0,108.2 322.0,116.1 368.0,121.6 414.0,124.5 460.0,125.6" fill="none" stroke="#7A7A82" stroke-width="2.6" stroke-linecap="round"/></svg>
+      <p class="pnote">Centred on the index. Some books win, some lose, and the benchmark is drawn
+        either way.</p>
+    </div>
   </div>
   <div class="foot">
     <span class="why">Nothing here should be able to flatter itself.</span>
-    <span class="meta">The benchmark is drawn either way</span>
+    <span class="meta">Dashed line: the index</span>
   </div>
+
 </div>

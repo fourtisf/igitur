@@ -35,9 +35,20 @@ The refused premise on card 3 is asserted to still refuse when book.json is
 built. If a future universe learns to match it, that assertion fails rather than
 letting the card claim a refusal that no longer happens.
 
-## What these cards deliberately do not show
+## The visuals, and why each is the one it is
 
-Card 4 is typographic where a chart would be obvious. It makes a claim about how
-the benchmark is constructed, not about performance, and the return series is
-synthetic until a vendor key is configured — a marketing image is the one place
-a caveat cannot travel with the number.
+Cards 3 and 5 show the interface inside the site's own window frame rather than
+describing it. Both are true: the refusal page really does list every theme
+underneath the refusal, and a committed claim really does look like that. The
+theme names, counts and risk labels come from `lib/universe`.
+
+Card 4 draws the correction instead of the returns. Two panels, four book paths
+each against a dashed index: on the left every path sits above it, which is what
+the earlier build did; on the right they scatter. There is no axis and no
+figure anywhere on it, because the return series is synthetic until a vendor key
+is configured and a marketing image is the one place a caveat cannot travel with
+a number. What the picture asserts — where the benchmark sits — is true today.
+
+The grid on card 3 shows 19 themes and counts the rest. Four rows of five fit
+the frame; a fifth row is clipped by the canvas edge, and a frame cut off at the
+bottom reads as a broken screenshot rather than a full one.
