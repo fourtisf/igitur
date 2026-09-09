@@ -107,8 +107,50 @@ const QUOTE_TTL = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600) * 1000;
 // every holding on every tracked claim, against the same allowance.
 const HISTORY_TTL = 24 * 60 * 60_000;
 
-const quoteCache = new Map<string, { at: number; quote: Quote }>();
-const historyCache = new Map<string, { at: number; bars: Bar[] }>();
+/**
+ * A vendor that fails must be retried sooner than one that succeeds.
+ *
+ * The first version cached a failure for the same hour it cached a price, so a
+ * single bad minute — a throttled burst during a deploy, say — left the whole
+ * site on generated figures until the hour was up, with no way to recover but
+ * another deploy, which would earn the same throttle again. That is how a
+ * source answering `curl` perfectly well can look, from the site, permanently
+ * dead.
+ *
+ * So failures back off instead: a minute, then two, four, eight, up to the
+ * ordinary TTL. Recovery costs one request a minute at worst, and a source
+ * that is genuinely gone is not hammered.
+ */
+const FIRST_RETRY_MS = 60_000;
+const MAX_BACKOFF_STEPS = 6;
+let failStreak = 0;
+
+function retryDelay(): number {
+  return Math.min(QUOTE_TTL, FIRST_RETRY_MS * 2 ** Math.max(0, failStreak - 1));
+}
+
+const quoteCache = new Map<string, { at: number; ttl: number; quote: Quote }>();
+const historyCache = new Map<string, { at: number; ttl: number; bars: Bar[] }>();
+
+/** Exported for tests: the caches outlive a single case otherwise. */
+export function resetMarketCache(): void {
+  quoteCache.clear();
+  historyCache.clear();
+  failStreak = 0;
+}
+
+/** Exported for tests: how long a failure would be held before retrying. */
+export function nextRetryDelayMs(): number {
+  return retryDelay();
+}
+
+/** Exported for tests: how long the entry for `ticker` may be reused, if any. */
+export function cachedTtlMs(ticker: string): number | null {
+  return quoteCache.get(ticker)?.ttl ?? null;
+}
+
+/** The ordinary TTL, so a test can say "shorter than this" and mean it. */
+export const QUOTE_TTL_MS = QUOTE_TTL;
 
 /**
  * Quotes for a set of tickers.
@@ -124,7 +166,7 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
 
   for (const t of tickers) {
     const hit = quoteCache.get(t);
-    if (hit && now - hit.at < QUOTE_TTL) out.set(t, hit.quote);
+    if (hit && now - hit.at < hit.ttl) out.set(t, hit.quote);
     else missing.push(t);
   }
 
@@ -137,9 +179,18 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
       // figures than with an error.
       fetched = new Map();
     }
+
+    // Nothing at all came back, so this is the source failing rather than the
+    // source not covering these names. Only that earns a short retry — a
+    // vendor that priced 158 of 163 is answering, and asking again in a minute
+    // for the five it does not carry would be a request storm for no gain.
+    const sourceFailed = fetched.size === 0;
+    failStreak = sourceFailed ? Math.min(failStreak + 1, MAX_BACKOFF_STEPS) : 0;
+    const ttl = sourceFailed ? retryDelay() : QUOTE_TTL;
+
     for (const t of missing) {
       const q = fetched.get(t) ?? syntheticQuote(t);
-      quoteCache.set(t, { at: now, quote: q });
+      quoteCache.set(t, { at: now, ttl, quote: q });
       out.set(t, q);
     }
   }
@@ -159,7 +210,7 @@ export async function getHistory(ticker: string, from: string): Promise<Bar[]> {
   const key = `${ticker}|${from}`;
   const now = Date.now();
   const hit = historyCache.get(key);
-  if (hit && now - hit.at < HISTORY_TTL) return hit.bars;
+  if (hit && now - hit.at < hit.ttl) return hit.bars;
 
   let bars: Bar[] = [];
   try {
@@ -167,7 +218,10 @@ export async function getHistory(ticker: string, from: string): Promise<Bar[]> {
   } catch {
     bars = [];
   }
-  historyCache.set(key, { at: now, bars });
+  // An empty series is a question the vendor did not answer, not an answer.
+  // Holding it for a day would keep a tracked claim blank long after the
+  // source came back.
+  historyCache.set(key, { at: now, ttl: bars.length ? HISTORY_TTL : retryDelay(), bars });
   return bars;
 }
 

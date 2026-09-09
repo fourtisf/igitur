@@ -181,10 +181,10 @@ FAIL=0
 # Setiap rute yang dipakai orang, termasuk yang baru. Daftar ini pernah
 # menyatakan sebuah deploy berhasil tanpa pernah menyentuh halaman yang justru
 # baru saja di-deploy — tambahkan rute baru ke sini, bukan ke ingatan.
-for path in / /status /universe /trending /token /legal /ledger /compose /changes; do
+for path in / /status /universe /trending /token /legal /ledger /compose /changes /api/market-probe; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "http://127.0.0.1:$PORT$path" || true)
-  if [ "$code" = "200" ]; then printf '  \033[1;32m✓\033[0m %-12s %s\n' "$path" "$code"
-  else printf '  \033[1;31m✗\033[0m %-12s %s\n' "$path" "$code"; FAIL=1; fi
+  if [ "$code" = "200" ]; then printf '  \033[1;32m✓\033[0m %-18s %s\n' "$path" "$code"
+  else printf '  \033[1;31m✗\033[0m %-18s %s\n' "$path" "$code"; FAIL=1; fi
 done
 
 if [ "$FAIL" = "1" ]; then
@@ -204,4 +204,29 @@ echo
 echo "  Tetangga tidak disentuh:"
 pm2 list | grep -E "heirlom|sunmil|igitur" || true
 echo
-echo "  Data pasar: buka https://$DOMAIN/status — barisnya jujur sendiri."
+# Dulu jawabannya cuma "sumbernya tidak menjawab", dan mencari tahu kenapa
+# butuh akses shell. Sekarang deploy-nya sendiri yang bertanya, dan setiap
+# langkah melapor kode HTTP-nya.
+echo "  Data pasar (langsung dari server ini):"
+PROBE=/tmp/igitur-probe.$$.json
+curl -s --max-time 40 "http://127.0.0.1:$PORT/api/market-probe" -o "$PROBE" || true
+if command -v python3 >/dev/null 2>&1 && [ -s "$PROBE" ]; then
+  python3 - "$PROBE" <<'PYEOF' || true
+import json, sys
+d = json.load(open(sys.argv[1]))
+print(f"    sumber      : {d.get('provider')}")
+print(f"    menyajikan  : {d.get('serving')}  (real = harga sungguhan)")
+err = d.get("lastVendorError")
+if err:
+    print(f"    kesalahan   : {err}")
+for s in d.get("steps", []):
+    mark = "  ok " if s.get("ok") else "GAGAL"
+    print(f"    [{mark}] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
+PYEOF
+else
+  cat "$PROBE" 2>/dev/null || true
+  echo
+fi
+rm -f "$PROBE"
+echo
+echo "  Halaman jujurnya: https://$DOMAIN/status"

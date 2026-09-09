@@ -8,10 +8,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { fmtMcap, fmtPrice, getQuote, getQuotes, isLive, providerName, sparkPath } from "../lib/market";
+import {
+  cachedTtlMs,
+  fmtMcap,
+  fmtPrice,
+  getQuote,
+  getQuotes,
+  isLive,
+  nextRetryDelayMs,
+  providerName,
+  QUOTE_TTL_MS,
+  resetMarketCache,
+  sparkPath,
+} from "../lib/market";
+import { setHttpTransport } from "../lib/market/http";
 import { syntheticQuote } from "../lib/market/synthetic";
 import { sessionsFor } from "../lib/track";
 import { UNIVERSE } from "../lib/universe";
+
+// These pin the synthetic path, so the vendor must not actually be reached: a
+// test that depends on Yahoo answering is a test that fails on a train.
+setHttpTransport(async () => ({ status: 0, body: "", cookies: [], error: "offline in tests" }));
 
 test("with nothing configured the site still reaches for real prices", () => {
   // It used to fall back to generated figures, which meant real data was
@@ -127,4 +144,52 @@ test("the cache TTL fits the vendor's free daily allowance", async () => {
     perDay <= FREE_TIER_PER_DAY,
     `${perDay.toFixed(0)} requests/day at a ${ttlSeconds}s TTL exceeds the ${FREE_TIER_PER_DAY} free tier`
   );
+});
+
+test("a source that stops answering is retried in a minute, not in an hour", async () => {
+  // The production failure this fixes: a failure was cached for the same hour
+  // a price was, so one throttled burst during a deploy left every figure on
+  // the site generated until the hour was up — and the next deploy earned the
+  // same throttle again. The source was answering `curl` the whole time.
+  resetMarketCache();
+  await getQuotes(["NVDA"]);
+  const held = cachedTtlMs("NVDA");
+  assert.ok(held !== null);
+  assert.ok(held <= 60_000, `a dead source was held for ${held}ms`);
+  assert.ok(held < QUOTE_TTL_MS, "a failure must not be cached as long as a price");
+});
+
+test("a source that stays dead is backed off rather than hammered", async () => {
+  resetMarketCache();
+  const seen: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    // A distinct ticker each time, so this measures repeated failures rather
+    // than a cache hit.
+    await getQuotes([`FAKE${i}`]);
+    seen.push(nextRetryDelayMs());
+  }
+  assert.deepEqual(seen, [60_000, 120_000, 240_000, 480_000, 960_000]);
+  for (const d of seen) assert.ok(d <= QUOTE_TTL_MS, "backoff never exceeds the ordinary TTL");
+});
+
+test("a source answering for most names is not retried for the few it lacks", async () => {
+  // Otherwise a vendor that covers 158 of 163 would be asked for the other
+  // five every minute for ever — a request storm to learn nothing new.
+  resetMarketCache();
+  setHttpTransport(async (url) => ({
+    status: 200,
+    cookies: url.includes("fc.yahoo.com") ? ["A1=d=abc"] : [],
+    body: url.includes("getcrumb")
+      ? "crumb1"
+      : JSON.stringify({
+          quoteResponse: { result: [{ symbol: "NVDA", regularMarketPrice: 1, marketCap: 1 }] },
+        }),
+    error: null,
+  }));
+  try {
+    await getQuotes(["NVDA", "NOTLISTED"]);
+    assert.equal(cachedTtlMs("NOTLISTED"), QUOTE_TTL_MS);
+  } finally {
+    setHttpTransport(async () => ({ status: 0, body: "", cookies: [], error: "offline in tests" }));
+  }
 });

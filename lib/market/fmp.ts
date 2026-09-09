@@ -1,3 +1,4 @@
+import { httpGet } from "./http";
 import type { Bar, MarketProvider, Quote } from "./types";
 
 /**
@@ -40,22 +41,6 @@ const BATCH = 50;
 
 /** A vendor call that hangs must not hold a page render open. */
 const TIMEOUT_MS = 8_000;
-
-/**
- * How long Next may reuse a vendor response, per call kind. These mirror the
- * in-process TTLs in ./index.ts rather than competing with them: the same
- * intent stated at the two layers that each need to hear it.
- *
- * Passing `cache: "no-store"` here instead would be a quiet disaster. It makes
- * Next throw DynamicServerError inside a statically rendered route, so on the
- * prerendered pages the vendor would never be reached at all — with a valid
- * key configured, the whole universe would still render synthetic.
- */
-// These mirror ./index.ts, which sets them from the vendor's daily allowance —
-// see the arithmetic there. Next must not refetch sooner than the layer above
-// asks, or the allowance is spent twice over.
-const QUOTE_TTL_S = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600);
-const HISTORY_TTL_S = 24 * 60 * 60;
 
 interface FmpQuote {
   symbol?: string;
@@ -108,24 +93,39 @@ function scrub(text: string, apiKey: string): string {
     .slice(0, 200);
 }
 
-async function getJson<T>(url: string, ttl: number, apiKey: string): Promise<T | null> {
+async function getJson<T>(url: string, apiKey: string): Promise<T | null> {
+  let res;
   try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      next: { revalidate: ttl },
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) {
-      // 401/403: key rejected. 402: endpoint needs a paid plan. 429: quota.
-      lastError = `HTTP ${res.status} from ${new URL(url).pathname}`;
-      return null;
-    }
-    lastError = null;
-    return (await res.json()) as T;
+    res = await httpGet(url, { headers: { Accept: "application/json" }, timeoutMs: TIMEOUT_MS });
   } catch (e) {
-    // A vendor outage must degrade to synthetic, never take the page down.
+    // httpGet is written not to reject. If that ever stops being true, the
+    // message still must not reach a page carrying the key.
     lastError = scrub(e instanceof Error ? e.message : "request failed", apiKey);
     return null;
+  }
+  if (res.status !== 200) {
+    // 401/403: key rejected. 402: endpoint needs a paid plan. 429: quota.
+    // 0: the request never completed, and `error` says why.
+    const why = res.error ? ` (${scrub(res.error, apiKey)})` : "";
+    lastError = `HTTP ${res.status} from ${path(url)}${why}`;
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(res.body) as T;
+    lastError = null;
+    return parsed;
+  } catch {
+    lastError = `unreadable response from ${path(url)}`;
+    return null;
+  }
+}
+
+/** The endpoint being named, never the query string the key travels in. */
+function path(url: string): string {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return "the vendor endpoint";
   }
 }
 
@@ -143,7 +143,7 @@ export function fmpProvider(apiKey: string): MarketProvider {
       for (let i = 0; i < tickers.length; i += BATCH) {
         const slice = tickers.slice(i, i + BATCH);
         const url = `${BASE}/batch-quote?symbols=${slice.map(encodeURIComponent).join(",")}&apikey=${key}`;
-        const rows = await getJson<FmpQuote[]>(url, QUOTE_TTL_S, apiKey);
+        const rows = await getJson<FmpQuote[]>(url, apiKey);
         if (!Array.isArray(rows)) continue;
 
         for (const row of rows) {
@@ -177,7 +177,7 @@ export function fmpProvider(apiKey: string): MarketProvider {
       const url =
         `${BASE}/historical-price-eod/full?symbol=${encodeURIComponent(ticker)}` +
         `&from=${encodeURIComponent(from)}&apikey=${key}`;
-      const body = await getJson<FmpHistory>(url, HISTORY_TTL_S, apiKey);
+      const body = await getJson<FmpHistory>(url, apiKey);
       const rows = Array.isArray(body) ? body : body?.historical;
       if (!Array.isArray(rows)) return [];
 
