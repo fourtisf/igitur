@@ -17,6 +17,30 @@ product thread.
 3200×1800 (16:9 at 2×). `x-post-banner.png` is a copy of card 1, kept under
 its old name for a standalone post.
 
+## The workspace banner — `07-workspace.png`
+
+`node brand/x/make-workspace.mjs`. One standalone image, same 3200×1800.
+
+The five cards above are typographic: a claim, a figure, the bar. This one is a
+scene, because it answers a different question. A stranger scrolling past has no
+way to know this is a working tool rather than a landing page, and the quickest
+way to say so is to show it running on a screen, in a room.
+
+Two things it deliberately does not have:
+
+**A person.** The developer-tool banners this borrows its composition from are
+AI-generated photographs of somebody at a desk. A human rendered in CSS lands
+between uncanny and cheap, and the room carries the message without one.
+
+**Anything on screen that is not the product.** Both monitors are built from
+`book.json`, like every other card here. A banner selling a tool whose whole
+claim is that every weight carries a reason must not carry weights somebody
+typed in.
+
+The room is lit three ways — daylight from the window on the left, the sign's
+own glow, and the pools the two screens throw down onto the desk. Take any one
+away and it flattens into a gradient.
+
 The token card carries the anti-scam warning verbatim from /token. A launch
 image that shows a ticker and "coming soon" without it is the exact shape a
 scammer copies, and the site's own promise — that the address appears here and
