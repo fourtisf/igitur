@@ -141,3 +141,38 @@ test("entries written before forking existed still read as plain books", async (
   const older = (await all()).filter((e) => e.drop === undefined && e.weights === undefined);
   assert.ok(older.length > 0, "the earlier entries in this file must still parse");
 });
+
+test("a house claim is marked, and an ordinary one is not", async () => {
+  // The record fills at launch with Igitur's own 26 theses, because an empty
+  // record is indistinguishable from a site where nothing works. That is only
+  // honest while a reader can tell them apart from somebody else's conviction.
+  const mine = await commit("copper supply cannot keep up with electrification");
+  assert.equal(mine.house, undefined, "an ordinary claim must carry no marking");
+
+  const house = await commit(
+    "fresh water becomes the constraint adaptation spending is organised around",
+    {},
+    { house: true }
+  );
+  assert.equal(house.house, true);
+
+  // It survives the round trip to the file, which is the only copy that matters.
+  const back = await get(house.id);
+  assert.equal(back?.house, true);
+});
+
+test("nothing arriving over HTTP can mark a claim as the house's own", async () => {
+  // The guard is structural rather than a runtime check: `house` is a third
+  // parameter, and the route builds its shape field by field from the body. If
+  // the route ever forwards a third argument, a request could claim to be us.
+  const src = readFileSync("app/api/commit/route.ts", "utf8");
+  const call = /await commit\(([^;]*)\);/.exec(src);
+  assert.ok(call, "the route must still call commit");
+  const args = call![1];
+  assert.equal(
+    args.split("{").length - 1,
+    1,
+    "the route passes exactly one object to commit: the book's shape"
+  );
+  assert.ok(!/house/.test(src), "/api/commit must not mention house at all");
+});

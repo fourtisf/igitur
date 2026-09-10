@@ -6,7 +6,7 @@ import { SITE } from "@/lib/site";
 
 import { normalizePremise } from "@/lib/premise";
 import { THEMES } from "@/lib/universe";
-import { Composer } from "./Composer";
+import { Composer } from "@/components/Composer";
 
 export const metadata: Metadata = {
   title: "Compose a book",

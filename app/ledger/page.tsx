@@ -85,7 +85,10 @@ export default async function LedgerPage() {
       </h1>
       <p className="sub rv" style={{ marginTop: 18, maxWidth: "56ch" }}>
         Every claim below was committed on purpose, and the date beside it was written by the server
-        on the day — not taken from a link. Nothing is removed for having been wrong.{" "}
+        on the day — not taken from a link. Nothing is removed for having been wrong. The ones marked{" "}
+        <b className="ac">House</b> are Igitur&rsquo;s own published theses, committed by the
+        project on the same terms as everyone else&rsquo;s — same dating, same settlement, and
+        the same inability to withdraw one that goes wrong.{" "}
         {/* No account and no email, so the only way a claim reaches anyone
             again is if they choose to be told. */}
         <a href="/feed.xml">Follow the record as a feed</a> to hear when claims are made and when
@@ -197,6 +200,7 @@ export default async function LedgerPage() {
                   <span className="ldate">{e.statedAt}</span>
                   <span className="lclaim">
                     {e.premise}
+                    {e.house ? <i className="ac"> · house</i> : null}
                     {settled ? <i style={{ color: "var(--fg-4)" }}> · settled</i> : null}
                   </span>
                   <span className="ltheme">{book ? themeName(book.theme.id) : "—"}</span>

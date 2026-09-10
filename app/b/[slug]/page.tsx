@@ -337,6 +337,33 @@ export default async function BookPage({
             <Amount holdings={b.holdings} />
           </div>
 
+          {/* Promoted above the share card, and retitled.
+
+              This is the only thing on the site that survives the reader
+              closing the tab, and it sat at the bottom of a sidebar under a
+              heading beginning "Or" — an afterthought to sharing. Session
+              history is deliberately in memory and dies on refresh (/legal
+              promises exactly that), so committing is not one way to keep a
+              book, it is the way. A shared link also proves nothing about when
+              it was written: the date in it is whatever the sender typed. Here
+              the server writes it, and nobody can edit it afterwards. */}
+          <div className="cell" style={{ padding: 20 }}>
+            <h3 style={{ fontSize: 14 }}>Put this claim on the record</h3>
+            <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
+              Nothing else here is kept — close the tab and this book is gone. Commit it and the
+              claim, with these weights, is measured from the day the server saw it, win or lose,
+              permanently.
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <CommitPremise
+                premise={b.premise}
+                drop={drop}
+                weights={formatPins(pins)}
+                themeHorizon={b.theme.horizon}
+              />
+            </div>
+          </div>
+
           <div className="cell" style={{ padding: 20 }}>
             <h3 style={{ fontSize: 14 }}>This book has an address</h3>
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
@@ -366,25 +393,6 @@ export default async function BookPage({
             </Link>
           </div>
 
-          {/* A shared link proves nothing about when it was written — the date
-              in it is whatever the sender typed. This is the one way to fix a
-              claim to a date the reader can trust, because the server writes
-              it and nobody can edit it afterwards. */}
-          <div className="cell" style={{ padding: 16, marginTop: 12 }}>
-            <h3 style={{ fontSize: 14 }}>Or fix it to a date</h3>
-            <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
-              Put the claim on the public record — with these weights — and it is measured from
-              the day the server saw it, win or lose, permanently.
-            </p>
-            <div style={{ marginTop: 10 }}>
-              <CommitPremise
-                premise={b.premise}
-                drop={drop}
-                weights={formatPins(pins)}
-                themeHorizon={b.theme.horizon}
-              />
-            </div>
-          </div>
         </div>
       </div>
 

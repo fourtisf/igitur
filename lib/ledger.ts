@@ -67,6 +67,20 @@ export interface Entry {
    * settled, which is exactly why the field was added.
    */
   settlesAt?: string;
+  /**
+   * Written by the seed script, never by the API.
+   *
+   * At launch the record is empty, and an empty record is the one page that
+   * makes a working site look like a landing page. The honest way to fill it is
+   * not to invent readers: it is for Igitur to put its own 26 written theses on
+   * the record, on exactly the terms everyone else gets — the server's date, no
+   * edits, no withdrawal, and no hiding the ones that lose.
+   *
+   * They are marked so nobody reads them as somebody else's conviction. A house
+   * claim is the project standing behind its own published theses; that is
+   * worth saying out loud, and worth being unable to take back.
+   */
+  house?: true;
 }
 
 /**
@@ -131,7 +145,17 @@ function newId(): string {
  * tool cannot even build a book for would be a record of nothing, and it is the
  * obvious way to fill the file with junk.
  */
-export async function commit(raw: string, shape: BookShape = {}): Promise<Entry> {
+export async function commit(
+  raw: string,
+  shape: BookShape = {},
+  /**
+   * Deliberately a third parameter and not a field on BookShape. /api/commit
+   * builds its shape field by field from the request body, so nothing a caller
+   * can send reaches this — marking a claim as the house's own is not something
+   * an HTTP request may do.
+   */
+  opts: { house?: boolean } = {}
+): Promise<Entry> {
   const premise = normalizePremise(raw);
   if (premise.length < 12) throw new LedgerError("Too short to be a claim about anything.");
   if (premise.length > MAX_PREMISE) throw new LedgerError("Too long. State one belief.");
@@ -181,6 +205,7 @@ export async function commit(raw: string, shape: BookShape = {}): Promise<Entry>
     theme: generated.theme.id,
     ...(drop.length ? { drop } : {}),
     ...(weights ? { weights } : {}),
+    ...(opts.house ? { house: true as const } : {}),
   };
 
   const path = file();

@@ -51,12 +51,16 @@ app/                 routes — one real URL per page, each with its own canonic
   track/[slug]/      performance against the index
   api/og/            1200x630 share image, generated per book
   sitemap.ts         one entry per theme claim
-components/          Bar, Holdings and the client islands
+components/          Bar, Holdings, Composer and the client islands
 lib/
   universe.ts        26 themes, 170 assets, 354 keywords   ← the data
   generator.ts       scoreThemes + buildBook               ← the core IP
+  nearmiss.ts        how a refusal is ranked and explained
+  ledger.ts          the append-only public record
   market.ts          synthetic data behind a vendor seam   ← REPLACE
   site.ts            every pre-deploy placeholder, in one file
+scripts/
+  seed-ledger.ts     puts the 26 house theses on the record, once
 tests/               invariants, fidelity, benchmark fairness
 premise.html         the original prototype, kept as the fidelity reference
 ```
@@ -65,7 +69,11 @@ premise.html         the original prototype, kept as the fidelity reference
 
 **It refuses.** A premise outside the universe returns no book at all. The app
 does not assemble a plausible-looking portfolio out of adjacent vocabulary.
-`ok: false` is a valid, shippable outcome.
+`ok: false` is a valid, shippable outcome. `lib/nearmiss.ts` ranks and explains
+the way out of a refusal — including the negative keyword that vetoed a theme —
+but every route it offers builds a *theme's own written claim*, never the
+refused premise. `tests/nearmiss.test.ts` is what stops it becoming a second,
+looser matcher.
 
 **The benchmark is not rigged.** Book drift is centred on the index, so roughly
 half of all books lose to it — 14 of the 26 theme claims beat it, 12 do not.

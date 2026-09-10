@@ -59,6 +59,8 @@ input,textarea{font:inherit;color:inherit}
    needing to be remembered separately — and so removing the strip after launch
    is one line, not three. */
 :root{--strip:38px}
+/* No token strip before there is an address to put in it — see TokenStrip. */
+.no-strip{--strip:0px}
 .tstrip{position:fixed;top:0;left:0;right:0;height:var(--strip);z-index:95;
   display:flex;justify-content:center;padding-inline:var(--pad);
   background:rgba(10,10,11,.86);backdrop-filter:blur(18px) saturate(160%);
@@ -194,6 +196,32 @@ section{padding-block:clamp(64px,9vw,120px)}
   box-shadow:inset 0 0 0 1px var(--bd)}
 @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stats>div{background:var(--bg-2);padding:24px 22px}
+
+/* ── Hero: the field, and one real book ──────────────────────────────────────
+   `.hero-wrap` centres its text. The composer and the book under it are
+   left-aligned content that happens to sit inside it, so both get their own
+   measure rather than inheriting the centring. */
+.herofield{max-width:720px;margin-inline:auto;text-align:left}
+.herodemo{max-width:720px;margin:clamp(26px,3.4vw,40px) auto 0;text-align:left;
+  padding:clamp(18px,2.4vw,24px)}
+.hd-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  font-size:12px;margin-bottom:12px}
+.hd-premise{font-size:clamp(14px,1.6vw,17px);font-weight:450;letter-spacing:-.02em;line-height:1.4;
+  color:var(--fg-1);margin-bottom:14px}
+
+/* ── The record strip on the landing page ───────────────────────────────────
+   Same row shape as /ledger minus the two figure columns: the landing page
+   states that dated claims exist, /ledger is where they are measured. */
+.reclist{margin-top:18px;border-radius:var(--r);overflow:hidden;
+  box-shadow:inset 0 0 0 1px var(--bd);background:var(--bg-2)}
+.recrow{display:grid;grid-template-columns:104px 1fr 168px;gap:14px;align-items:center;
+  padding:13px 16px;text-decoration:none;transition:background .18s}
+.recrow+.recrow{border-top:1px solid var(--bd)}
+.recrow:hover{background:var(--surf)}
+@media(max-width:720px){
+  .recrow{grid-template-columns:1fr;gap:5px}
+  .recrow .lclaim{white-space:normal}
+}
 .sn{font-size:30px;font-weight:600;letter-spacing:-.045em;line-height:1}
 .sl{font-size:12.5px;color:var(--fg-3);margin-top:8px}
 
@@ -260,11 +288,15 @@ section{padding-block:clamp(64px,9vw,120px)}
 .composer.hot{box-shadow:inset 0 0 0 1px rgba(124,140,255,.45),0 0 0 4px rgba(124,140,255,.09),0 30px 70px -40px rgba(0,0,0,.9)}
 .cfield{display:flex;gap:11px;align-items:flex-start}
 .cpre{font-size:clamp(16px,2vw,22px);font-weight:300;color:var(--fg-4);letter-spacing:-.022em;flex:none;line-height:1.35}
-.cin{flex:1;min-width:0;border:none;background:none;resize:none;overflow:hidden;
+.cin{flex:1;min-width:0;border:none;background:none;resize:none;overflow:hidden;text-align:left;
   font-size:clamp(16px,2vw,22px);font-weight:450;letter-spacing:-.026em;line-height:1.35}
 .cin::placeholder{color:var(--fg-4);font-weight:300}
 .cin:focus{outline:none}
 .crow2{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:20px}
+/* One-click premises under the hero field. `.chip` is a button elsewhere;
+   here each one is a link to a real book, so it must not look different. */
+.egs{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:16px;font-size:12px}
+.egs .chip{text-decoration:none}
 .chip{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:450;color:var(--fg-2);
   background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:color .18s,background .18s;text-align:left}
 .chip:hover{color:var(--fg);background:var(--surf-2)}

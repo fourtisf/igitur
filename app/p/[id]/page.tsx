@@ -115,6 +115,7 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
       <span className="kick rv">
         On the record · <Link href="/ledger">all claims</Link>
+        {entry.house ? " · House claim" : ""}
       </span>
       <h1 className="pg rv" style={{ marginTop: 12, maxWidth: "24ch" }}>
         {entry.premise}
@@ -156,6 +157,9 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
         anything.
         {entry.weights || entry.drop?.length
           ? " These are the author's own weights, not the generator's defaults."
+          : ""}
+        {entry.house
+          ? " This is one of Igitur's own published theses, committed by the project itself rather than by a reader — on the same terms, and just as impossible to withdraw."
           : ""}
       </p>
 

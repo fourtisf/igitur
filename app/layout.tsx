@@ -5,7 +5,7 @@ import { twitterCard } from "@/lib/twitter-card";
 
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
-import { TokenStrip } from "@/components/TokenStrip";
+import { TokenStrip, hasStrip } from "@/components/TokenStrip";
 import { Reveal } from "@/components/Reveal";
 import { Toast } from "@/components/Toast";
 import { pageOg } from "@/lib/og-pages";
@@ -60,7 +60,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    // `no-strip` zeroes --strip. The strip is fixed-position, so the nav and
+    // every page's top padding are offset by its height whether or not it is
+    // there; without this the site would open on 38px of nothing.
+    <html lang="en" className={inter.variable + (hasStrip ? "" : " no-strip")}>
       <body>
         {/* The three depth layers, in this order and nothing else. §11 */}
         <div className="glow" />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,16 +17,44 @@ import { UNIVERSE_VERSION } from "@/lib/universe";
  * reader can see and edit the claim before building it — that is what the
  * prototype did, and it is why the cells are buttons on this page and links
  * everywhere else.
+ *
+ * It lives in components/ rather than beside /compose because the landing page
+ * mounts it too. The site used to open on a drawing of this field inside fake
+ * browser chrome, so the first thing a reader could actually do was on the
+ * second page. A tool whose whole argument is "state a belief and see what it
+ * holds" should hand over the field, not a picture of one.
  */
+export interface Example {
+  /** The theme the premise lands on — the label a reader scans. */
+  label: string;
+  premise: string;
+}
+
 export function Composer({
   prefill = "",
   claims,
   counts,
+  /**
+   * The 26-cell grid under the field. On /compose it is the rest of the page.
+   * In the hero the page continues underneath, so the grid would bury it.
+   */
+  showThemes = true,
+  /**
+   * Take focus on mount. True on /compose, where the field is the page. False
+   * in the hero: pulling focus there scrolls past the sentence that explains
+   * what the field is for, and opens a keyboard over the whole page on a phone.
+   */
+  autoFocus = true,
+  /** One-click premises, for where there is no grid to pick from. */
+  examples = [],
 }: {
   prefill?: string;
   /** Theme claims, passed from the server so the prose stays off the wire. */
   claims: Record<string, string>;
   counts: Record<string, number>;
+  showThemes?: boolean;
+  autoFocus?: boolean;
+  examples?: Example[];
 }) {
   const CLAIMS = claims;
   const COUNTS = counts;
@@ -43,8 +72,8 @@ export function Composer({
 
   useEffect(() => {
     grow();
-    field.current?.focus();
-  }, []);
+    if (autoFocus) field.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     grow();
@@ -158,26 +187,51 @@ export function Composer({
         </div>
       </div>
 
-      <p className="p rv" style={{ margin: "clamp(30px,4vw,46px) 0 14px", fontSize: 13 }}>
-        Or start from a written thesis — all {MATCH_INDEX.length} of them
-      </p>
-      <div className="rv">
-        <div className="bento" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
-          {MATCH_INDEX.map((th) => (
-            <button
-              key={th.id}
-              className="cell"
-              onClick={() => pick(CLAIMS[th.id])}
-              style={{ gridColumn: "span 1", padding: 16 }}
+      {/* Links, not buttons: each one is a real book at a real address, so a
+          reader who wants output before typing anything gets it in one click
+          and lands on the page a shared link would have taken them to.
+          No stated date, for the same reason the theme grid carries none — the
+          date on a book belongs to whoever states the claim. */}
+      {examples.length ? (
+        <div className="egs rv">
+          <span className="faint">Or open one that already builds</span>
+          {examples.map((e) => (
+            <Link
+              key={e.premise}
+              className="chip"
+              href={bookHref(e.premise, [], { universe: UNIVERSE_VERSION })}
+              title={e.premise}
             >
-              <h3 style={{ fontSize: 14 }}>{th.name}</h3>
-              <p className="p" style={{ fontSize: 12, marginTop: 5 }}>
-                {COUNTS[th.id]} names · {th.risk}
-              </p>
-            </button>
+              {e.label}
+            </Link>
           ))}
         </div>
-      </div>
+      ) : null}
+
+      {showThemes ? (
+        <>
+          <p className="p rv" style={{ margin: "clamp(30px,4vw,46px) 0 14px", fontSize: 13 }}>
+            Or start from a written thesis — all {MATCH_INDEX.length} of them
+          </p>
+          <div className="rv">
+            <div className="bento" style={{ gridTemplateColumns: "repeat(5,1fr)" }}>
+              {MATCH_INDEX.map((th) => (
+                <button
+                  key={th.id}
+                  className="cell"
+                  onClick={() => pick(CLAIMS[th.id])}
+                  style={{ gridColumn: "span 1", padding: 16 }}
+                >
+                  <h3 style={{ fontSize: 14 }}>{th.name}</h3>
+                  <p className="p" style={{ fontSize: 12, marginTop: 5 }}>
+                    {COUNTS[th.id]} names · {th.risk}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : null}
     </>
   );
 }

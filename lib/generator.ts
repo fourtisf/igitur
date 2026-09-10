@@ -72,17 +72,31 @@ function escapeRe(s: string): string {
  *  4. Negative keywords. Without them "drones will replace delivery vans"
  *     resolved to Palantir and Northrop Grumman.
  */
-export function scoreThemes<T extends MatchableTheme>(
-  text: string,
-  themes: readonly T[] = THEMES as unknown as readonly T[]
-): ThemeScore<T>[] {
-  const q =
+/**
+ * The exact text the matcher reads: lower-cased, punctuation flattened to
+ * spaces, and padded so a keyword at either end still has a boundary.
+ *
+ * Exported because `lib/nearmiss.ts` has to ask the same question of the same
+ * string — which negative keyword vetoed this theme. A second copy of these
+ * five lines would drift, and the refusal page would then explain the refusal
+ * in terms of a sentence the generator never saw.
+ */
+export function matchText(text: string): string {
+  return (
     " " +
     text
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, " ")
       .replace(/\s+/g, " ") +
-    " ";
+    " "
+  );
+}
+
+export function scoreThemes<T extends MatchableTheme>(
+  text: string,
+  themes: readonly T[] = THEMES as unknown as readonly T[]
+): ThemeScore<T>[] {
+  const q = matchText(text);
 
   return themes.map((th): ThemeScore<T> => {
     let s = 0;

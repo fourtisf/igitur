@@ -3,20 +3,25 @@ import Link from "next/link";
 import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
+import { Composer, type Example } from "@/components/Composer";
 import { Holdings } from "@/components/Holdings";
-import { HeroPrompt } from "@/components/HeroPrompt";
-import { TelegramIcon, XIcon } from "@/components/icons";
 import { buildBook } from "@/lib/generator";
+import { all as ledgerEntries } from "@/lib/ledger";
 import { getQuotes } from "@/lib/market";
 import { pageOg } from "@/lib/og-pages";
+import { bookHref, daysSince } from "@/lib/routes";
 import { FEATURED, HOST, SITE } from "@/lib/site";
-import { NAMES, THEMES } from "@/lib/universe";
+import { NAMES, THEMES, THEME_BY_ID, UNIVERSE_VERSION } from "@/lib/universe";
 
 /**
  * Market figures on this page are fetched on the server, and the vendor key is
  * set at runtime rather than at build time. Without this the page would be
  * baked once — during a build that had no key — and would go on serving
  * synthetic numbers for ever, however the server was later configured.
+ *
+ * The record strip below is the other reason: it counts claims committed after
+ * this build, so a statically baked homepage would announce an empty record on
+ * a site that has one.
  */
 export const revalidate = 300;
 
@@ -43,10 +48,35 @@ const COMPARISON: [string, string, string][] = [
   ["When it doesn't know", "It answers anyway", "It stops and says so"],
 ];
 
+/**
+ * Three premises that build, for a reader who wants to see output before
+ * typing. They are theme claims, so each one lands on a book the matcher fully
+ * agrees with — and they carry no stated date, because the date on a book
+ * belongs to whoever states the claim, not to the page that suggested it.
+ */
+const EXAMPLE_IDS = ["nuclear", "robotics", "water"] as const;
+
 export default async function Home() {
   const b = buildBook(FEATURED);
   if (!b.ok) throw new Error("FEATURED premise must build a book");
   const quotes = await getQuotes(b.holdings.slice(0, 3).map((h) => h.t));
+
+  const examples: Example[] = EXAMPLE_IDS.flatMap((id) => {
+    const th = THEME_BY_ID.get(id);
+    return th ? [{ label: th.name, premise: th.claim }] : [];
+  });
+
+  /**
+   * The record, read straight off the file. Deliberately no market call here:
+   * standing per claim costs a vendor round trip each and belongs on /ledger,
+   * which does it properly. What this page needs is the fact that the record
+   * exists and is dated — which is exactly what nobody could tell before,
+   * because the landing page never mentioned it at all.
+   */
+  const record = await ledgerEntries();
+  const recent = record.slice(0, 4);
+  const oldest = record.length ? daysSince(record[record.length - 1].statedAt) : null;
+  const recordThemes = new Set(record.map((e) => e.theme)).size;
 
   return (
     <>
@@ -63,38 +93,118 @@ export default async function Home() {
           One sentence about the next decade goes in. A weighted portfolio comes out — and every
           single weight carries the reason it earned its size.
         </p>
-        <div className="hero-cta rv">
-          <Link className="b1 lg" href="/compose">
-            Build your first book
-          </Link>
-          <a className="b2 lg" href="#how">
-            See how it works
-          </a>
+        {/* The field itself, on the first page.
+
+            This used to be a drawing of the field: fake browser chrome around a
+            typing animation of a book that was already built. It demonstrated
+            the product to somebody who could not yet use it, and the first
+            thing a reader could actually do lived on /compose, one navigation
+            away. For a tool whose entire argument is "state a belief, see what
+            it holds", the field is the argument. */}
+        <div className="herofield">
+          <Composer
+            claims={Object.fromEntries(THEMES.map((t) => [t.id, t.claim]))}
+            counts={Object.fromEntries(THEMES.map((t) => [t.id, t.assets.length]))}
+            showThemes={false}
+            autoFocus={false}
+            examples={examples}
+          />
         </div>
-        <div className="window rv">
-          <div className="wbar">
-            <div className="wdots">
-              <i />
-              <i />
-              <i />
-            </div>
-            <div className="wurl">{HOST}/b/compute-is-the-binding-constraint</div>
+
+        {/* Real output, at its real address — no chrome drawn around it. */}
+        <div className="cell rv herodemo">
+          <div className="hd-head">
+            <span className="faint">One that already exists</span>
+            <Link className="b3" href={bookHref(FEATURED, [], { universe: UNIVERSE_VERSION })}>
+              Open this book
+            </Link>
           </div>
-          <div className="wbody">
-            <HeroPrompt text="that compute is the binding constraint on AI, not model design.">
-              <div className="meta">
-                <span className="tagp on">{b.theme.name}</span>
-                <span className="tagp">{b.risk}</span>
-                <span className="tagp">{b.horizon}</span>
-                <span className="tagp">{b.holdings.length} holdings</span>
-                <span className="tagp">Confidence {b.confidence}%</span>
-              </div>
-              <Bar holdings={b.holdings} />
-              <BarFoot />
-            </HeroPrompt>
+          <p className="hd-premise">&ldquo;{FEATURED}&rdquo;</p>
+          <div className="meta">
+            <span className="tagp on">{b.theme.name}</span>
+            <span className="tagp">{b.risk}</span>
+            <span className="tagp">{b.horizon}</span>
+            <span className="tagp">{b.holdings.length} holdings</span>
+            <span className="tagp">Confidence {b.confidence}%</span>
           </div>
+          <Bar holdings={b.holdings} animate />
+          <BarFoot />
         </div>
       </div>
+
+      {/* The record, on the page that decides whether anyone stays.
+
+          /ledger calls itself "the page the rest of the site exists to fill",
+          and until now the landing page did not mention it once. A generator
+          that forgets is a demo; dated claims that can be checked against what
+          happened are the thing worth coming back to, and a reader could not
+          learn that without finding the nav item. */}
+      <section id="record" className="shell" style={{ paddingBlock: "clamp(38px,5vw,64px)" }}>
+        <span className="kick rv">The record</span>
+        <h2 className="rv" style={{ marginTop: 12, maxWidth: "22ch" }}>
+          Claims with a date on them.
+        </h2>
+        <p className="sub rv" style={{ marginTop: 16, maxWidth: "58ch" }}>
+          A book is free to build and costs nothing to be wrong about. Committing one is the
+          opposite: the server writes the date, the claim cannot be edited or withdrawn, and it is
+          measured against the index from that day — whichever way it goes.
+        </p>
+
+        {record.length ? (
+          <>
+            <div className="stats rv" style={{ marginTop: 24 }}>
+              <div>
+                <div className="sn">{record.length}</div>
+                <div className="sl">claims on the record</div>
+              </div>
+              <div>
+                <div className="sn">{oldest === null || oldest === 0 ? "today" : oldest}</div>
+                <div className="sl">
+                  {oldest === null || oldest === 0 ? "the oldest was stated" : "days since the oldest"}
+                </div>
+              </div>
+              <div>
+                <div className="sn">{recordThemes}</div>
+                <div className="sl">themes represented</div>
+              </div>
+              <div>
+                <div className="sn">0</div>
+                <div className="sl">removed for being wrong</div>
+              </div>
+            </div>
+            <div className="reclist rv">
+              {recent.map((e) => (
+                <Link key={e.id} className="recrow" href={`/p/${e.id}`}>
+                  <span className="ldate">{e.statedAt}</span>
+                  <span className="lclaim">
+                    {e.premise}
+                    {e.house ? <i className="ac"> · house</i> : null}
+                  </span>
+                  <span className="ltheme">{THEME_BY_ID.get(e.theme)?.name ?? e.theme}</span>
+                </Link>
+              ))}
+            </div>
+            <div className="hero-cta rv" style={{ justifyContent: "flex-start", marginTop: 20 }}>
+              <Link className="b2" href="/ledger">
+                Read the whole record
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="cell rv" style={{ marginTop: 24, padding: "clamp(20px,2.6vw,30px)" }}>
+            <h3>Nothing on the record yet.</h3>
+            <p className="p" style={{ marginTop: 10, maxWidth: "48ch" }}>
+              The first claim committed here will be the oldest one on the site, which is the only
+              thing about it that cannot be caught up with later.
+            </p>
+            <div className="hero-cta" style={{ justifyContent: "flex-start", marginTop: 18 }}>
+              <Link className="b1" href="/compose">
+                Write one
+              </Link>
+            </div>
+          </div>
+        )}
+      </section>
 
       <section style={{ paddingBlock: "clamp(38px,5vw,64px)" }}>
         <p
@@ -323,62 +433,24 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="community" className="shell">
-        <div className="g-none" />
-        <span className="kick rv">Community</span>
-        <h2 className="rv" style={{ marginTop: 12, maxWidth: "20ch" }}>
-          The tool is free. The token is for the expensive part.
-        </h2>
-        <div className="bento rv">
-          <div className="cell c3">
-            <h3>${SITE.token.ticker}</h3>
-            <p className="p" style={{ marginTop: 8 }}>
-              Fixed supply of {SITE.token.supply === "1B" ? "1 billion" : SITE.token.supply} on{" "}
-              {SITE.token.chain}. It gates higher generation limits, published books, creator
-              rewards and governance — not the research, which stays free.
-            </p>
-            <div className="addrbox" style={{ marginTop: 16 }}>
-              <code>Contract address</code>
-              <span className="soon">Coming soon</span>
-            </div>
-            <Link className="b2" style={{ marginTop: 14 }} href="/token">
-              Read the tokenomics
-            </Link>
-          </div>
-          <div className="cell c3">
-            <h3>{SITE.x || SITE.telegram ? "Two official channels" : "No official channels yet"}</h3>
-            {SITE.x || SITE.telegram ? (
-              <>
-                <p className="p" style={{ marginTop: 8 }}>
-                  The contract address appears on this site and on X at the same moment, and nowhere
-                  else first. There is no presale, no whitelist and no team wallet taking deposits.
-                  Nobody from this project will message you first.
-                </p>
-                <div className="socbig">
-                  {SITE.x ? (
-                    <a href={SITE.x} target="_blank" rel="noopener">
-                      <XIcon />
-                      Follow on X
-                    </a>
-                  ) : null}
-                  {SITE.telegram ? (
-                    <a href={SITE.telegram} target="_blank" rel="noopener">
-                      <TelegramIcon />
-                      Join Telegram
-                    </a>
-                  ) : null}
-                </div>
-              </>
-            ) : (
-            <p className="p" style={{ marginTop: 8 }}>
-              There are no official channels yet. Until they are announced here, on this domain,
-              every account, group or DM claiming to be this project is not — including any that
-              posts a contract address. There is no presale, no whitelist and no team wallet taking
-              deposits, and nobody from this project will message you first.
-            </p>
-            )}
-          </div>
-        </div>
+      {/* The token used to be a full section here — ticker, supply, a contract
+          address reading "Coming soon" — sitting between the argument for the
+          product and the call to use it. A reader met an unlaunched token
+          before they had seen a single book of their own, which reads as a
+          project selling something it does not have yet. /token still carries
+          all of it, including the anti-impersonation warning that is the part
+          that actually protects people; this is the one line that points there.
+          Nothing was softened, only moved behind the proof. */}
+      <section className="shell">
+        <p className="notice rv">
+          The research tool is free, needs no account and no wallet, and stays that way. A token is
+          published ahead of any launch so it can be held against us afterwards — it is not
+          deployed, and the contract address does not exist yet.{" "}
+          <Link href="/token" style={{ textDecoration: "underline" }}>
+            Read the tokenomics
+          </Link>
+          , including why anyone posting an address today is not us.
+        </p>
       </section>
 
       <section className="shell">

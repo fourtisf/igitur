@@ -39,6 +39,8 @@ export const metadata: Metadata = {
 const ALWAYS_LIVE = [
   "Compose a book from a premise the universe carries — and a refusal when it does not",
   "Negative keywords to stop cross-sector mismatches",
+  "A ranked way out of a refusal, naming the term that vetoed a theme",
+  "Igitur's own 26 theses on the record, on the same terms as anyone else's",
   "Written case for and against, every time",
   "Remove a holding and reweight the book",
   "Session history of everything you built",

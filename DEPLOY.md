@@ -270,18 +270,49 @@ twice, and one address may commit five times an hour. The rate limit is in
 memory and resets when pm2 restarts, which is the accepted cost of not keeping
 another store.
 
+### Seeding it, once, on the first deploy
+
+A new deploy has an empty record, and `/ledger` — the page the rest of the site
+exists to fill — reads *"Nothing on the record yet."* A visitor cannot tell that
+apart from a site where nothing works.
+
+Fill it with Igitur's own 26 theses, marked `house` so nobody mistakes them for
+a reader's conviction:
+
+```bash
+cd /var/www/igitur
+LEDGER_PATH=/var/www/igitur/data/ledger.jsonl npx tsx scripts/seed-ledger.ts
+```
+
+It goes through the same `commit()` the endpoint uses, so every seeded claim is
+validated, dated by the server and de-duplicated like any other. Running it
+twice adds nothing.
+
+Run it **once, on the first deploy** — not from `update-igitur.sh`. It cannot
+backdate: `statedAt` is the server's date at the moment of the write, so a
+second run weeks later would add the same 26 claims again with a later
+settlement date. That is a different claim, correctly, and not what you want in
+the record.
+
 ## 5e. The contract address, after launch
 
-Until the token exists, a strip across the top of every page reads
-`$IGITUR · Contract address · Coming soon · Nothing is tradeable yet. Any
-address circulating now is fake.`
+Until the token exists there is no strip. `components/TokenStrip.tsx` renders
+nothing while `contractAddress` is null: a research tool that opens by
+advertising an unlaunched token reads as a token wearing a research tool, and
+the warning it carried is stated in full on `/token`, on `/legal` and in a line
+on the landing page that links to both.
 
-On launch day, one line in `lib/site.ts` publishes it everywhere at once — the
-strip, `/token` and the home page all read the same value:
+On launch day, one line in `lib/site.ts` turns the strip on and publishes the
+address everywhere at once — the strip and `/token` read the same value:
 
 ```ts
 contractAddress: "0x…" as string | null,
 ```
+
+That single edit also brings the strip back across every page, offset included
+— there is no separate flag to remember, which is the point. The moment an
+address exists is the moment someone can pass off a fake one, and that is when
+a fixed, unmissable place to check it starts being worth its space.
 
 The strip then shows the address and its own line changes to *Verify it here
 before you trade anything*. Nothing else needs editing, which is the point:

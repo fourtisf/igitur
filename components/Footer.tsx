@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { BrandMark } from "./icons";
 
-import { REVIEWED } from "@/lib/universe";
+import { REVIEWED, UNIVERSE_VERSION } from "@/lib/universe";
 import { SITE } from "@/lib/site";
 
 export function Footer() {
@@ -15,8 +15,8 @@ export function Footer() {
             {SITE.name}
           </Link>
           <p className="p" style={{ marginTop: 12, fontSize: 13, maxWidth: "34ch" }}>
-            A working prototype. Research only. Nothing here is investment advice and no order
-            ever leaves this page.
+            Research output only. Nothing here is investment advice and no order ever leaves this
+            page.
           </p>
         </div>
         <div>
@@ -53,7 +53,15 @@ export function Footer() {
         </div>
       </div>
       <p className="faint" style={{ fontSize: 12, marginTop: 34 }}>
-        © 2026 {SITE.name} · {SITE.build} · Universe reviewed {REVIEWED} · Token not deployed
+        {/* "Prototype build 2.1" used to sit here, on every page. /about and
+            /status both say what stage this is at, at length and with the
+            detail that makes it useful; a bare word in the footer of a working
+            site only tells a first-time reader not to trust what they are
+            looking at. The two disclosures that do carry information — what
+            data version they are reading, and that the token does not exist —
+            stay. */}
+        © 2026 {SITE.name} · Universe v{UNIVERSE_VERSION}, reviewed {REVIEWED} · Research only ·
+        Token not deployed
       </p>
     </footer>
   );

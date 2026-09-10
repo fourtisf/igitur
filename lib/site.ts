@@ -79,8 +79,6 @@ export const SITE = {
     /** Stays null until the pool opens. The UI reads null as "Coming soon". */
     contractAddress: null as string | null,
   },
-
-  build: "Prototype build 2.1",
 } as const;
 
 /** The premise shown on the landing page and used as the /track default. */

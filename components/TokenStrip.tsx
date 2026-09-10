@@ -16,9 +16,34 @@ import { SITE } from "@/lib/site";
  * `SITE.token.contractAddress` stops being null the strip becomes the canonical
  * place the address lives, rather than a placeholder someone has to remember to
  * replace.
+ *
+ * ── Why it renders nothing before launch ─────────────────────────────────────
+ *
+ * All of the above is an argument about the day there IS an address. Before
+ * then the strip pins "$IGITUR · Contract address · Coming soon" to the top of
+ * every page — the first thing every visitor reads, on a site whose whole
+ * problem is that people cannot tell it has a working product. A research tool
+ * that opens by advertising an unlaunched token reads as a token that has
+ * borrowed a research tool.
+ *
+ * So it stands down until there is something to point at. Nothing protective is
+ * lost: the warning it carries — nothing is tradeable, any address circulating
+ * now is fake — is stated at length on /token, on /legal, and in a line on the
+ * landing page that links to both. What that warning defends against is someone
+ * passing off an address as ours, and the moment that danger becomes real is
+ * the moment `contractAddress` stops being null, which is exactly when this
+ * comes back. No launch-day checklist item, no forgotten flag.
+ *
+ * `--strip` is the height the nav and every page's top padding are offset by,
+ * so `hasStrip` below keeps the layout honest about whether the space is used.
  */
+
+/** Whether the strip occupies the top of the page. Read by the layout. */
+export const hasStrip = SITE.token.contractAddress !== null;
+
 export function TokenStrip() {
   const { ticker, contractAddress } = SITE.token;
+  if (!contractAddress) return null;
 
   return (
     <div className="tstrip">

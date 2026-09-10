@@ -135,13 +135,34 @@ test("the card is attributed to the account that holds the name", () => {
 });
 
 test("the contract-address strip never invents an address", () => {
-  // It is on every page, so it is the most-read sentence on the site. Nothing
-  // is deployed, and the strip must say so rather than showing a placeholder
+  // When it is up it is on every page, so it is the most-read sentence on the
+  // site. It must show the deployed address or nothing — never a placeholder
   // that could be mistaken for the real thing.
   const src = readFileSync("components/TokenStrip.tsx", "utf8");
   assert.match(src, /SITE\.token/, "the strip must read the address, not carry one");
   assert.doesNotMatch(src, /0x[0-9a-fA-F]{6}/, "no address literal belongs in this component");
   assert.equal(SITE.token.contractAddress, null, "nothing is deployed");
+});
+
+test("the strip stands down until there is an address, and comes back by itself", () => {
+  // Before launch it pinned "Coming soon" to the top of every page, which is
+  // the first thing a visitor read on a site trying to show it has a working
+  // product. It now renders nothing — but the layout offset and the strip must
+  // agree about that, and both must be driven by the address alone, so that
+  // publishing one brings the strip back with no second flag to remember.
+  const src = readFileSync("components/TokenStrip.tsx", "utf8");
+  assert.match(src, /if \(!contractAddress\) return null;/, "it must render nothing with no address");
+  assert.match(
+    src,
+    /export const hasStrip = SITE\.token\.contractAddress !== null;/,
+    "the layout offset must be derived from the same value the strip is"
+  );
+
+  const layout = readFileSync("app/layout.tsx", "utf8");
+  assert.match(layout, /hasStrip \? "" : " no-strip"/, "the layout must zero --strip when the strip is absent");
+
+  const css = readFileSync("app/globals.css", "utf8");
+  assert.match(css, /\.no-strip\{--strip:0px\}/, "no-strip must actually zero the offset");
 });
 
 test("the status page never promises more than the generator does", () => {
