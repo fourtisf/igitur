@@ -169,15 +169,39 @@ export function vendorError(): string | null {
 //                against 250 a day. One hour is 96 a day, comfortably inside.
 //
 //   Twelve Data  a batch spends one credit PER SYMBOL, so a refresh costs 163
-//                against 800 a day — about four refreshes. Six hours is four a
-//                day; one hour would be spent before lunch.
+//                against 800 a day. Quotes are not the whole bill, though —
+//                see below.
 //
-// Six hours is honest for what this is. These are not trading prices, the page
-// prints the timestamp, and between refreshes the disk store serves the last
-// real close — which is a stock's price until the next session opens.
+// ── The bill the first version of this arithmetic left out ───────────────────
+//
+// /ledger measures every committed claim against the index, and that needs a
+// price series per holding. Those are cached for a day, so it is one sweep of
+// every distinct ticker the record touches — and once Igitur's own 26 theses
+// were committed, that sweep is 144 names. It was zero when the six-hour TTL
+// was chosen, because the record was empty.
+//
+//   quotes at 6h   4 × 163 = 652
+//   ledger history           144
+//   total                    796   against 800
+//
+// Four credits of headroom. One reader opening /track, one deploy verifying
+// /ledger, one cache miss, and the key is spent — which is exactly what
+// happened: 1175 credits used against a limit of 800, every vendor refusing,
+// and the site quietly serving yesterday's closes off the disk store.
+//
+//   quotes at 8h   3 × 163 = 489
+//   ledger history           144
+//   total                    633   against 800
+//
+// Eight hours is honest for what this is. These are not trading prices, the
+// page prints the timestamp, and between refreshes the disk store serves the
+// last real close — which is a stock's price until the next session opens.
+// tests/market-budget.test.ts holds the whole sum under the quota, so growing
+// the universe or shortening this cannot quietly kill the key again.
 //
 // MARKET_TTL_S overrides both, for a paid plan where a minute is affordable.
-const DEFAULT_TTL_S = cleanKey(process.env.TWELVEDATA_API_KEY) ? 6 * 3600 : 3600;
+export const TWELVEDATA_TTL_S = 8 * 3600;
+const DEFAULT_TTL_S = cleanKey(process.env.TWELVEDATA_API_KEY) ? TWELVEDATA_TTL_S : 3600;
 const QUOTE_TTL = Math.max(60, Number(process.env.MARKET_TTL_S) || DEFAULT_TTL_S) * 1000;
 
 // Daily closes change once a day. Six hours meant four identical fetches for

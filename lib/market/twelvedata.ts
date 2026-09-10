@@ -26,11 +26,15 @@ import type { Bar, MarketProvider, Quote } from "./types";
  * ── The free tier's arithmetic ───────────────────────────────────────────────
  *
  * 800 credits a day, and a batch spends one credit per symbol — so one full
- * refresh of the universe costs 163 and the allowance carries about four a day.
- * lib/market therefore defaults to a six-hour TTL when this provider is in use.
+ * refresh of the universe costs 163. Quotes are not the whole bill: /ledger
+ * needs a price series per holding, cached a day, which is one sweep of every
+ * ticker the record touches. lib/market sets the TTL against the SUM of the
+ * two, not against quotes alone; the arithmetic is written out there, and
+ * tests/market-budget.test.ts keeps it under the quota.
+ *
  * At one hour the key would be spent before lunch and the site would look
  * broken for reasons nothing on the page could explain, which is exactly how
- * the FMP key failed.
+ * the FMP key failed — and, later, this one.
  *
  * Between refreshes the disk store serves the last real close with the
  * timestamp it actually carries. A stock's last close is its price until the
@@ -46,6 +50,9 @@ const TIMEOUT_MS = 10_000;
 
 /** Symbols per request. The credit cost is per symbol either way. */
 const BATCH = 50;
+
+/** The free tier's daily allowance. Read by tests/market-budget.test.ts. */
+export const DAILY_CREDITS = 800;
 
 /**
  * Values arrive as strings — "671.23", not 671.23 — which is the single most
