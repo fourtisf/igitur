@@ -270,6 +270,28 @@ twice, and one address may commit five times an hour. The rate limit is in
 memory and resets when pm2 restarts, which is the accepted cost of not keeping
 another store.
 
+## 5h. Dua berkas simpanan, keduanya di luar `.next`
+
+```
+/var/www/igitur/data/quotes.json    harga terakhir per ticker
+/var/www/igitur/data/history.json   seri harga harian untuk /track dan /ledger
+```
+
+`MARKET_CACHE_PATH` menempatkan yang pertama; yang kedua otomatis di sebelahnya
+(`MARKET_HISTORY_PATH` menimpanya kalau perlu). Keduanya **harus** di luar
+`.next` — setiap deploy mengganti `.next` seluruhnya.
+
+Kenapa yang kedua ada: `/ledger` mengukur tiap klaim terhadap indeks, dan itu
+butuh seri harga per holding — 144 nama sejak 26 tesis Igitur masuk catatan.
+Dulu seri itu hanya ada di memori proses. Setiap deploy me-restart proses, dan
+langkah verifikasi deploy sendiri membuka `/ledger`, jadi **setiap deploy
+membayar ulang 144 nama**. Delapan deploy dalam satu malam menghabiskan 1299
+kredit dari jatah 800, dan satu-satunya gejalanya adalah semua sumber menjawab
+429.
+
+Jangan hapus dua berkas ini untuk "membersihkan". Menghapusnya berarti membeli
+ulang seluruh riwayat dari jatah harian.
+
 ## 5g. Menerbitkan versi baru: satu perintah
 
 ```bash

@@ -2,6 +2,7 @@ import { chainProviders } from "./fallback";
 import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
 import { remember, rememberedEntry } from "./store";
+import { forgetHistoryStore, rememberBars, rememberedBars } from "./history-store";
 import { stooqLastError, stooqProvider } from "./stooq";
 import { twelveDataLastError, twelveDataProvider } from "./twelvedata";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
@@ -260,6 +261,10 @@ const historyCache = new Map<string, { at: number; ttl: number; bars: Bar[] }>()
 export function resetMarketCache(): void {
   quoteCache.clear();
   historyCache.clear();
+  // The disk store keeps its own map, so clearing only the two above would
+  // leave a test reading bars a previous case wrote — passing for the wrong
+  // reason, which is worse than failing.
+  forgetHistoryStore();
   failStreak = 0;
   provider = null;
 }
@@ -371,6 +376,16 @@ export async function getHistory(ticker: string, from: string): Promise<Bar[]> {
   const hit = historyCache.get(key);
   if (hit && now - hit.at < hit.ttl) return hit.bars;
 
+  // Disk before vendor. The in-process map dies with the process, and every
+  // deploy restarts it — so without this each deploy re-fetched a series for
+  // all 144 names /ledger tracks, paid for by the same daily allowance the
+  // quotes come out of. Eight deploys in an evening spent 1299 credits of 800.
+  const stored = rememberedBars(key);
+  if (stored && now - stored.at < HISTORY_TTL) {
+    historyCache.set(key, { at: stored.at, ttl: HISTORY_TTL, bars: stored.bars });
+    return stored.bars;
+  }
+
   let bars: Bar[] = [];
   try {
     bars = await get().history(ticker, from);
@@ -381,6 +396,13 @@ export async function getHistory(ticker: string, from: string): Promise<Bar[]> {
   // Holding it for a day would keep a tracked claim blank long after the
   // source came back.
   historyCache.set(key, { at: now, ttl: bars.length ? HISTORY_TTL : retryDelay(), bars });
+  // Only a real series is written; rememberBars ignores an empty one.
+  rememberBars(key, bars);
+
+  // A vendor that has stopped answering leaves the last good series on disk,
+  // and a series from this morning is a better answer than none — the same
+  // trade the quote store makes, and /status still says the source is down.
+  if (!bars.length && stored) return stored.bars;
   return bars;
 }
 
