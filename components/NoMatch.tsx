@@ -77,7 +77,7 @@ export function NoMatch({ premise, emptied }: { premise: string; emptied?: boole
         </p>
         <p className="sub" style={{ marginTop: 20, fontSize: 15 }}>
           {emptied
-            ? "Restore the book, or write a different premise."
+            ? "Restore the portfolio, or write a different premise."
             : noClaim
               ? "This box wants a sentence stating something you think will happen over the next decade — a constraint, an industry or a resource, and what happens to it. One of the three below is a working example you can edit."
               : "Rather than assemble something plausible out of whatever was nearest, the tool stops here. Pick a written thesis below, or rewrite the premise naming a specific constraint, industry or resource."}
@@ -94,7 +94,7 @@ export function NoMatch({ premise, emptied }: { premise: string; emptied?: boole
           ) : (
             <>
               <Link className="b1" href={bookHref(premise, [], { universe: UNIVERSE_VERSION })}>
-                {emptied ? "Restore the book" : "Try again"}
+                {emptied ? "Restore the portfolio" : "Try again"}
               </Link>
               <Link className="b2" href={`/compose?p=${encodeURIComponent(premise)}`}>
                 Rewrite the premise
@@ -131,7 +131,7 @@ export function NoMatch({ premise, emptied }: { premise: string; emptied?: boole
                 })}
               </div>
               <p className="p" style={{ fontSize: 12, marginTop: 12 }}>
-                A thing, and what happens to it. Click any of them to see the book it builds.
+                A thing, and what happens to it. Click any of them to see the portfolio it builds.
               </p>
             </div>
             <div className="cell c3" style={{ padding: 22 }}>

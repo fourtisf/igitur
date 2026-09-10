@@ -16,7 +16,7 @@ export function Concentration({ holdings }: { holdings: readonly Holding[] }) {
     { k: "Holdings", v: String(c.names) },
     { k: "Weighted like", v: `${c.effectiveNames.toFixed(1)} equal ones` },
     { k: "Largest", v: `${c.top.ticker} at ${c.top.pct.toFixed(1)}%` },
-    { k: "Half the book", v: `${c.namesForHalf} name${c.namesForHalf > 1 ? "s" : ""}` },
+    { k: "Half the portfolio", v: `${c.namesForHalf} name${c.namesForHalf > 1 ? "s" : ""}` },
     { k: "Exposed to the premise", v: `${c.atRisk.toFixed(0)}%` },
   ];
 

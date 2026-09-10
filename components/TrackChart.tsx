@@ -42,7 +42,7 @@ export function TrackChart({ book, track }: { book: { holdings: Holding[] }; tra
         preserveAspectRatio="none"
         role="img"
         aria-label={
-          `Book performance against the index over ${N} sessions. Book ${bEnd.toFixed(1)}%, ` +
+          `Portfolio performance against the index over ${N} sessions. Portfolio ${bEnd.toFixed(1)}%, ` +
           `index ${sEnd.toFixed(1)}%.` +
           (sec ? ` Sector ${track.sectorTicker} ${secEnd.toFixed(1)}%.` : "")
         }
@@ -82,8 +82,11 @@ export function TrackChart({ book, track }: { book: { holdings: Holding[] }; tra
           />
         ) : null}
         <path d={path(bs)} fill="none" stroke="#AEB6FF" strokeWidth="2.3" filter="url(#gl)" />
+        {/* "Yours" rather than "Portfolio": the label sits in 54 units of gutter
+            and the longer word clips. It also pairs better with SPY beneath it
+            — what this reads as is yours against the index. */}
         <text className="endlab" x={W - PR + 10} y={(yOf(bEnd) + 4).toFixed(1)} fill="#AEB6FF">
-          Book
+          Yours
         </text>
         <text className="endlab" x={W - PR + 10} y={(yOf(sEnd) + 4).toFixed(1)} fill="rgba(255,255,255,.45)">
           SPY

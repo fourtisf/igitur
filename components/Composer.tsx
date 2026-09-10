@@ -170,7 +170,7 @@ export function Composer({
 
         <div className="crow2">
           <button className="b1" onClick={() => go(value)}>
-            Build the book
+            Build the portfolio
           </button>
           <button
             className="chip"
@@ -182,7 +182,7 @@ export function Composer({
             Clear
           </button>
           <span className="faint" style={{ fontSize: 12 }}>
-            Enter to build
+            Enter to build it
           </span>
         </div>
       </div>

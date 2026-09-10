@@ -161,7 +161,7 @@ export default async function Home() {
           <div className="hd-head">
             <span className="faint">One that already exists</span>
             <Link className="b3" href={bookHref(FEATURED, [], { universe: UNIVERSE_VERSION })}>
-              Open this book
+              Open this portfolio
             </Link>
           </div>
           <p className="hd-premise">&ldquo;{FEATURED}&rdquo;</p>
@@ -235,7 +235,7 @@ export default async function Home() {
           Claims with a date on them.
         </h2>
         <p className="sub rv" style={{ marginTop: 16, maxWidth: "58ch" }}>
-          A book is free to build and costs nothing to be wrong about. Committing one is the
+          A portfolio is free to build and costs nothing to be wrong about. Committing one is the
           opposite: the server writes the date, the claim cannot be edited or withdrawn, and it is
           measured against the index from that day — whichever way it goes.
         </p>
@@ -376,9 +376,9 @@ export default async function Home() {
             </div>
           </div>
           <div className="cell c2 rv">
-            <h3>Every book has an address</h3>
+            <h3>Every portfolio has an address</h3>
             <p className="p">
-              Send it to anyone. They open the exact same book, weight for weight. No account,
+              Send it to anyone. They open the exact same portfolio, weight for weight. No account,
               nothing stored.
             </p>
             <div className="urlbox" style={{ marginTop: 18 }}>
@@ -389,7 +389,7 @@ export default async function Home() {
           <div className="cell c2 rv">
             <h3>Honestly benchmarked</h3>
             <p className="p">
-              The index is shown whether or not it flatters the book — and plenty of books lose to
+              The index is shown whether or not it flatters the portfolio — and plenty of them lose to
               it.
             </p>
             <svg
@@ -478,7 +478,7 @@ export default async function Home() {
             <h3 style={{ marginTop: 16 }}>Show the working</h3>
             <p className="p" style={{ marginTop: 8 }}>
               Every holding arrives with its reason, its role, its price, and the case that would
-              break it. Edit anything and the book reweights.
+              break it. Edit anything and it reweights.
             </p>
           </div>
         </div>
@@ -493,7 +493,7 @@ export default async function Home() {
           </div>
           <div>
             <div className="sn">5–8</div>
-            <div className="sl">holdings per book</div>
+            <div className="sl">holdings per portfolio</div>
           </div>
           <div>
             <div className="sn">100%</div>
@@ -557,7 +557,7 @@ export default async function Home() {
           </p>
           <div className="hero-cta" style={{ marginTop: 28 }}>
             <Link className="b1 lg" href="/compose">
-              Build your first book
+              Build your first portfolio
             </Link>
             <Link className="b2 lg" href="/method">
               Read the methodology

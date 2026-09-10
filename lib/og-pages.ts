@@ -33,7 +33,7 @@ export const PAGE_CARDS = {
   universe: {
     kicker: "The universe",
     title: "Published in the open.",
-    body: "Every name a book can hold, with the reason it can earn weight and the conviction score that sets its size.",
+    body: "Every name a portfolio can hold, with the reason it can earn weight and the conviction score that sets its size.",
   },
   method: {
     kicker: "Methodology",
@@ -63,7 +63,7 @@ export const PAGE_CARDS = {
   notfound: {
     kicker: "Not found",
     title: "That page does not exist.",
-    body: "Every book has an address, but this is not one of them.",
+    body: "Every portfolio has an address, but this is not one of them.",
   },
 } as const satisfies Record<string, PageCard>;
 

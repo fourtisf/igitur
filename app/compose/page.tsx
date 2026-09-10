@@ -12,13 +12,13 @@ import { THEMES, THEME_BY_ID, UNIVERSE_VERSION } from "@/lib/universe";
 import { Composer } from "@/components/Composer";
 
 export const metadata: Metadata = {
-  title: "Compose a book",
+  title: "Compose a portfolio",
   description:
     "State one belief about the next decade. Igitur matches it against 26 written theses and returns a weighted portfolio with a reason on every holding.",
   alternates: { canonical: "/compose" },
   openGraph: {
     url: "/compose",
-    title: `Compose a book — ${SITE.name}`,
+    title: `Compose a portfolio — ${SITE.name}`,
     description:
       "State one belief about the next decade and get a weighted portfolio with a reason on every holding.",
     images: [{ url: pageOg("compose"), width: 1200, height: 630 }],

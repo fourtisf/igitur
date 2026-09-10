@@ -144,7 +144,7 @@ export default async function BookPage({
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
       <Remember premise={b.premise} />
-      <span className="kick rv">Your book</span>
+      <span className="kick rv">Your portfolio</span>
       <h1 className="pg rv" style={{ marginTop: 12, maxWidth: "26ch", fontWeight: 550 }}>
         {b.premise}
       </h1>
@@ -198,7 +198,7 @@ export default async function BookPage({
         <p className="notice warn rv" style={{ marginTop: 18 }}>
           This link was built against universe v{universe}, and the published universe is now v
           {UNIVERSE_VERSION}. Conviction scores and holdings may have been revised since, so the
-          book below is not necessarily the one that was shared.{" "}
+          portfolio below is not necessarily the one that was shared.{" "}
           <Link href="/changes" style={{ textDecoration: "underline" }}>
             See what changed
           </Link>
@@ -250,7 +250,7 @@ export default async function BookPage({
             <h3 id="holdings">Every holding, and why it is that size</h3>
             {drop.length || pins.size ? (
               <Link className="b3" href={bookHref(b.premise, [], prov)}>
-                Restore the book
+                Restore the portfolio
               </Link>
             ) : (
               <span className="faint" style={{ fontSize: 12 }}>
@@ -350,7 +350,7 @@ export default async function BookPage({
           <div className="cell" style={{ padding: 20 }}>
             <h3 style={{ fontSize: 14 }}>Put this claim on the record</h3>
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
-              Nothing else here is kept — close the tab and this book is gone. Commit it and the
+              Nothing else here is kept — close the tab and this portfolio is gone. Commit it and the
               claim, with these weights, is measured from the day the server saw it, win or lose,
               permanently.
             </p>
@@ -365,9 +365,9 @@ export default async function BookPage({
           </div>
 
           <div className="cell" style={{ padding: 20 }}>
-            <h3 style={{ fontSize: 14 }}>This book has an address</h3>
+            <h3 style={{ fontSize: 14 }}>This portfolio has an address</h3>
             <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
-              Anyone who opens it rebuilds the same book, weight for weight.
+              Anyone who opens it rebuilds the same portfolio, weight for weight.
             </p>
             <ShareBook display={short} premise={b.premise} />
             <a
@@ -389,7 +389,7 @@ export default async function BookPage({
               style={{ marginTop: 12, width: "100%", justifyContent: "center" }}
               href={trackHref(b.premise, prov)}
             >
-              Track this book
+              Track this portfolio
             </Link>
           </div>
 

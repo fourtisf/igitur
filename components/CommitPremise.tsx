@@ -70,8 +70,8 @@ export function CommitPremise({
     <div className="cell" style={{ padding: 18, maxWidth: 520 }}>
       <h3 style={{ fontSize: 15 }}>This cannot be undone.</h3>
       <p className="p" style={{ marginTop: 8, fontSize: 13.5 }}>
-        The claim, this book&rsquo;s exact weights and today&rsquo;s date go on a public page.
-        Anyone can read it, and it stays there whether the book goes on to beat the index or lose
+        The claim, this portfolio&rsquo;s exact weights and today&rsquo;s date go on a public page.
+        Anyone can read it, and it stays there whether the portfolio goes on to beat the index or lose
         to it. Nothing about you is stored — no name, no email, no identifier — which is also why
         it cannot be removed later.
       </p>
@@ -96,7 +96,7 @@ export function CommitPremise({
           {/* A belief with no deadline can never be wrong, only early. This is
               the field that lets a claim be lost. */}
           On <b>{settles}</b> this claim is judged and stops moving: over {horizonLabel(horizon)},
-          the book beat the index or it did not.
+          the portfolio beat the index or it did not.
           {themeHorizon ? (
             <>
               {" "}

@@ -77,7 +77,7 @@ export function PortfolioOverlap({ holdings }: { holdings: Holding[] }) {
               </span>
             </div>
             <div className="kv">
-              <span className="kv-k">Of the book, by weight</span>
+              <span className="kv-k">Of the portfolio, by weight</span>
               <span className="kv-v">{result.o.bookWeightHeld.toFixed(0)}%</span>
             </div>
             {result.o.yourWeightShared !== null ? (
@@ -92,7 +92,7 @@ export function PortfolioOverlap({ holdings }: { holdings: Holding[] }) {
               </div>
             ) : null}
             <div className="kv">
-              <span className="kv-k">Held, but not in this book</span>
+              <span className="kv-k">Held, but not in this portfolio</span>
               <span className="kv-v">{result.o.outside.length}</span>
             </div>
           </div>
@@ -118,7 +118,7 @@ export function PortfolioOverlap({ holdings }: { holdings: Holding[] }) {
             </div>
           ) : (
             <p className="notice" style={{ marginTop: 14 }}>
-              Every name in this book is already in what you pasted.
+              Every name in this portfolio is already in what you pasted.
             </p>
           )}
 
