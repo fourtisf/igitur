@@ -31,7 +31,12 @@ export const metadata: Metadata = {
   },
   description: SITE.description,
   applicationName: SITE.name,
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    // Feed discovery, site-wide. The record's whole value is in being
+    // revisited, and a reader who subscribes never has to remember a URL.
+    types: { "application/rss+xml": [{ url: "/feed.xml", title: "Igitur — the record" }] },
+  },
   openGraph: {
     type: "website",
     siteName: SITE.name,

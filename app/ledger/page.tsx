@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LedgerControls } from "@/components/LedgerControls";
 import { buildBook } from "@/lib/generator";
 import { all } from "@/lib/ledger";
+import { daysUntil, isSettled } from "@/lib/horizon";
 import { marketIsReal } from "@/lib/market";
 import { daysSince } from "@/lib/routes";
 import { trackBook } from "@/lib/track";
@@ -48,10 +49,29 @@ export default async function LedgerPage() {
   const rows = await Promise.all(
     entries.map(async (e) => {
       const book = buildBook(e.premise);
-      if (!book.ok) return { e, book: null, track: null };
-      return { e, book, track: await trackBook(book, e.statedAt, daysSince(e.statedAt)) };
+      const settled = isSettled(e.settlesAt);
+      if (!book.ok) return { e, book: null, track: null, settled };
+      // A settled claim is measured to its date and never past it, here as on
+      // its own page — the two must not disagree about what happened.
+      const until = settled ? (e.settlesAt ?? null) : null;
+      const days = settled
+        ? Math.round(
+            (Date.parse(e.settlesAt + "T00:00:00Z") - Date.parse(e.statedAt + "T00:00:00Z")) /
+              86_400_000
+          )
+        : daysSince(e.statedAt);
+      return { e, book, track: await trackBook(book, e.statedAt, days, until), settled };
     })
   );
+
+  // Two lists that give the record a reason to be revisited. A dated claim
+  // nobody comes back to is a dated claim nobody is held to.
+  const soon = rows
+    .filter((r) => !r.settled && r.e.settlesAt && (daysUntil(r.e.settlesAt) ?? 999) <= 30)
+    .sort((a, b) => (a.e.settlesAt ?? "").localeCompare(b.e.settlesAt ?? ""));
+  const justSettled = rows
+    .filter((r) => r.settled && (daysUntil(r.e.settlesAt) ?? -999) > -30)
+    .sort((a, b) => (b.e.settlesAt ?? "").localeCompare(a.e.settlesAt ?? ""));
 
   const measured = rows.filter((r) => r.track?.live);
   const ahead = measured.filter((r) => r.track!.bookEnd >= r.track!.indexEnd).length;
@@ -65,7 +85,11 @@ export default async function LedgerPage() {
       </h1>
       <p className="sub rv" style={{ marginTop: 18, maxWidth: "56ch" }}>
         Every claim below was committed on purpose, and the date beside it was written by the server
-        on the day — not taken from a link. Nothing is removed for having been wrong.
+        on the day — not taken from a link. Nothing is removed for having been wrong.{" "}
+        {/* No account and no email, so the only way a claim reaches anyone
+            again is if they choose to be told. */}
+        <a href="/feed.xml">Follow the record as a feed</a> to hear when claims are made and when
+        they are judged.
       </p>
 
       {!entries.length ? (
@@ -83,6 +107,52 @@ export default async function LedgerPage() {
         </div>
       ) : (
         <>
+          {justSettled.length ? (
+            <div className="cell rv" style={{ marginTop: 22, padding: "clamp(18px,2.4vw,26px)" }}>
+              <h3>Settled in the last month</h3>
+              <p className="p" style={{ marginTop: 8, fontSize: 13.5 }}>
+                These are finished. The figure beside each one was fixed on its settlement date and
+                does not move again.
+              </p>
+              <div style={{ marginTop: 12 }}>
+                {justSettled.slice(0, 8).map(({ e, track }) => {
+                  const held = (track?.bookEnd ?? 0) >= (track?.indexEnd ?? 0);
+                  return (
+                    <div className="kv" key={e.id}>
+                      <span className="kv-k">
+                        <Link href={`/p/${e.id}`}>{e.premise}</Link>
+                      </span>
+                      <span className="kv-v">
+                        <span className={"pill " + (held ? "pon" : "poff")}>
+                          {held ? "Held" : "Failed"}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {soon.length ? (
+            <div className="cell rv" style={{ marginTop: 18, padding: "clamp(18px,2.4vw,26px)" }}>
+              <h3>Settling within thirty days</h3>
+              <p className="p" style={{ marginTop: 8, fontSize: 13.5 }}>
+                Still open. On the date beside each one the record states what happened and stops.
+              </p>
+              <div style={{ marginTop: 12 }}>
+                {soon.slice(0, 8).map(({ e }) => (
+                  <div className="kv" key={e.id}>
+                    <span className="kv-k">
+                      <Link href={`/p/${e.id}`}>{e.premise}</Link>
+                    </span>
+                    <span className="kv-v">{e.settlesAt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <p className="notice rv" style={{ marginTop: 22 }}>
             {entries.length} claim{entries.length > 1 ? "s" : ""} on the record.{" "}
             {live && measured.length
@@ -106,7 +176,7 @@ export default async function LedgerPage() {
                 <span>Book</span>
                 <span>Index</span>
               </div>
-              {rows.map(({ e, book, track }, i) => (
+              {rows.map(({ e, book, track, settled }, i) => (
                 <Link
                   key={e.id}
                   className="lrow"
@@ -120,7 +190,10 @@ export default async function LedgerPage() {
                   data-order={i}
                 >
                   <span className="ldate">{e.statedAt}</span>
-                  <span className="lclaim">{e.premise}</span>
+                  <span className="lclaim">
+                    {e.premise}
+                    {settled ? <i style={{ color: "var(--fg-4)" }}> · settled</i> : null}
+                  </span>
                   <span className="ltheme">{book ? themeName(book.theme.id) : "—"}</span>
                   <span className={"lnum " + (track?.live && track.bookEnd >= 0 ? "up" : "down")}>
                     {track?.live ? `${track.bookEnd >= 0 ? "+" : ""}${track.bookEnd.toFixed(1)}%` : "—"}
