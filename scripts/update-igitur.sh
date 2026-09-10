@@ -308,15 +308,25 @@ if live and primary_ok:
         print(f"    cadangan    : {len(bad)} tidak terpakai ({names})")
         print( "                  wajar: hanya dipanggil kalau sumber utama berhenti menjawab.")
 else:
+    # Kata "GAGAL" berdiri di sini, berwarna, tepat sebelum baris "Selesai" —
+    # dan tiga kali berturut-turut operator membacanya sebagai deploy yang
+    # gagal, lalu menjalankan ulang deploy yang sebenarnya sudah berhasil.
+    # Yang gagal adalah vendor, bukan rilis ini; laporan yang membuat orang
+    # membatalkan pekerjaan yang benar lebih buruk daripada tidak ada laporan.
+    print( "    ─────────────────────────────────────────────────────────────")
+    print( "    Di bawah ini keadaan VENDOR, bukan hasil deploy. Rilisnya")
+    print( "    sudah terbit; situsnya menyajikan harga tersimpan dan")
+    print( "    mengatakannya sendiri di /status.")
     if live:
-        print( "    catatan     : angka nyata datang dari simpanan di disk, bukan dari")
-        print( "                  vendor barusan. Alasan vendor gagal ada di bawah.")
+        print( "    Angka nyata datang dari simpanan di disk, bukan dari vendor")
+        print( "    barusan.")
     err = d.get("lastVendorError")
     if err:
-        print(f"    kesalahan   : {err}")
+        print(f"    sebabnya    : {err}")
     for s in steps:
-        mark = "  ok " if s.get("ok") else "GAGAL"
+        mark = " ok  " if s.get("ok") else "tolak"
         print(f"    [{mark}] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
+    print( "    ─────────────────────────────────────────────────────────────")
 PYEOF
 else
   cat "$PROBE" 2>/dev/null || true
