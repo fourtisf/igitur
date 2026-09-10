@@ -86,9 +86,10 @@ export async function GET() {
     steps.push(...(await yahooProbe()));
 
     // The third source is the one that answers when the other two do not, so a
-    // probe that skipped it would omit the only good news available.
-    const st = await stooqProbe();
-    steps.push({ step: "stooq SPY", status: st.status, ok: st.ok, detail: st.detail });
+    // probe that skipped it would omit the only good news available. Both of
+    // its shapes are reported: one failing while the other answers is the
+    // difference between a wrong address and a refused server.
+    steps.push(...(await stooqProbe()));
   }
 
   const probe: Probe = {

@@ -45,10 +45,63 @@ test("a name is priced, and the session move is unknown rather than zero", async
   assert.match(seen()[0], /s=nvda\.us\+spy\.us/, "one request for both names");
 });
 
-test("163 names cost four requests", async () => {
-  const seen = serve(QUOTE_CSV);
+test("163 names cost four requests when the light path prices them", async () => {
+  // Its whole reason for going first: fifty names to a request.
+  const urls: string[] = [];
+  setHttpTransport(async (url) => {
+    urls.push(url);
+    // A "+" in a query string decodes to a space, which is exactly how Stooq
+    // reads it as a separator — so the stub must split on either.
+    const symbols = (new URL(url).searchParams.get("s") ?? "").split(/[+ ]/).filter(Boolean);
+    const body = [
+      "Symbol,Date,Time,Open,High,Low,Close,Volume",
+      ...symbols.map((sym) => `${sym.toUpperCase()},2026-09-09,22:00:04,1,1,1,184.22,1`),
+    ].join("\n");
+    return { status: 200, body, cookies: [], retryAfter: null, error: null };
+  });
+
+  const q = await stooqProvider().quotes(Array.from({ length: 163 }, (_, i) => `T${i}`));
+  assert.equal(q.size, 163);
+  assert.equal(urls.length, 4, "163 names at fifty a request");
+  assert.equal(urls.filter((u) => u.includes("/q/d/l/")).length, 0, "nothing fell through");
+});
+
+test("a light path that 404s falls through to the daily download", async () => {
+  // The 404 this deployment actually got. It is not a refusal — a bot check
+  // answers 200 with a page — so the other shape is worth asking.
+  const urls: string[] = [];
+  setHttpTransport(async (url) => {
+    urls.push(url);
+    if (url.includes("/q/l/")) return { status: 404, body: "", cookies: [], retryAfter: null, error: null };
+    return {
+      status: 200,
+      cookies: [],
+      retryAfter: null,
+      error: null,
+      body: ["Date,Open,High,Low,Close,Volume", "2026-09-08,1,1,1,180,1", "2026-09-09,178,1,1,189,1"].join("\n"),
+    };
+  });
+
+  const q = await stooqProvider().quotes(["NVDA"]);
+  const n = q.get("NVDA");
+  assert.ok(n, "the daily path priced it");
+  assert.equal(n.price, 189, "the last close is the price");
+  assert.equal(n.previousClose, 180, "the row before it is the previous close");
+  assert.equal(n.changePct, 5, "two real closes make a real move, not a dash");
+  assert.equal(n.open, 178);
+  assert.ok(urls.some((u) => u.includes("/q/d/l/")));
+});
+
+test("a daily path that refuses the first name is not asked 162 more times", async () => {
+  // The lesson Yahoo taught this deployment at the cost of a day.
+  const urls: string[] = [];
+  setHttpTransport(async (url) => {
+    urls.push(url);
+    return { status: 404, body: "", cookies: [], retryAfter: null, error: null };
+  });
   await stooqProvider().quotes(Array.from({ length: 163 }, (_, i) => `T${i}`));
-  assert.equal(seen().length, 4);
+  const daily = urls.filter((u) => u.includes("/q/d/l/")).length;
+  assert.ok(daily <= 2, `the canary became ${daily} requests`);
 });
 
 test("a bot check answering 200 with HTML is not parsed as data", async () => {
@@ -75,6 +128,26 @@ test("a refusal degrades and says which code it was", async () => {
   assert.equal((await stooqProvider().quotes(["NVDA"])).size, 0);
   assert.match(stooqLastError() ?? "", /429/);
   assert.deepEqual(await stooqProvider().history("NVDA", "2026-09-01"), []);
+});
+
+test("a single daily row prices the name but leaves the move unknown", async () => {
+  // One close is a price. It is not a change, and a calm 0.00% would be a
+  // claim that the name did not move.
+  serve(["Date,Open,High,Low,Close,Volume", "2026-09-09,1,1,1,189,1"].join("\n"));
+  setHttpTransport(async (url) =>
+    url.includes("/q/l/")
+      ? { status: 404, body: "", cookies: [], retryAfter: null, error: null }
+      : {
+          status: 200,
+          cookies: [],
+          retryAfter: null,
+          error: null,
+          body: ["Date,Open,High,Low,Close,Volume", "2026-09-09,1,1,1,189,1"].join("\n"),
+        }
+  );
+  const n = (await stooqProvider().quotes(["NVDA"])).get("NVDA");
+  assert.equal(n?.price, 189);
+  assert.equal(n?.changePct, null);
 });
 
 test("history is oldest first and skips rows without a close", async () => {
