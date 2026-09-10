@@ -181,10 +181,15 @@ export default async function LedgerPage() {
                   key={e.id}
                   className="lrow"
                   href={`/p/${e.id}`}
-                  // The sort and the filter both read these. `lead` is empty
-                  // rather than 0 when the figures are not real, so a claim with
-                  // nothing measured yet sorts last instead of outranking a
-                  // genuine loss.
+                  /* The sort and the filter both read these. `lead` is empty
+                     rather than 0 when the figures are not real, so a claim
+                     with nothing measured yet sorts last instead of
+                     outranking a genuine loss.
+
+                     Block comment, not `//`: a line comment inside a JSX
+                     opening tag makes the build silently drop an edit to the
+                     attribute below it — no error, no warning, just yesterday's
+                     value in today's HTML. It cost an afternoon on /universe. */
                   data-find={`${e.premise} ${book ? themeName(book.theme.id) : ""} ${e.statedAt}`.toLowerCase()}
                   data-lead={track?.live ? (track.bookEnd - track.indexEnd).toFixed(4) : ""}
                   data-order={i}

@@ -24,7 +24,7 @@ import {
   parseDrop,
   parseStated,
   parseUniverse,
-  themeHref,
+  universeHref,
   trackHref,
 } from "@/lib/routes";
 import { getQuotes } from "@/lib/market";
@@ -148,21 +148,29 @@ export default async function BookPage({
       <h1 className="pg rv" style={{ marginTop: 12, maxWidth: "26ch", fontWeight: 550 }}>
         {b.premise}
       </h1>
-      {/* Some of these go somewhere and some are labels, and until now they all
-          looked identical — an accented pill that does nothing reads as a
-          button that is broken. The ones that lead somewhere are marked `lnk`
-          and say so on hover; the rest are plainly facts about this book. */}
+      {/* Every chip that states something about the book now leads to the rest
+          of the universe that shares it — the theme, the risk band, the
+          horizon. The ones that remain plain are counts of this book alone,
+          which nothing else can be filtered by. */}
       <div className="meta rv" style={{ marginTop: 20 }}>
-        <Link className="tagp on lnk" href={themeHref(b.theme.name)} title="See this theme in the universe">
+        <Link className="tagp on lnk" href={universeHref(b.theme.name)} title="See this theme in the universe">
           {b.theme.name}
         </Link>
         {b.second ? (
-          <Link className="tagp lnk" href={themeHref(b.second.name)} title="See this theme in the universe">
+          <Link className="tagp lnk" href={universeHref(b.second.name)} title="See this theme in the universe">
             + {b.second.name}
           </Link>
         ) : null}
-        <span className="tagp">{b.risk}</span>
-        <span className="tagp">{b.horizon}</span>
+        <Link className="tagp lnk" href={universeHref(b.risk)} title={`Every theme rated ${b.risk}`}>
+          {b.risk}
+        </Link>
+        <Link
+          className="tagp lnk"
+          href={universeHref(b.horizon)}
+          title={`Every theme with a ${b.horizon} horizon`}
+        >
+          {b.horizon}
+        </Link>
         <a className="tagp lnk" href="#holdings" title="Jump to the holdings">
           {b.holdings.length} holdings
         </a>

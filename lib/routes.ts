@@ -124,12 +124,13 @@ export function icsHref(id: string): string {
 }
 
 /**
- * The universe, filtered to one theme.
+ * The universe, filtered by any text a row carries — a theme name, a risk
+ * band, a horizon.
  *
  * `q` seeds the filter box in the browser rather than being read on the
  * server, so /universe keeps its static prerender and a crawler still sees
  * every theme on it.
  */
-export function themeHref(themeName: string): string {
-  return `/universe?q=${encodeURIComponent(themeName)}`;
+export function universeHref(q: string): string {
+  return `/universe?q=${encodeURIComponent(q)}`;
 }

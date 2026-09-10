@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 
 import { buildBook, scoreThemes } from "../lib/generator";
 import { MATCH_INDEX } from "../lib/match-index";
-import { bookCanonical, bookHref, daysSince, parseStated, parseUniverse, themeHref, today, trackHref } from "../lib/routes";
+import { bookCanonical, bookHref, daysSince, parseStated, parseUniverse, universeHref, today, trackHref } from "../lib/routes";
 import { sessionsFor } from "../lib/track";
 import { CHANGELOG, THEMES, UNIVERSE_VERSION } from "../lib/universe";
 
@@ -166,17 +166,22 @@ test("a book reports the themes that scored but did not lead", () => {
   }
 });
 
-test("a theme chip lands on the universe already filtered to that theme", () => {
+test("every chip on a book lands on a universe that actually shows something", () => {
   // Every theme name here has a space in it, and a raw space in a query string
   // is what makes a link land on an unfiltered page — which is exactly the
   // "nothing happened" this was added to fix.
-  assert.equal(themeHref("Compute buildout"), "/universe?q=Compute%20buildout");
-  assert.equal(themeHref("Water & scarcity"), "/universe?q=Water%20%26%20scarcity");
+  assert.equal(universeHref("Compute buildout"), "/universe?q=Compute%20buildout");
+  assert.equal(universeHref("Water & scarcity"), "/universe?q=Water%20%26%20scarcity");
+  assert.equal(universeHref("3–5 years"), "/universe?q=3%E2%80%935%20years", "an en dash too");
 
-  // And the filter matches on what the rows actually carry.
+  // Every chip a book shows — name, risk, horizon — has to match the row it
+  // came from, or clicking it lands on an empty page. The row's own text is
+  // the only thing the filter reads, so that is what this checks against.
   for (const t of THEMES) {
-    const q = decodeURIComponent(themeHref(t.name).split("q=")[1]);
-    const rowText = `${t.name} ${t.claim}`.toLowerCase();
-    assert.ok(rowText.includes(q.toLowerCase()), `${t.id}: a link for it would show nothing`);
+    const row = `${t.name} ${t.claim} ${t.risk} ${t.horizon}`.toLowerCase();
+    for (const chip of [t.name, t.risk, t.horizon]) {
+      const q = decodeURIComponent(universeHref(chip).split("q=")[1]);
+      assert.ok(row.includes(q.toLowerCase()), `${t.id}: the chip "${chip}" would show nothing`);
+    }
   }
 });

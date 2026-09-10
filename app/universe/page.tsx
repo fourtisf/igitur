@@ -72,7 +72,15 @@ export default async function UniversePage() {
             <div
               key={th.id}
               className="rv ublock"
-              data-find={`${th.name} ${th.claim} ${th.assets
+              /* Risk and horizon are in here so a book's chips have somewhere
+                 honest to lead: "Aggressive" and "3–5 years" are questions
+                 about what else is like this, and this row is the answer.
+
+                 Block comment, not `//`: a line comment in this position makes
+                 the build silently drop an edit to the attribute below it. The
+                 build succeeds, the types check, the lint passes, and the page
+                 serves the previous value. */
+              data-find={`${th.name} ${th.claim} ${th.risk} ${th.horizon} ${th.assets
                 .map((a) => `${a.t} ${a.n}`)
                 .join(" ")}`.toLowerCase()}
               style={{ marginTop: "clamp(26px,3.5vw,46px)" }}
