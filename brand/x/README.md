@@ -49,6 +49,13 @@ travels with the announcement.
 
 Not the profile header — that is `../x-header.png`, 1500×500.
 
+## The words
+
+`copy.md` holds the post text for all of it — the standalone banner post,
+the five-post thread, the token post, the bio and the standing replies. It opens
+with the six claims this account may never make about itself, because copy is
+where that discipline gets lost first.
+
 ## Regenerating
 
 ```bash
