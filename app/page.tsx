@@ -107,18 +107,37 @@ export default async function Home() {
   return (
     <>
       <div className="shell hero-wrap">
+        {/* ── The first screen ─────────────────────────────────────────────
+            A stranger has one screen to work out what this is, and until now
+            it gave them "New · 160 names across 26 themes" (a statistic that
+            means nothing without the category), a slogan, and a field. The
+            words that said what the thing is FOR were four sections down, past
+            a scroll most first visits never make.
+
+            Three lines now do it, in the order a stranger needs them: what
+            category this is, what it does, and what it is not. The last row is
+            the one that stops the two misreadings that actually happen — a
+            broker, and a crypto project — and it costs one line to rule both
+            out where they are formed rather than where they are corrected. */}
         <span className="badge rv">
-          <b>New</b> {NAMES} names across {THEMES.length} themes
+          <b>Investment research</b> {THEMES.length} written theses · {NAMES} names
         </span>
-        <h1 className="hero rv" style={{ marginTop: 24 }}>
+        <h1 className="hero rv" style={{ marginTop: 18 }}>
           Write what you believe.
           <br />
           <span>See what it holds.</span>
         </h1>
-        <p className="sub rv" style={{ margin: "24px auto 0", textAlign: "center" }}>
-          One sentence about the next decade goes in. A weighted portfolio comes out — and every
-          single weight carries the reason it earned its size.
+        <p className="sub rv" style={{ margin: "20px auto 0", textAlign: "center" }}>
+          State one belief about the next decade. Igitur matches it against {THEMES.length} written
+          theses and returns 5–8 holdings sized to conviction — each carrying the reason it earned
+          its weight, and the argument against the thesis beside it.
         </p>
+        <div className="hero-rules rv">
+          <span>Free</span>
+          <span>No account</span>
+          <span>Nothing places an order</span>
+          <span>Research, not advice</span>
+        </div>
         {/* The field itself, on the first page.
 
             This used to be a drawing of the field: fake browser chrome around a
