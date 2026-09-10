@@ -75,17 +75,32 @@ if command -v python3 >/dev/null 2>&1 && [ -s "$PROBE" ]; then
   python3 - "$PROBE" <<'PYEOF' || true
 import json, sys
 d = json.load(open(sys.argv[1]))
+live = d.get("serving") == "real"
+steps = d.get("steps", [])
+good = [s for s in steps if s.get("ok")]
+bad = [s for s in steps if not s.get("ok")]
 print(f"    sumber      : {d.get('provider')}")
 print(f"    menyajikan  : {d.get('serving')}  (real = harga sungguhan)")
 for name, k in (d.get("keys") or {}).items():
     if k.get("configured"):
         print(f"    kunci {name:<9}: {k.get('length')} karakter, terkutip di .env: {k.get('quotedInEnv')}")
-err = d.get("lastVendorError")
-if err:
-    print(f"    kesalahan   : {err}")
-for s in d.get("steps", []):
-    mark = "  ok " if s.get("ok") else "GAGAL"
-    print(f"    [{mark}] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
+if live:
+    # Sumber utama menjawab. Cadangan yang gagal bukan masalah dan tidak perlu
+    # terlihat seperti masalah — laporan yang selalu merah membuat orang
+    # berhenti membacanya, justru saat ada yang benar-benar salah.
+    for s in good:
+        print(f"    [  ok ] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
+    if bad:
+        names = ", ".join(str(s.get("step")) for s in bad)
+        print(f"    cadangan    : {len(bad)} tidak terpakai ({names})")
+        print( "                  wajar: hanya dipanggil kalau sumber utama berhenti menjawab.")
+else:
+    err = d.get("lastVendorError")
+    if err:
+        print(f"    kesalahan   : {err}")
+    for s in steps:
+        mark = "  ok " if s.get("ok") else "GAGAL"
+        print(f"    [{mark}] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
 PYEOF
 else
   cat "$PROBE" 2>/dev/null || true
