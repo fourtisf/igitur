@@ -241,11 +241,25 @@ FAIL=0
 # Setiap rute yang dipakai orang, termasuk yang baru. Daftar ini pernah
 # menyatakan sebuah deploy berhasil tanpa pernah menyentuh halaman yang justru
 # baru saja di-deploy — tambahkan rute baru ke sini, bukan ke ingatan.
-for path in / /status /universe /trending /token /legal /ledger /compose /changes /api/market-probe; do
+#
+# /api/market-probe TIDAK ada di daftar ini, dan tidak boleh ditambahkan.
+# Ia bukan halaman yang dibaca orang: ia sengaja memanggil Twelvedata, Yahoo
+# dan Stooq satu per satu secara langsung, jadi lamanya ditentukan jaringan
+# orang lain, bukan oleh deploy ini. Sebagai gerbang lulus/gagal ia pernah
+# membatalkan build yang setiap halaman aslinya menjawab 200, hanya karena
+# probe-nya lewat 15 detik — sementara pemanggilan probe di bawah, di skrip
+# yang sama, sudah memberinya 40. Kesehatan vendor bukan urusan rilis ini.
+for path in / /status /universe /trending /token /legal /ledger /compose /changes; do
   code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "http://127.0.0.1:$PORT$path" || true)
   if [ "$code" = "200" ]; then printf '  \033[1;32m✓\033[0m %-18s %s\n' "$path" "$code"
   else printf '  \033[1;31m✗\033[0m %-18s %s\n' "$path" "$code"; FAIL=1; fi
 done
+
+# Tetap ditanyakan, tetap dilaporkan — hanya tidak menggagalkan apa pun.
+# Waktunya sama dengan pemanggilan di bawah, karena itu memang lamanya.
+code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 45 "http://127.0.0.1:$PORT/api/market-probe" || true)
+if [ "$code" = "200" ]; then printf '  \033[1;32m✓\033[0m %-18s %s (diagnostik)\n' "/api/market-probe" "$code"
+else printf '  \033[1;33m!\033[0m %-18s %s (diagnostik — vendor lambat atau menolak; rilis tidak dibatalkan)\n' "/api/market-probe" "$code"; fi
 
 if [ "$FAIL" = "1" ]; then
   restore

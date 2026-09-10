@@ -129,6 +129,23 @@ test("a fresh clone is pinned to the production branch", () => {
   }
 });
 
+test("a third party's health cannot roll back a release", () => {
+  // /api/market-probe calls Twelvedata, Yahoo and Stooq live, one after the
+  // other, so how long it takes is decided by somebody else's network. As a
+  // pass/fail gate it rolled back a build whose every real page had answered
+  // 200, because the probe ran past the 15s the check allowed it — while the
+  // same script's own call to it, forty lines later, allows 40.
+  const src = readFileSync("scripts/update-igitur.sh", "utf8");
+  const loop = /for path in ([^;]*); do/.exec(src);
+  assert.ok(loop, "the verification loop must still exist");
+  assert.ok(
+    !loop![1].includes("market-probe"),
+    "market-probe is a diagnostic, not a liveness check — it must not gate the release"
+  );
+  // Still asked, still reported. Silence would be the opposite mistake.
+  assert.match(src, /market-probe.*\(diagnostik\)|diagnostik/, "it must still be reported");
+});
+
 test("the clone URL is this repository's current name, not one that redirects", () => {
   // The old name is not wrong today — it is unowned tomorrow.
   for (const [name, src] of scripts) {
