@@ -131,7 +131,7 @@ say "3/7  Membaca konfigurasi"
 MARKET_ENV=""
 BUILD_ENV=""
 if [ -f "$APP/.env" ]; then
-  MARKET_ENV=$(grep -E '^MARKET_(PROVIDER|API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
+  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
   BUILD_ENV=$(grep -E '^NEXT_PUBLIC_[A-Z_]+=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
 fi
 # Nilainya tidak pernah dicetak — hanya ada tidaknya.

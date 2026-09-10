@@ -12,9 +12,22 @@ import type { Bar, MarketProvider, Quote } from "./types";
  * fix stopped the site provoking it, which is not the same as making it work.
  * The paid vendor was answering 401 with a key that had never been valid.
  *
- * Two sources that fail together are one source. This is a different company,
- * a different network and a different rate limit, and it needs no key, no
- * account and no signup — the obstacle that started all of this.
+ * Two sources that fail together are one source, so this was added as a third:
+ * a different company, a different network, a different rate limit, and no key
+ * at all — the obstacle that started all of this.
+ *
+ * ── What it actually answered ────────────────────────────────────────────────
+ *
+ * "This site requires JavaScript to verify your browser. Please enable
+ * JavaScript and reload." Read from the deployment server itself, which settles
+ * it: a server does not run JavaScript, so this door does not open, and no
+ * change to headers or addresses on this side will change that. The 404 from
+ * the light-quote path was a wrong address on top of a wall.
+ *
+ * It stays in the chain because it costs nothing behind a working source — the
+ * circuit breaker in ./fallback.ts sets it aside after three empty rounds — and
+ * because a wall is not permanent by nature. But nothing here should be relied
+ * on to serve this deployment, and the honest source is ./twelvedata.ts.
  *
  * ── What it cannot supply ────────────────────────────────────────────────────
  *

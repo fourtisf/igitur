@@ -46,7 +46,7 @@ ok "port $PORT (dari nginx)"
 say "Membaca .env"
 MARKET_ENV=""
 if [ -f "$APP/.env" ]; then
-  MARKET_ENV=$(grep -E '^MARKET_(PROVIDER|API_KEY|TTL_S)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
+  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
 fi
 # Nilainya tidak pernah dicetak — hanya ada tidaknya, dan panjangnya.
 if [ -n "$MARKET_ENV" ]; then
@@ -77,9 +77,9 @@ import json, sys
 d = json.load(open(sys.argv[1]))
 print(f"    sumber      : {d.get('provider')}")
 print(f"    menyajikan  : {d.get('serving')}  (real = harga sungguhan)")
-k = d.get("key") or {}
-if k.get("configured"):
-    print(f"    kunci       : {k.get('length')} karakter, terkutip di .env: {k.get('quotedInEnv')}")
+for name, k in (d.get("keys") or {}).items():
+    if k.get("configured"):
+        print(f"    kunci {name:<9}: {k.get('length')} karakter, terkutip di .env: {k.get('quotedInEnv')}")
 err = d.get("lastVendorError")
 if err:
     print(f"    kesalahan   : {err}")

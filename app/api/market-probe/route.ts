@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { cleanKey, marketIsReal, providerName, vendorError } from "@/lib/market";
 import { stooqProbe } from "@/lib/market/stooq";
+import { twelveDataProbe } from "@/lib/market/twelvedata";
 import { forgetYahooSession, yahooHoldingOff, yahooProbe, type ProbeStep } from "@/lib/market/yahoo";
 
 /**
@@ -42,6 +43,11 @@ interface KeyShape {
   hasInnerWhitespace: boolean;
 }
 
+interface Keys {
+  twelvedata: KeyShape;
+  fmp: KeyShape;
+}
+
 interface Probe {
   at: string;
   provider: string;
@@ -49,13 +55,13 @@ interface Probe {
   lastVendorError: string | null;
   /** Set while a refusal is being honoured, rather than argued with. */
   holdingOffUntil: string | null;
-  key: KeyShape;
+  keys: Keys;
   steps: ProbeStep[];
   note: string;
 }
 
-function keyShape(): KeyShape {
-  const raw = process.env.MARKET_API_KEY ?? "";
+function keyShape(name: string): KeyShape {
+  const raw = process.env[name] ?? "";
   const clean = cleanKey(raw) ?? "";
   return {
     configured: clean.length > 0,
@@ -79,6 +85,15 @@ export async function GET() {
   // or as the fallback behind a key. Probing it only when it is the *named*
   // provider is how this endpoint answered `"steps": []` on the one run that
   // mattered, and left the question open for another round trip.
+  // The configured vendor first: when a key is set it is the source that
+  // matters, and a probe that only walked the keyless ones would report the
+  // health of sources the site is not using.
+  const twelve = cleanKey(process.env.TWELVEDATA_API_KEY);
+  if (twelve) {
+    const td = await twelveDataProbe(twelve);
+    steps.push({ step: "twelvedata", status: td.status, ok: td.ok, detail: td.detail });
+  }
+
   if (provider !== "synthetic") {
     // A probe that reads a warm session cannot tell you whether a cold render
     // would have got one.
@@ -98,7 +113,10 @@ export async function GET() {
     serving: (await marketIsReal()) ? "real" : "generated",
     lastVendorError: vendorError(),
     holdingOffUntil: yahooHoldingOff(),
-    key: keyShape(),
+    keys: {
+      twelvedata: keyShape("TWELVEDATA_API_KEY"),
+      fmp: keyShape("MARKET_API_KEY"),
+    },
     steps,
     note:
       provider === "synthetic"

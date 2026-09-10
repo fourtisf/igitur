@@ -3,6 +3,7 @@ import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
 import { remember, remembered } from "./store";
 import { stooqLastError, stooqProvider } from "./stooq";
+import { twelveDataLastError, twelveDataProvider } from "./twelvedata";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
 import type { Bar, MarketProvider, Quote } from "./types";
 
@@ -22,6 +23,8 @@ export { bookDrift, series, SPY_DRIFT } from "./synthetic";
  */
 /** Only the two variables that decide this, so a test can pass them plainly. */
 export interface MarketEnv {
+  /** Twelve Data. The one source verified reachable from the deployment server. */
+  TWELVEDATA_API_KEY?: string | undefined;
   MARKET_API_KEY?: string | undefined;
   MARKET_PROVIDER?: string | undefined;
   [key: string]: string | undefined;
@@ -41,6 +44,7 @@ export function cleanKey(raw: string | undefined): string | undefined {
 }
 
 export function pickProvider(env: MarketEnv = process.env): MarketProvider {
+  const twelve = cleanKey(env.TWELVEDATA_API_KEY);
   const key = cleanKey(env.MARKET_API_KEY);
   const named = env.MARKET_PROVIDER?.trim().toLowerCase();
 
@@ -49,17 +53,22 @@ export function pickProvider(env: MarketEnv = process.env): MarketProvider {
   if (named === "yahoo") return chainProviders([yahooProvider(), stooqProvider()]);
   if (named === "stooq") return stooqProvider();
 
-  // A key is a preference for FMP, never a promise that the key works. This
-  // site served generated figures behind `HTTP 401 from /stable/batch-quote`
-  // with a keyless source configured, working and never asked, because the
-  // selection treated a key being *present* as the decision.
+  // A key is a preference, never a promise that the key works. This site served
+  // generated figures behind `HTTP 401 from /stable/batch-quote` with keyless
+  // sources configured and never asked, because the selection treated a key
+  // being *present* as the decision.
   //
-  // Three sources, because two that fail together are one source — and they
-  // did: FMP rejecting a key it had never accepted, and Yahoo answering 429
-  // to this address for hours because data-centre ranges are throttled as a
-  // matter of policy. Stooq is a different company, network and rate limit.
-  const keyless = [yahooProvider(), stooqProvider()];
-  return chainProviders(key ? [fmpProvider(key), ...keyless] : keyless);
+  // The order is what the deployment server actually proved, not a ranking of
+  // vendors: Twelve Data answered with clean JSON, FMP answered 401, Yahoo
+  // answered 429 to every API host, and Stooq answered "this site requires
+  // JavaScript to verify your browser" — which a server cannot do. The last two
+  // stay in the chain because they cost nothing while a working source is
+  // ahead of them, and because a blocked address is not blocked for ever.
+  const chain: MarketProvider[] = [];
+  if (twelve) chain.push(twelveDataProvider(twelve));
+  if (key) chain.push(fmpProvider(key));
+  chain.push(yahooProvider(), stooqProvider());
+  return chainProviders(chain);
 }
 
 let provider: MarketProvider | null = null;
@@ -111,6 +120,8 @@ export function vendorError(): string | null {
   if (f) parts.push(`fmp: ${f}`);
   const y = yahooLastError();
   if (y) parts.push(`yahoo: ${y}`);
+  const td = twelveDataLastError();
+  if (td) parts.push(`twelvedata: ${td}`);
   const st = stooqLastError();
   if (st) parts.push(`stooq: ${st}`);
   return parts.length ? parts.join(" · ") : null;
@@ -121,20 +132,24 @@ export function vendorError(): string | null {
 // A page renders 163 quotes; a reader refreshing must not cost 163 more. But
 // the TTL is set by the vendor's daily allowance, not by taste.
 //
-// One full refresh of the universe costs 4 requests — 163 tickers, batched 50
-// at a time. FMP's free tier allows 250 requests a day, so:
+// The arithmetic differs by vendor, so the default does too. Guessing one TTL
+// for all of them is how the FMP key would have died before lunch — spent
+// allowance and rejected key look identical from the page.
 //
-//   60s   → 5,760/day   23× over. The key dies within the hour.
-//   5min  → 1,152/day    5× over.
-//   30min →   192/day    fits.
-//   1h    →    96/day    fits, with room for /track and the record.
+//   FMP          163 tickers batched 50 at a time = 4 requests a refresh,
+//                against 250 a day. One hour is 96 a day, comfortably inside.
 //
-// An hour is also honest for what this is. These are not trading prices; a
-// research tool that says a holding moved 2.4% today does not become wrong
-// because the figure is fifty minutes old, and the page prints the timestamp.
+//   Twelve Data  a batch spends one credit PER SYMBOL, so a refresh costs 163
+//                against 800 a day — about four refreshes. Six hours is four a
+//                day; one hour would be spent before lunch.
 //
-// MARKET_TTL_S overrides it for a paid plan, where a minute is affordable.
-const QUOTE_TTL = Math.max(60, Number(process.env.MARKET_TTL_S) || 3600) * 1000;
+// Six hours is honest for what this is. These are not trading prices, the page
+// prints the timestamp, and between refreshes the disk store serves the last
+// real close — which is a stock's price until the next session opens.
+//
+// MARKET_TTL_S overrides both, for a paid plan where a minute is affordable.
+const DEFAULT_TTL_S = cleanKey(process.env.TWELVEDATA_API_KEY) ? 6 * 3600 : 3600;
+const QUOTE_TTL = Math.max(60, Number(process.env.MARKET_TTL_S) || DEFAULT_TTL_S) * 1000;
 
 // Daily closes change once a day. Six hours meant four identical fetches for
 // every holding on every tracked claim, against the same allowance.
