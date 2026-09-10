@@ -1,6 +1,7 @@
 import { getHistory, isLive, series, SPY_DRIFT, bookDrift } from "./market";
 import type { Bar } from "./market";
 import type { Book } from "./types";
+import { themeBenchmark } from "./universe";
 
 /**
  * Performance since the premise was stated.
@@ -37,6 +38,16 @@ export interface TrackResult {
   missing: string[];
   /** True when the window ended at a settlement date rather than at today. */
   settled: boolean;
+  /**
+   * The same measurement against the theme's own broad ETF, when it has one.
+   *
+   * A nuclear book that beats the index may be an insight, or nuclear may
+   * simply have had a good year. Only one of those was worth composing a book
+   * for, and the index alone cannot tell them apart.
+   */
+  sector: number[] | null;
+  sectorEnd: number | null;
+  sectorTicker: string | null;
 }
 
 export function sessionsFor(days: number | null): number {
@@ -67,6 +78,11 @@ function syntheticTrack(b: Book, days: number | null): TrackResult {
     live: false,
     missing: [],
     settled: false,
+    // Two invented series are no more informative than one, and a second fake
+    // line would only make the picture look better researched than it is.
+    sector: null,
+    sectorEnd: null,
+    sectorTicker: null,
   };
 }
 
@@ -93,13 +109,17 @@ export async function trackBook(
   // Ballast is part of the book and must be measured with it, or the return
   // flatters the thesis by leaving out the sleeve that is there to drag.
   const holdings = b.holdings;
+  const sectorTicker = themeBenchmark(b.theme);
   const histories = await Promise.all(
-    [...holdings.map((h) => h.t), BENCHMARK].map((t) => getHistory(t, stated))
+    [...holdings.map((h) => h.t), BENCHMARK, ...(sectorTicker ? [sectorTicker] : [])].map((t) =>
+      getHistory(t, stated)
+    )
   );
   // A settled claim is measured to its settlement date and no further.
   const cut = until ? (bars: Bar[]) => bars.filter((x) => x.date <= until) : (bars: Bar[]) => bars;
-  const benchmark = cut(histories[histories.length - 1]);
-  const perHolding = histories.slice(0, -1).map(cut);
+  const benchmark = cut(histories[holdings.length]);
+  const perHolding = histories.slice(0, holdings.length).map(cut);
+  const sectorBars = sectorTicker ? cut(histories[holdings.length + 1]) : [];
 
   const missing = holdings.filter((_, i) => perHolding[i].length < 2).map((h) => h.t);
   const usable = holdings.filter((_, i) => perHolding[i].length >= 2);
@@ -133,6 +153,13 @@ export async function trackBook(
 
   const index = toReturns(benchmark.slice(benchmark.length - n).map((x) => x.close));
 
+  // Aligned on the same window or not shown at all. A sector line measured over
+  // a different span would be the one comparison on this page that lies.
+  const sector =
+    sectorTicker && sectorBars.length >= n
+      ? toReturns(sectorBars.slice(sectorBars.length - n).map((x) => x.close))
+      : null;
+
   return {
     book,
     index,
@@ -143,5 +170,8 @@ export async function trackBook(
     live: true,
     missing,
     settled: Boolean(until),
+    sector,
+    sectorEnd: sector ? (sector[sector.length - 1] ?? 0) : null,
+    sectorTicker: sector ? sectorTicker : null,
   };
 }

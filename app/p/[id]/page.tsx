@@ -177,6 +177,22 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
         </p>
       )}
 
+      {track.sector && track.sectorTicker ? (
+        <p className="notice rv" style={{ marginTop: 14 }}>
+          {/* The comparison that separates an insight from a sector that simply
+              had a good year. The ETF is usually a holding in the book; the
+              question is not whether the theme rose, but whether choosing names
+              within it beat buying the whole thing. */}
+          Against {track.sectorTicker}, the broad fund for this theme:{" "}
+          <b>
+            {track.sectorEnd! >= 0 ? "+" : ""}
+            {track.sectorEnd!.toFixed(1)}%
+          </b>
+          . Beating the index while trailing this would mean the theme rose, not that picking
+          within it was worth the trouble.
+        </p>
+      ) : null}
+
       <div style={{ marginTop: 26 }}>
         <TrackChart book={book} track={track} />
       </div>

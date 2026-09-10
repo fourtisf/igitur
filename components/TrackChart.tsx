@@ -19,7 +19,10 @@ const PB = 28;
  */
 export function TrackChart({ book, track }: { book: { holdings: Holding[] }; track: TrackResult }) {
   const { book: bs, index: ss, n: N, bookEnd: bEnd, indexEnd: sEnd } = track;
-  const all = bs.concat(ss);
+  // Drawn only when it was measured over the very same window.
+  const sec = track.sector && track.sector.length === N ? track.sector : null;
+  const secEnd = track.sectorEnd ?? 0;
+  const all = sec ? bs.concat(ss, sec) : bs.concat(ss);
   const lo = Math.min(...all);
   const hi = Math.max(...all);
   const yOf = (v: number) => PT + (1 - (v - lo) / (hi - lo || 1)) * (H - PT - PB);
@@ -38,9 +41,11 @@ export function TrackChart({ book, track }: { book: { holdings: Holding[] }; tra
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         role="img"
-        aria-label={`Book performance against the index over ${N} sessions. Book ${bEnd.toFixed(
-          1
-        )}%, index ${sEnd.toFixed(1)}%.`}
+        aria-label={
+          `Book performance against the index over ${N} sessions. Book ${bEnd.toFixed(1)}%, ` +
+          `index ${sEnd.toFixed(1)}%.` +
+          (sec ? ` Sector ${track.sectorTicker} ${secEnd.toFixed(1)}%.` : "")
+        }
       >
         <defs>
           <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
@@ -65,6 +70,17 @@ export function TrackChart({ book, track }: { book: { holdings: Holding[] }; tra
         />
         <path d={area} fill="url(#ag)" />
         <path d={path(ss)} fill="none" stroke="rgba(255,255,255,.30)" strokeWidth="1.7" />
+        {sec ? (
+          // Dashed, so at a glance it reads as the other yardstick rather than
+          // as a second book.
+          <path
+            d={path(sec)}
+            fill="none"
+            stroke="rgba(174,182,255,.45)"
+            strokeWidth="1.6"
+            strokeDasharray="5 4"
+          />
+        ) : null}
         <path d={path(bs)} fill="none" stroke="#AEB6FF" strokeWidth="2.3" filter="url(#gl)" />
         <text className="endlab" x={W - PR + 10} y={(yOf(bEnd) + 4).toFixed(1)} fill="#AEB6FF">
           Book
@@ -72,6 +88,16 @@ export function TrackChart({ book, track }: { book: { holdings: Holding[] }; tra
         <text className="endlab" x={W - PR + 10} y={(yOf(sEnd) + 4).toFixed(1)} fill="rgba(255,255,255,.45)">
           SPY
         </text>
+        {sec ? (
+          <text
+            className="endlab"
+            x={W - PR + 10}
+            y={(yOf(secEnd) + 4).toFixed(1)}
+            fill="rgba(174,182,255,.6)"
+          >
+            {track.sectorTicker}
+          </text>
+        ) : null}
         <text className="axis" x={PL} y={H - 6}>
           Stated
         </text>
