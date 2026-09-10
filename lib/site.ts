@@ -19,8 +19,13 @@ export function handleFor(raw: string | undefined): string | null {
 export const SITE = {
   name: "Igitur",
   tagline: "Write what you believe. See what it holds.",
+  /**
+   * The sentence a search result and a shared card are judged on, so it names
+   * the category rather than only the mechanism. Readers arriving cold took
+   * this for a screener, and for a crypto project; neither is what it is.
+   */
   description:
-    "Write one sentence about the next decade. Igitur returns a weighted portfolio, and every weight carries the reason it earned its size.",
+    "Twenty-six written investment theses, addressed by a sentence. State a belief and get a weighted portfolio with a reason on every holding, and the argument against the thesis beside it. Research only.",
 
   /**
    * ⚠ PLACEHOLDER — set NEXT_PUBLIC_SITE_URL in the deploy environment.

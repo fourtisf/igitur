@@ -56,6 +56,32 @@ const COMPARISON: [string, string, string][] = [
  */
 const EXAMPLE_IDS = ["nuclear", "robotics", "water"] as const;
 
+/**
+ * The four categories readers mistake this for, ruled out one line each.
+ *
+ * Stated as refusals because that is what they are, and because the strongest
+ * thing this product has to say about itself is the list of things it will not
+ * do. /about carries the same list at length.
+ */
+const NOT: [string, string][] = [
+  [
+    "Not a broker",
+    "Nothing here places an order, holds money, or connects to an account. What comes out is a list of weights you take wherever you already trade — or nowhere at all.",
+  ],
+  [
+    "Not a screener",
+    "A screener starts from filters over financials. This starts from a claim you can state in a sentence, and returns the reason each name earned its weight.",
+  ],
+  [
+    "Not AI",
+    "The matcher is a published keyword index with negative terms, and the weighting is application code so the weights stay auditable. A model reading the premise is on the not-built list.",
+  ],
+  [
+    "Not advice",
+    "Research output. It does not know your position, your horizon or your circumstances, and it will not tell you what to buy.",
+  ],
+];
+
 export default async function Home() {
   const b = buildBook(FEATURED);
   if (!b.ok) throw new Error("FEATURED premise must build a book");
@@ -131,6 +157,51 @@ export default async function Home() {
           <BarFoot />
         </div>
       </div>
+
+      {/* ── What this is ─────────────────────────────────────────────────────
+          The question every first visit asks and the site never answered: what
+          kind of thing is this? The hero states a mechanism, the sections below
+          argue for a set of values, and a newcomer arrives at neither — several
+          read it as a stock screener, and several more as a crypto project,
+          because an unlaunched token used to sit above the fold on every page.
+
+          So the category is named, the scope is named, and the four things it
+          is not are ruled out in one line each. The provenance line is the one
+          that matters most to the reader this is written for, and it is the
+          admission every competitor buries: the conviction scores are somebody's
+          judgement. A number nobody can argue with is a number nobody can use,
+          which is exactly why it is stated here rather than on the sixth page. */}
+      <section id="what" className="shell" style={{ paddingBlock: "clamp(38px,5vw,64px)" }}>
+        <span className="kick rv">What this is</span>
+        <h2 className="rv" style={{ marginTop: 12, maxWidth: "24ch" }}>
+          Twenty-six written theses, addressed by a sentence.
+        </h2>
+        <p className="sub rv" style={{ marginTop: 16, maxWidth: "62ch" }}>
+          Not a screener and not a model. Igitur is a bounded, published set of investment
+          theses — {THEMES.length} of them, {NAMES} names, each carrying the reason it can earn
+          weight — and a matcher that turns a stated belief into the one thesis that holds it.
+        </p>
+        <p className="sub rv" style={{ marginTop: 14, maxWidth: "62ch" }}>
+          The conviction scores that set every weight are <b>editorial judgements, not model
+          output</b>. That is published on{" "}
+          <Link href="/method" style={{ textDecoration: "underline" }}>
+            the methodology page
+          </Link>{" "}
+          along with the places the method is weak, and it is the first thing worth checking. A
+          number nobody can argue with is a number nobody can use.
+        </p>
+
+        <div className="bento rv" style={{ marginTop: 22 }}>
+          {NOT.map(([what, why]) => (
+            <div className="cell c3" key={what} style={{ padding: 20 }}>
+              <h3 style={{ fontSize: 14 }}>{what}</h3>
+              <p className="p" style={{ fontSize: 12.5, marginTop: 6 }}>
+                {why}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* The record, on the page that decides whether anyone stays.
 
