@@ -117,3 +117,8 @@ export function daysSince(stated: string | null): number | null {
   const ms = Date.now() - Date.parse(stated + "T00:00:00Z");
   return Math.max(0, Math.floor(ms / 86_400_000));
 }
+
+/** The calendar file for a claim's settlement date. */
+export function icsHref(id: string): string {
+  return `/api/claim.ics?id=${encodeURIComponent(id)}`;
+}

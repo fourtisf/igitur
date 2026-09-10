@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 
 import { buildBook } from "./generator";
 import { applyPins, parsePins } from "./reweight";
+import { DEFAULT_HORIZON, isHorizon, settlesOn } from "./horizon";
 import { normalizePremise } from "./premise";
 import { UNIVERSE_VERSION } from "./universe";
 
@@ -59,6 +60,13 @@ export interface Entry {
    */
   drop?: string[];
   weights?: string;
+  /**
+   * The date this claim is judged on, written by the server from the horizon
+   * the author chose. Optional: entries recorded before horizons existed are
+   * open-ended and keep reading as what they were — a claim that can never be
+   * settled, which is exactly why the field was added.
+   */
+  settlesAt?: string;
 }
 
 /**
@@ -93,6 +101,8 @@ export class LedgerError extends Error {}
 export interface BookShape {
   drop?: string[];
   weights?: string;
+  /** Months the claim stands for. Anything not in HORIZONS becomes the default. */
+  horizon?: number;
 }
 
 /**
@@ -100,8 +110,12 @@ export interface BookShape {
  * point of forking is that two people can hold the same belief and size it
  * differently, and the record should show both.
  */
-function shapeKey(premise: string, drop: string[], weights: string): string {
-  return [premise.toLowerCase(), [...drop].sort().join(","), weights].join("|");
+function shapeKey(premise: string, drop: string[], weights: string, settlesAt: string): string {
+  // The horizon is part of the claim's identity. "This beats the index over
+  // three months" and "over five years" are two different beliefs about the
+  // same idea, and the record should be able to hold both — and to settle them
+  // separately.
+  return [premise.toLowerCase(), [...drop].sort().join(","), weights, settlesAt].join("|");
 }
 
 function newId(): string {
@@ -124,6 +138,10 @@ export async function commit(raw: string, shape: BookShape = {}): Promise<Entry>
 
   const drop = (shape.drop ?? []).filter((t) => /^[A-Z.\-]{1,8}$/.test(t)).slice(0, 24);
   const weights = typeof shape.weights === "string" ? shape.weights.slice(0, 200) : "";
+  // Anything not on the list becomes the default rather than an error: a
+  // hand-edited request should not be able to write an arbitrary date, and it
+  // should not be able to make the claim open-ended either.
+  const horizon = isHorizon(shape.horizon) ? shape.horizon : DEFAULT_HORIZON;
 
   const generated = buildBook(premise, drop);
   if (!generated.ok) {
@@ -143,17 +161,23 @@ export async function commit(raw: string, shape: BookShape = {}): Promise<Entry>
   // The first person to state it keeps the date, which is the whole point of a
   // record. A different set of weights is a different claim about the same
   // belief, so it gets its own entry.
-  const key = shapeKey(premise, drop, weights);
-  const existing = (await all()).find((e) => shapeKey(e.premise, e.drop ?? [], e.weights ?? "") === key);
+  // The server's date, for the same reason as statedAt: a settlement date the
+  // caller could set would make every settled verdict on this site worthless.
+  const statedAt = new Date().toISOString().slice(0, 10);
+  const settlesAt = settlesOn(statedAt, horizon);
+
+  const key = shapeKey(premise, drop, weights, settlesAt);
+  const existing = (await all()).find(
+    (e) => shapeKey(e.premise, e.drop ?? [], e.weights ?? "", e.settlesAt ?? "") === key
+  );
   if (existing) return existing;
 
   const entry: Entry = {
     id: newId(),
     premise,
     universe: UNIVERSE_VERSION,
-    // The server's date. A date the caller could set would make every
-    // performance figure on this site unfalsifiable.
-    statedAt: new Date().toISOString().slice(0, 10),
+    statedAt,
+    settlesAt,
     theme: generated.theme.id,
     ...(drop.length ? { drop } : {}),
     ...(weights ? { weights } : {}),

@@ -1,4 +1,5 @@
 import { getHistory, isLive, series, SPY_DRIFT, bookDrift } from "./market";
+import type { Bar } from "./market";
 import type { Book } from "./types";
 
 /**
@@ -34,6 +35,8 @@ export interface TrackResult {
   live: boolean;
   /** Holdings the vendor could not cover, so the reader knows what is missing. */
   missing: string[];
+  /** True when the window ended at a settlement date rather than at today. */
+  settled: boolean;
 }
 
 export function sessionsFor(days: number | null): number {
@@ -63,6 +66,7 @@ function syntheticTrack(b: Book, days: number | null): TrackResult {
     n,
     live: false,
     missing: [],
+    settled: false,
   };
 }
 
@@ -70,9 +74,21 @@ function syntheticTrack(b: Book, days: number | null): TrackResult {
  * @param stated ISO date the premise was made, or null for a link that
  *               predates the field — in which case there is no real window to
  *               measure and the synthetic series is used.
+ * @param until  ISO date the claim settles on. Once it has passed, the window
+ *               ends there and never moves again: a settled claim that kept
+ *               accruing return would be a verdict that changes after it was
+ *               delivered, which is not a verdict.
  */
-export async function trackBook(b: Book, stated: string | null, days: number | null): Promise<TrackResult> {
-  if (!isLive() || !stated) return syntheticTrack(b, days);
+export async function trackBook(
+  b: Book,
+  stated: string | null,
+  days: number | null,
+  until: string | null = null
+): Promise<TrackResult> {
+  if (!isLive() || !stated) {
+    const t = syntheticTrack(b, days);
+    return { ...t, settled: Boolean(until) };
+  }
 
   // Ballast is part of the book and must be measured with it, or the return
   // flatters the thesis by leaving out the sleeve that is there to drag.
@@ -80,12 +96,17 @@ export async function trackBook(b: Book, stated: string | null, days: number | n
   const histories = await Promise.all(
     [...holdings.map((h) => h.t), BENCHMARK].map((t) => getHistory(t, stated))
   );
-  const benchmark = histories[histories.length - 1];
-  const perHolding = histories.slice(0, -1);
+  // A settled claim is measured to its settlement date and no further.
+  const cut = until ? (bars: Bar[]) => bars.filter((x) => x.date <= until) : (bars: Bar[]) => bars;
+  const benchmark = cut(histories[histories.length - 1]);
+  const perHolding = histories.slice(0, -1).map(cut);
 
   const missing = holdings.filter((_, i) => perHolding[i].length < 2).map((h) => h.t);
   const usable = holdings.filter((_, i) => perHolding[i].length >= 2);
-  if (!usable.length || benchmark.length < 2) return syntheticTrack(b, days);
+  if (!usable.length || benchmark.length < 2) {
+    const t = syntheticTrack(b, days);
+    return { ...t, settled: Boolean(until) };
+  }
 
   // Align on the shortest series so every session compares like with like.
   const lengths = perHolding.filter((h) => h.length >= 2).map((h) => h.length);
@@ -121,5 +142,6 @@ export async function trackBook(b: Book, stated: string | null, days: number | n
     n,
     live: true,
     missing,
+    settled: Boolean(until),
   };
 }

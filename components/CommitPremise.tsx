@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { DEFAULT_HORIZON, HORIZONS, horizonLabel, settlesOn, type Horizon } from "@/lib/horizon";
+
 /**
  * Put this premise on the public record.
  *
@@ -15,16 +17,24 @@ export function CommitPremise({
   premise,
   drop = [],
   weights = "",
+  themeHorizon,
 }: {
   premise: string;
   /** Holdings the author removed — part of what makes this book theirs. */
   drop?: string[];
   /** Reader-set weights, `NVDA:12,TSM:8`. */
   weights?: string;
+  /** The theme's own horizon, e.g. "3–5 years". Shown, never imposed. */
+  themeHorizon?: string;
 }) {
   const router = useRouter();
   const [state, setState] = useState<"idle" | "confirm" | "sending">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [horizon, setHorizon] = useState<Horizon>(DEFAULT_HORIZON);
+
+  // Shown before the button is pressed, because the date is the part that
+  // cannot be changed afterwards.
+  const settles = settlesOn(new Date().toISOString().slice(0, 10), horizon);
 
   async function send() {
     setState("sending");
@@ -33,7 +43,7 @@ export function CommitPremise({
       const res = await fetch("/api/commit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ premise, drop, weights }),
+        body: JSON.stringify({ premise, drop, weights, horizon }),
       });
       const body = (await res.json()) as { id?: string; error?: string };
       if (!res.ok || !body.id) {
@@ -65,6 +75,37 @@ export function CommitPremise({
         to it. Nothing about you is stored — no name, no email, no identifier — which is also why
         it cannot be removed later.
       </p>
+
+      <div style={{ marginTop: 16 }}>
+        <div className="sl">How long does this claim stand?</div>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+          {HORIZONS.map((h) => (
+            <button
+              key={h}
+              type="button"
+              className={h === horizon ? "b1" : "b2"}
+              onClick={() => setHorizon(h)}
+              aria-pressed={h === horizon}
+              disabled={state === "sending"}
+            >
+              {horizonLabel(h)}
+            </button>
+          ))}
+        </div>
+        <p className="p" style={{ marginTop: 10, fontSize: 13 }}>
+          {/* A belief with no deadline can never be wrong, only early. This is
+              the field that lets a claim be lost. */}
+          On <b>{settles}</b> this claim is judged and stops moving: over {horizonLabel(horizon)},
+          the book beat the index or it did not.
+          {themeHorizon ? (
+            <>
+              {" "}
+              That settles the claim, not the thesis — this theme&rsquo;s own horizon is{" "}
+              {themeHorizon}, so anything shorter is a checkpoint rather than a verdict on the idea.
+            </>
+          ) : null}
+        </p>
+      </div>
       {error ? (
         <p className="notice warn" style={{ marginTop: 12, fontSize: 13 }}>
           {error}

@@ -340,7 +340,12 @@ export default async function BookPage({
               the day the server saw it, win or lose, permanently.
             </p>
             <div style={{ marginTop: 10 }}>
-              <CommitPremise premise={b.premise} drop={drop} weights={formatPins(pins)} />
+              <CommitPremise
+                premise={b.premise}
+                drop={drop}
+                weights={formatPins(pins)}
+                themeHorizon={b.theme.horizon}
+              />
             </div>
           </div>
         </div>

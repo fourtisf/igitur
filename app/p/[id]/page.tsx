@@ -8,7 +8,9 @@ import { TrackChart } from "@/components/TrackChart";
 import { buildBook } from "@/lib/generator";
 import { applyPins, parsePins } from "@/lib/reweight";
 import { get } from "@/lib/ledger";
+import { daysUntil, horizonLabel, isSettled, monthsBetween } from "@/lib/horizon";
 import { getQuotes } from "@/lib/market";
+import { icsHref } from "@/lib/routes";
 import { bookHref, daysSince } from "@/lib/routes";
 import { trackBook } from "@/lib/track";
 import { twitterCard } from "@/lib/twitter-card";
@@ -88,10 +90,23 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
     );
   }
 
-  const days = daysSince(entry.statedAt) ?? 0;
+  // A settled claim is measured to its settlement date and never past it. A
+  // verdict that keeps moving after it is delivered is not a verdict.
+  const settled = isSettled(entry.settlesAt);
+  const until = settled ? (entry.settlesAt ?? null) : null;
+  const openDays = daysSince(entry.statedAt) ?? 0;
+  const days = settled
+    ? Math.round(
+        (Date.parse(entry.settlesAt + "T00:00:00Z") - Date.parse(entry.statedAt + "T00:00:00Z")) /
+          86_400_000
+      )
+    : openDays;
+  const left = daysUntil(entry.settlesAt);
+  const months = entry.settlesAt ? monthsBetween(entry.statedAt, entry.settlesAt) : 0;
+
   const [quotes, track] = await Promise.all([
     getQuotes(book.holdings.map((h) => h.t)),
-    trackBook(book, entry.statedAt, days),
+    trackBook(book, entry.statedAt, days, until),
   ]);
 
   const ahead = track.bookEnd >= track.indexEnd;
@@ -105,9 +120,38 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
         {entry.premise}
       </h1>
 
-      <p className="notice rv" style={{ marginTop: 18 }}>
-        Stated on <b>{human(entry.statedAt)}</b>, {days === 0 ? "today" : `${days} days ago`}, and
-        measured ever since. That date was written by the server when this claim was committed. It
+      {settled ? (
+        <p className={"notice rv " + (ahead ? "" : "warn")} style={{ marginTop: 18 }}>
+          {/* The whole point of a horizon: on this date the claim stops being
+              a work in progress and becomes something that was right or wrong. */}
+          <b>Settled on {human(entry.settlesAt!)}.</b> Over {horizonLabel(months)}, this book
+          returned <b>{track.bookEnd >= 0 ? "+" : ""}{track.bookEnd.toFixed(1)}%</b> against the
+          index&rsquo;s <b>{track.indexEnd >= 0 ? "+" : ""}{track.indexEnd.toFixed(1)}%</b> — the
+          claim {ahead ? "held" : "failed"}. The figure does not move again.
+          {track.live
+            ? ""
+            : " It is drawn from the premise rather than from market data, and is worth nothing until real prices are switched on."}
+        </p>
+      ) : entry.settlesAt ? (
+        <p className="notice rv" style={{ marginTop: 18 }}>
+          Judged on <b>{human(entry.settlesAt)}</b>
+          {left !== null ? `, ${left} day${left === 1 ? "" : "s"} from now` : ""}. On that date the
+          record states what happened over {horizonLabel(months)} and stops. Until then this is an
+          open claim, not a result.{" "}
+          <a href={icsHref(entry.id)}>Add the date to a calendar</a> — the file is made on request
+          and nothing about you is stored.
+        </p>
+      ) : (
+        <p className="notice warn rv" style={{ marginTop: 18 }}>
+          This claim was recorded before horizons existed, so it has no settlement date and can
+          never be judged — only watched. That is the gap the field was added to close; the entry
+          is left as it was made rather than backdated into something it never said.
+        </p>
+      )}
+
+      <p className="notice rv" style={{ marginTop: 14 }}>
+        Stated on <b>{human(entry.statedAt)}</b>, {openDays === 0 ? "today" : `${openDays} days ago`}
+        , and measured ever since. That date was written by the server when this claim was committed. It
         is not in the link and cannot be changed — which is what makes the figure below worth
         anything.
         {entry.weights || entry.drop?.length
@@ -115,7 +159,7 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
           : ""}
       </p>
 
-      {track.live ? (
+      {track.live && !settled ? (
         <p className="notice rv" style={{ marginTop: 14 }}>
           Since then the book is <b>{track.bookEnd >= 0 ? "+" : ""}{track.bookEnd.toFixed(1)}%</b>{" "}
           and the index <b>{track.indexEnd >= 0 ? "+" : ""}{track.indexEnd.toFixed(1)}%</b> — the
@@ -125,7 +169,7 @@ export default async function RecordPage({ params }: { params: Promise<Params> }
                priced (${track.missing.join(", ")}) and their weight was spread across the rest.`
             : ""}
         </p>
-      ) : (
+      ) : track.live ? null : (
         <p className="notice warn rv" style={{ marginTop: 14 }}>
           The performance below is synthetic — no market data vendor is configured, so it is drawn
           from the premise itself and reflects nothing. The date is real; the return is not, and
