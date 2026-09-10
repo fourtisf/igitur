@@ -969,3 +969,27 @@ export const UNIVERSE: UniverseEntry[] = (() => {
 export const NAMES = UNIVERSE.length - 4;
 
 export const THEME_BY_ID = new Map(THEMES.map((t) => [t.id, t]));
+
+/**
+ * The broad ETF a theme is really a bet on.
+ *
+ * A book about nuclear energy that beats the index may be an insight, or it may
+ * be that nuclear energy had a good year and anyone holding the sector did too.
+ * Only one of those is worth the trouble of composing a book, and the index
+ * alone cannot tell them apart.
+ *
+ * The benchmark is the theme's own broadest ETF, identified as the ETF with the
+ * lowest conviction score — the universe lists assets from the most specific
+ * bet to the least, so the broad one sorts last by construction. No new tickers
+ * are introduced: guessing at a sector fund that might not exist would be a
+ * worse answer than admitting a theme has none, and six of them do not.
+ *
+ * That ETF is usually a holding in the book. The comparison is still the right
+ * one, and the pages say what it means: the question is not whether the theme
+ * went up, but whether choosing names within it beat buying the whole thing.
+ */
+export function themeBenchmark(theme: Pick<Theme, "assets">): string | null {
+  const etfs = theme.assets.filter((a) => a.k === "ETF");
+  if (!etfs.length) return null;
+  return etfs.reduce((lowest, a) => (a.c < lowest.c ? a : lowest)).t;
+}

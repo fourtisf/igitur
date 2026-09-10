@@ -5,6 +5,7 @@ import { twitterCard } from "@/lib/twitter-card";
 
 import { Bar, BarFoot } from "@/components/Bar";
 import { CommitPremise } from "@/components/CommitPremise";
+import { Concentration } from "@/components/Concentration";
 import { ShareBook } from "@/components/ShareBook";
 import { Holdings } from "@/components/Holdings";
 import { NoMatch } from "@/components/NoMatch";
@@ -228,6 +229,9 @@ export default async function BookPage({
                 Nudge a weight with ± , or × to remove
               </span>
             )}
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <Concentration holdings={b.holdings} />
           </div>
           <div style={{ marginTop: 16 }}>
             <Holdings
