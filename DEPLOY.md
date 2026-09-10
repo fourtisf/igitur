@@ -270,6 +270,29 @@ twice, and one address may commit five times an hour. The rate limit is in
 memory and resets when pm2 restarts, which is the accepted cost of not keeping
 another store.
 
+## 5g. Menerbitkan versi baru: satu perintah
+
+```bash
+bash /var/www/igitur/scripts/deploy.sh
+```
+
+Itu memanggil `update-igitur.sh`, tidak menggantikannya — build, tes dan
+rollback tetap milik skrip itu. Yang ditambahkan hanya dua hal yang selama ini
+harus diingat manusia, dan sekali terlupa membuat server menyajikan kode
+berumur berminggu-minggu tanpa satu pun galat:
+
+1. **Memaksa checkout mengikuti `main`.** Server ini pernah mengikuti cabang
+   sesi selama berminggu-minggu sementara setiap update melapor "sudah terbaru"
+   dengan benar.
+2. **Mengisi catatan, sekali saja.** Hanya berjalan kalau `ledger.jsonl` benar
+   -benar kosong, jadi menjalankan skrip ini berulang kali tidak menambah
+   klaim duplikat.
+
+Terakhir ia mencetak commit yang benar-benar terpasang dan menanyakan
+`https://igitur.xyz/` — bukti, bukan anggapan.
+
+Aman dijalankan berulang. Untuk staging: `BRANCH=coba bash scripts/deploy.sh`.
+
 ## 5f. Cabang mana yang disajikan server
 
 Produksi mengikuti `main`, dan kedua skrip menyebut namanya — tidak pernah
