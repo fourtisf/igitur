@@ -59,20 +59,26 @@ echo "  port yang sudah dipakai: $(ss -ltn | awk '{print $4}' | grep -oE '[0-9]+
 
 # ── 3. Kode ─────────────────────────────────────────────────────────────────
 say "3/8  Mengambil kode"
+# Cabang produksi — lihat update-igitur.sh. Disebut namanya dan tidak pernah
+# disimpulkan dari checkout: server pernah mengikuti cabang sesi berminggu-minggu
+# sambil melapor "sudah terbaru" dengan benar terhadap cabang yang salah.
+BRANCH="${BRANCH:-main}"
+
 if [ -d "$APP/.git" ]; then
-  # Bukan `origin/HEAD` — lihat update-igitur.sh: ref itu tidak dipelihara oleh
-  # fetch dan tidak dibuat oleh clone --depth 1, jadi mereset ke sana memakukan
-  # pemasangan pada commit lama tanpa sepatah galat pun.
-  BRANCH=$(git -C "$APP" symbolic-ref --quiet --short HEAD || true)
-  [ -n "$BRANCH" ] || BRANCH=$(git -C "$APP" remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' | head -1)
-  [ -n "$BRANCH" ] || die "Tidak bisa menentukan cabang yang diikuti $APP."
-  git -C "$APP" fetch origin "$BRANCH" --quiet
+  # set-branches lebih dulu: klon --depth 1 memetakan satu cabang saja, jadi
+  # tanpa ini `origin/$BRANCH` tidak pernah ada dan resetnya gagal.
+  git -C "$APP" remote set-branches origin "$BRANCH"
+  git -C "$APP" fetch origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" --quiet \
+    || die "Tidak bisa mengambil cabang '$BRANCH' dari origin."
+  git -C "$APP" checkout -B "$BRANCH" "origin/$BRANCH" --quiet
   git -C "$APP" reset --hard "origin/$BRANCH" --quiet
   echo "  diperbarui: $APP (cabang $BRANCH)"
 else
   [ -e "$APP" ] && die "$APP sudah ada tapi bukan repo git. Periksa dulu, saya tidak akan menimpanya."
-  git clone --depth 1 "$REPO" "$APP"
-  echo "  dikloning ke $APP"
+  # --branch eksplisit: tanpa itu klon mengikuti cabang bawaan repo, yang bukan
+  # hal yang sama dan sudah pernah membuat server ini menyajikan cabang sesi.
+  git clone --depth 1 --branch "$BRANCH" "$REPO" "$APP"
+  echo "  dikloning ke $APP (cabang $BRANCH)"
 fi
 echo "  commit: $(git -C "$APP" log --oneline -1)"
 

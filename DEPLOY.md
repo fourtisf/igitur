@@ -270,6 +270,40 @@ twice, and one address may commit five times an hour. The rate limit is in
 memory and resets when pm2 restarts, which is the accepted cost of not keeping
 another store.
 
+## 5f. Cabang mana yang disajikan server
+
+Produksi mengikuti `main`, dan kedua skrip menyebut namanya — tidak pernah
+menyimpulkannya dari checkout.
+
+Itu bukan kerapian. Server ini pernah mengikuti cabang sesi,
+`claude/new-session-ao22yh`, selama berminggu-minggu. Setiap update melapor
+"sudah terbaru" dan itu **benar**: cabang tersebut memang tidak bergerak.
+Jawabannya tepat, pertanyaannya yang salah. Sekarang skrip memindahkan checkout
+ke `main` dan mengatakannya kalau menemukan checkout di tempat lain.
+
+Kalau sebuah pemasangan sudah terlanjur mengikuti cabang lain, sekali ini
+perbaiki manual — skrip lama tidak bisa memperbaiki dirinya sendiri, karena bug
+itulah yang mencegahnya mengambil perbaikannya:
+
+```bash
+cd /var/www/igitur
+git remote set-branches origin main
+git fetch origin main
+git checkout -B main origin/main
+git log --oneline -1
+```
+
+`git remote set-branches` harus lebih dulu. `git clone --depth 1` membuat klon
+satu cabang yang refspec-nya hanya memetakan cabang yang dikloning, jadi tanpa
+itu `git fetch origin main` hanya menulis `FETCH_HEAD` dan `origin/main` tidak
+pernah ada — persis pesan `fatal: ambiguous argument 'origin/main'`.
+
+Untuk staging, timpa dengan variabel lingkungan:
+
+```bash
+BRANCH=coba bash scripts/update-igitur.sh
+```
+
 ### Seeding it, once, on the first deploy
 
 A new deploy has an empty record, and `/ledger` — the page the rest of the site

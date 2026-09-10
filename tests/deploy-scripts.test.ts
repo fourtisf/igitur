@@ -11,7 +11,20 @@
  * runs — never creates it. So the ref holds whatever commit it was given, for
  * ever, and every later step builds, tests and reports success on stale code.
  *
- * The second has not happened yet and would be worse. The repository was
+ * The second was the same failure wearing a better disguise. Reading the branch
+ * off the checkout instead of naming it looks safer and is not: this server was
+ * following a session branch, claude/new-session-ao22yh, and every update
+ * reported "sudah terbaru" *correctly* — that branch really had not moved. The
+ * answer was right; the question was wrong. Production follows one named
+ * branch, and a checkout sitting somewhere else is moved and said out loud.
+ *
+ * The third is mechanical. `git clone --depth 1` produces a single-branch
+ * clone whose refspec maps only the branch it cloned, so `git fetch origin
+ * main` writes FETCH_HEAD and nothing else — `origin/main` never exists and the
+ * reset dies with "ambiguous argument". A script that fetches a branch must
+ * make that branch trackable first.
+ *
+ * The fourth has not happened yet and would be worse. The repository was
  * renamed premise → igitur. GitHub still redirects the old URL, so a script
  * pointing at it keeps working — until somebody registers the freed name, at
  * which point the redirect breaks and the deploy clones a stranger's
@@ -61,6 +74,57 @@ test("a script that resets also proves the reset landed", () => {
       src,
       /\[ "\$NEW_COMMIT" = "\$WANT" \] \|\| die/,
       `${name} must stop when the reset did not land`
+    );
+  }
+});
+
+test("the production branch is named, never inferred from the checkout", () => {
+  // Inferring it is how this server served a session branch for weeks while
+  // every deploy reported success.
+  for (const [name, src] of scripts) {
+    if (!/reset\s+--hard/.test(src) && !/git clone/.test(src)) continue;
+    assert.match(
+      src,
+      /^BRANCH="\$\{BRANCH:-main\}"$/m,
+      `${name} must name the production branch (defaulting to main), not read it off HEAD`
+    );
+    const code = src.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
+    assert.doesNotMatch(
+      code,
+      /BRANCH=\$\(git .*symbolic-ref[^)]*HEAD/,
+      `${name} still derives the deploy branch from the checkout`
+    );
+  }
+});
+
+test("a fetched branch is made trackable, because a shallow clone maps only one", () => {
+  // Without set-branches, `git fetch origin main` on a --depth 1 clone writes
+  // FETCH_HEAD and nothing else, and origin/main never exists.
+  for (const [name, src] of scripts) {
+    if (!/git -C "\$APP" fetch/.test(src)) continue;
+    assert.match(
+      src,
+      /remote set-branches origin "\$BRANCH"/,
+      `${name} fetches a branch it never made trackable`
+    );
+    assert.match(
+      src,
+      /fetch origin "\+refs\/heads\/\$BRANCH:refs\/remotes\/origin\/\$BRANCH"/,
+      `${name} must fetch with an explicit refspec so origin/$BRANCH is written`
+    );
+  }
+});
+
+test("a fresh clone is pinned to the production branch", () => {
+  for (const [name, src] of scripts) {
+    // Comments discuss `git clone` at length; only a real invocation counts.
+    const code = src.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n");
+    const clone = /git clone [^\n]*/.exec(code);
+    if (!clone) continue;
+    assert.match(
+      clone[0],
+      /--branch "\$BRANCH"/,
+      `${name} clones the repository's default branch, which is not the same as the deploy branch`
     );
   }
 });

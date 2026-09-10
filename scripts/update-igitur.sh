@@ -96,24 +96,38 @@ BUILT=$(cat "$BUILT_STAMP" 2>/dev/null || true)
 SELF="$APP/scripts/update-igitur.sh"
 SELF_SUM=$(cksum "$SELF" 2>/dev/null | awk '{print $1"-"$2}' || true)
 
-# Cabang yang diikuti pemasangan ini. JANGAN `origin/HEAD`.
+# Cabang produksi. Disebut namanya, bukan disimpulkan.
 #
-# `git fetch` tidak pernah memperbarui refs/remotes/origin/HEAD, dan
-# `git clone --depth 1` — persis yang dijalankan deploy-igitur.sh — tidak pernah
-# membuatnya sama sekali. Mereset ke ref itu memakukan server pada commit yang
-# kebetulan dipegangnya: skrip melapor "sudah terbaru" selamanya sementara
-# repositori berjalan terus tanpanya. Itu bukan teori — server ini duduk di
-# c1743da dan terus bilang "sudah terbaru" setelah cabangnya sampai di 8ea4650,
-# dan tidak ada satu pun pesan galat yang muncul.
-BRANCH=$(git -C "$APP" symbolic-ref --quiet --short HEAD || true)
-if [ -z "$BRANCH" ]; then
-  # HEAD terlepas: tanya remote cabang bawaannya.
-  BRANCH=$(git -C "$APP" remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' | head -1)
-fi
-[ -n "$BRANCH" ] || die "Tidak bisa menentukan cabang yang diikuti $APP.
-       Lihat sendiri:  git -C $APP branch -vv  dan  git -C $APP remote -v"
+# Dua cara skrip ini pernah membangun kode yang salah tanpa satu pun galat:
+#
+#   `git reset --hard origin/HEAD`  — `git fetch` tidak pernah memperbarui
+#   refs/remotes/origin/HEAD, jadi resetnya bisa jadi tidak memindahkan apa pun.
+#
+#   Menyimpulkan cabang dari checkout — server ini ternyata mengikuti cabang
+#   sesi, `claude/new-session-ao22yh`, berminggu-minggu. Setiap update melapor
+#   "sudah terbaru" dengan BENAR: cabang itu memang tidak bergerak. Yang salah
+#   bukan jawabannya, melainkan pertanyaannya. Produksi mengikuti satu cabang
+#   yang ditentukan, dan kalau checkout ada di tempat lain itu harus dipindahkan
+#   dan dikatakan, bukan diikuti.
+#
+# Bisa ditimpa untuk staging:  BRANCH=coba bash scripts/update-igitur.sh
+BRANCH="${BRANCH:-main}"
 
-git -C "$APP" fetch origin "$BRANCH" --quiet
+# `git clone --depth 1` membuat klon SATU CABANG: refspec-nya hanya memetakan
+# cabang yang dikloning, sehingga `git fetch origin main` hanya menulis
+# FETCH_HEAD dan `origin/main` tidak pernah ada — "fatal: ambiguous argument
+# 'origin/main'". Dua baris ini yang membuat cabang produksi benar-benar bisa
+# dilacak, apa pun bentuk klon aslinya.
+git -C "$APP" remote set-branches origin "$BRANCH"
+git -C "$APP" fetch origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" --quiet \
+  || die "Tidak bisa mengambil cabang '$BRANCH' dari origin.
+       Lihat sendiri:  git -C $APP remote -v  dan  git -C $APP ls-remote --heads origin"
+
+CURRENT=$(git -C "$APP" symbolic-ref --quiet --short HEAD || echo "(HEAD terlepas)")
+if [ "$CURRENT" != "$BRANCH" ]; then
+  warn "checkout mengikuti '$CURRENT', bukan '$BRANCH' — dipindahkan ke '$BRANCH'"
+fi
+git -C "$APP" checkout -B "$BRANCH" "origin/$BRANCH" --quiet
 git -C "$APP" reset --hard "origin/$BRANCH" --quiet
 NEW_COMMIT=$(git -C "$APP" rev-parse HEAD)
 
