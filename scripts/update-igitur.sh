@@ -242,10 +242,13 @@ good = [s for s in steps if s.get("ok")]
 bad = [s for s in steps if not s.get("ok")]
 print(f"    sumber      : {d.get('provider')}")
 print(f"    menyajikan  : {d.get('serving')}  (real = harga sungguhan)")
-if live:
-    # Sumber utama menjawab. Cadangan yang gagal bukan masalah dan tidak perlu
-    # terlihat seperti masalah — laporan yang selalu merah membuat orang
-    # berhenti membacanya, justru saat ada yang benar-benar salah.
+# Menggulung yang gagal hanya sah kalau sumber UTAMA yang menjawab. Kalau
+# "real" datang dari cache disk sementara vendornya sendiri gagal, alasan
+# kegagalan itu justru yang paling perlu dibaca — menyembunyikannya adalah
+# kesalahan yang sama dengan laporan yang selalu merah, dari arah sebaliknya.
+primary = str(d.get("provider") or "")
+primary_ok = any(s.get("ok") and str(s.get("step") or "").startswith(primary) for s in steps)
+if live and primary_ok:
     for s in good:
         print(f"    [  ok ] {str(s.get('step')):<11} HTTP {s.get('status'):<4} {s.get('detail')}")
     if bad:
@@ -253,6 +256,9 @@ if live:
         print(f"    cadangan    : {len(bad)} tidak terpakai ({names})")
         print( "                  wajar: hanya dipanggil kalau sumber utama berhenti menjawab.")
 else:
+    if live:
+        print( "    catatan     : angka nyata datang dari simpanan di disk, bukan dari")
+        print( "                  vendor barusan. Alasan vendor gagal ada di bawah.")
     err = d.get("lastVendorError")
     if err:
         print(f"    kesalahan   : {err}")
