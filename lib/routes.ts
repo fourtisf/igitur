@@ -122,3 +122,14 @@ export function daysSince(stated: string | null): number | null {
 export function icsHref(id: string): string {
   return `/api/claim.ics?id=${encodeURIComponent(id)}`;
 }
+
+/**
+ * The universe, filtered to one theme.
+ *
+ * `q` seeds the filter box in the browser rather than being read on the
+ * server, so /universe keeps its static prerender and a crawler still sees
+ * every theme on it.
+ */
+export function themeHref(themeName: string): string {
+  return `/universe?q=${encodeURIComponent(themeName)}`;
+}

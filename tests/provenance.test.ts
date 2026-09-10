@@ -8,15 +8,7 @@ import assert from "node:assert/strict";
 
 import { buildBook, scoreThemes } from "../lib/generator";
 import { MATCH_INDEX } from "../lib/match-index";
-import {
-  bookCanonical,
-  bookHref,
-  daysSince,
-  parseStated,
-  parseUniverse,
-  today,
-  trackHref,
-} from "../lib/routes";
+import { bookCanonical, bookHref, daysSince, parseStated, parseUniverse, themeHref, today, trackHref } from "../lib/routes";
 import { sessionsFor } from "../lib/track";
 import { CHANGELOG, THEMES, UNIVERSE_VERSION } from "../lib/universe";
 
@@ -171,5 +163,20 @@ test("a book reports the themes that scored but did not lead", () => {
   assert.ok(b.alternatives.length <= 3);
   for (let i = 1; i < b.alternatives.length; i++) {
     assert.ok(b.alternatives[i - 1].score >= b.alternatives[i].score);
+  }
+});
+
+test("a theme chip lands on the universe already filtered to that theme", () => {
+  // Every theme name here has a space in it, and a raw space in a query string
+  // is what makes a link land on an unfiltered page — which is exactly the
+  // "nothing happened" this was added to fix.
+  assert.equal(themeHref("Compute buildout"), "/universe?q=Compute%20buildout");
+  assert.equal(themeHref("Water & scarcity"), "/universe?q=Water%20%26%20scarcity");
+
+  // And the filter matches on what the rows actually carry.
+  for (const t of THEMES) {
+    const q = decodeURIComponent(themeHref(t.name).split("q=")[1]);
+    const rowText = `${t.name} ${t.claim}`.toLowerCase();
+    assert.ok(rowText.includes(q.toLowerCase()), `${t.id}: a link for it would show nothing`);
   }
 });

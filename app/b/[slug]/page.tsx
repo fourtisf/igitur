@@ -24,6 +24,7 @@ import {
   parseDrop,
   parseStated,
   parseUniverse,
+  themeHref,
   trackHref,
 } from "@/lib/routes";
 import { getQuotes } from "@/lib/market";
@@ -147,13 +148,31 @@ export default async function BookPage({
       <h1 className="pg rv" style={{ marginTop: 12, maxWidth: "26ch", fontWeight: 550 }}>
         {b.premise}
       </h1>
+      {/* Some of these go somewhere and some are labels, and until now they all
+          looked identical — an accented pill that does nothing reads as a
+          button that is broken. The ones that lead somewhere are marked `lnk`
+          and say so on hover; the rest are plainly facts about this book. */}
       <div className="meta rv" style={{ marginTop: 20 }}>
-        <span className="tagp on">{b.theme.name}</span>
-        {b.second ? <span className="tagp">+ {b.second.name}</span> : null}
+        <Link className="tagp on lnk" href={themeHref(b.theme.name)} title="See this theme in the universe">
+          {b.theme.name}
+        </Link>
+        {b.second ? (
+          <Link className="tagp lnk" href={themeHref(b.second.name)} title="See this theme in the universe">
+            + {b.second.name}
+          </Link>
+        ) : null}
         <span className="tagp">{b.risk}</span>
         <span className="tagp">{b.horizon}</span>
-        <span className="tagp">{b.holdings.length} holdings</span>
-        <span className={"tagp" + (low ? " warn" : "")}>Confidence {b.confidence}%</span>
+        <a className="tagp lnk" href="#holdings" title="Jump to the holdings">
+          {b.holdings.length} holdings
+        </a>
+        <Link
+          className={"tagp lnk" + (low ? " warn" : "")}
+          href="/method"
+          title="How this score is worked out, and where it is weak"
+        >
+          Confidence {b.confidence}%
+        </Link>
         {drop.length ? <span className="tagp warn">{drop.length} removed</span> : null}
         {pins.size ? <span className="tagp warn">{pins.size} reweighted</span> : null}
       </div>
@@ -220,7 +239,7 @@ export default async function BookPage({
               flexWrap: "wrap",
             }}
           >
-            <h3>Every holding, and why it is that size</h3>
+            <h3 id="holdings">Every holding, and why it is that size</h3>
             {drop.length || pins.size ? (
               <Link className="b3" href={bookHref(b.premise, [], prov)}>
                 Restore the book
