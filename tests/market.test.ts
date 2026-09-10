@@ -9,8 +9,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildingOffline,
   cachedTtlMs,
   cleanKey,
+  pickProvider,
   fmtMcap,
   fmtPrice,
   getQuote,
@@ -22,7 +24,7 @@ import {
   resetMarketCache,
   sparkPath,
 } from "../lib/market";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -257,19 +259,28 @@ test("a move the source could not supply is filled in from the previous session"
   // exactly that previous close, so the move becomes knowable the day after
   // the first successful fetch, without asking anyone for anything more.
   resetMarketCache();
+  // Stored a week ago: old enough that the vendor is asked, recent enough that
+  // yesterday's close is still worth something. remember() stamps the present,
+  // so the file is written directly.
+  writeFileSync(
+    process.env.MARKET_CACHE_PATH!,
+    JSON.stringify({
+      NVDA: {
+        at: Date.now() - 2 * 86_400_000,
+        quote: {
+          ticker: "NVDA",
+          price: 180,
+          changePct: 0,
+          marketCap: 0,
+          previousClose: 0,
+          open: 0,
+          asOf: "2026-09-08T20:00:00.000Z",
+          synthetic: false,
+        },
+      },
+    })
+  );
   forgetStore();
-  remember([
-    {
-      ticker: "NVDA",
-      price: 180,
-      changePct: 0,
-      marketCap: 0,
-      previousClose: 0,
-      open: 0,
-      asOf: "2026-09-08T20:00:00.000Z",
-      synthetic: false,
-    },
-  ]);
 
   setHttpTransport(async (url) =>
     url.includes("stooq.com")
@@ -302,19 +313,25 @@ test("a move the source could not supply is filled in from the previous session"
 
 test("a stored quote from the same session is not treated as a previous close", async () => {
   resetMarketCache();
-  forgetStore();
-  remember([
-    {
-      ticker: "AAPL",
+  writeFileSync(
+    process.env.MARKET_CACHE_PATH!,
+    JSON.stringify({
+      AAPL: {
+        at: Date.now() - 2 * 86_400_000,
+        quote: {
+          ticker: "AAPL",
       price: 180,
-      changePct: null,
-      marketCap: 0,
-      previousClose: 0,
-      open: 0,
-      asOf: "2026-09-09T14:00:00.000Z",
-      synthetic: false,
-    },
-  ]);
+          changePct: null,
+          marketCap: 0,
+          previousClose: 0,
+          open: 0,
+          asOf: "2026-09-09T14:00:00.000Z",
+          synthetic: false,
+        },
+      },
+    })
+  );
+  forgetStore();
   setHttpTransport(async (url) =>
     url.includes("stooq.com")
       ? {
@@ -331,6 +348,59 @@ test("a stored quote from the same session is not treated as a previous close", 
   try {
     const q = (await getQuotes(["AAPL"])).get("AAPL");
     assert.equal(q?.changePct, null, "that is this session, not the one before it");
+  } finally {
+    setHttpTransport(async () => ({
+      status: 0,
+      body: "",
+      cookies: [],
+      retryAfter: null,
+      error: "offline in tests",
+    }));
+  }
+});
+
+test("a build never spends a vendor's allowance", () => {
+  // 184 pages across three workers fired the whole universe at the vendor
+  // several times in seconds. Against a free tier metered per symbol that was
+  // an instant 429 and most of a day's credits spent before a reader arrived.
+  assert.equal(buildingOffline({ MARKET_OFFLINE: "1" }), true);
+  assert.equal(buildingOffline({ NEXT_PHASE: "phase-production-build" }), true);
+  assert.equal(buildingOffline({}), false, "a running server is not a build");
+
+  // A key set and a build running: the key is not spent.
+  const p = pickProvider({ MARKET_OFFLINE: "1", TWELVEDATA_API_KEY: "real-key" });
+  assert.equal(p.live, false, "generated figures, and the pages say so");
+  assert.equal(p.name, "synthetic");
+});
+
+test("a stored quote inside its own TTL is not bought again", async () => {
+  // Every deploy restarts the server and empties the in-process cache. Without
+  // this, each deploy re-bought the whole universe from a metered vendor.
+  resetMarketCache();
+  forgetStore();
+  remember([
+    {
+      ticker: "NVDA",
+      price: 184.22,
+      changePct: 1,
+      marketCap: 0,
+      previousClose: 182,
+      open: 183,
+      asOf: "2026-09-10T14:00:00.000Z",
+      synthetic: false,
+    },
+  ]);
+
+  let calls = 0;
+  setHttpTransport(async () => {
+    calls++;
+    return { status: 0, body: "", cookies: [], retryAfter: null, error: "offline in tests" };
+  });
+  try {
+    const q = (await getQuotes(["NVDA"])).get("NVDA");
+    assert.equal(q?.price, 184.22);
+    assert.equal(q?.synthetic, false);
+    assert.equal(calls, 0, "the vendor was never asked");
   } finally {
     setHttpTransport(async () => ({
       status: 0,

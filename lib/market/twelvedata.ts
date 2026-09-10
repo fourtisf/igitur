@@ -65,6 +65,19 @@ export function twelveDataLastError(): string | null {
 }
 
 /** The vendor names itself in error text; the key never appears in it. */
+/** Whatever the vendor said, trimmed to one line and never carrying the key. */
+function detailOf(body: string, error: string | null, apiKey: string): string {
+  let said = "";
+  try {
+    const parsed = JSON.parse(body) as { message?: string };
+    if (typeof parsed?.message === "string") said = parsed.message;
+  } catch {
+    said = body.slice(0, 120);
+  }
+  const text = said || error || "";
+  return text ? ` (${scrub(text.replace(/\s+/g, " ").trim(), apiKey)})` : "";
+}
+
 function scrub(text: string, apiKey: string): string {
   return text
     .split(apiKey)
@@ -151,7 +164,11 @@ async function getJson(url: string, apiKey: string): Promise<unknown | null> {
     timeoutMs: TIMEOUT_MS,
   });
   if (res.status !== 200) {
-    lastError = `HTTP ${res.status}${res.error ? ` (${scrub(res.error, apiKey)})` : ""}`;
+    // The body says which limit was hit — eight requests a minute recovers in
+    // sixty seconds, a spent daily allowance does not until midnight UTC. A
+    // bare status code cannot tell the two apart, and the difference is the
+    // difference between waiting a minute and waiting a day.
+    lastError = `HTTP ${res.status}${detailOf(res.body, res.error, apiKey)}`;
     return null;
   }
   let body: unknown;
@@ -229,7 +246,8 @@ export async function twelveDataProbe(
     timeoutMs: TIMEOUT_MS,
   });
   if (res.status !== 200) {
-    return { status: res.status, ok: false, detail: scrub(res.error ?? "refused", apiKey) };
+    const said = detailOf(res.body, res.error, apiKey).replace(/^ \(|\)$/g, "");
+    return { status: res.status, ok: false, detail: said || "refused" };
   }
   let body: unknown;
   try {

@@ -146,3 +146,13 @@ test("an outage degrades instead of taking the page down", async () => {
   assert.deepEqual(await p.history("SPY", "2026-01-01"), []);
   assert.match(twelveDataLastError() ?? "", /503/);
 });
+
+test("a 429 says which limit was hit, because they recover differently", async () => {
+  // Eight requests a minute recovers in sixty seconds; a spent daily allowance
+  // does not until midnight. A bare status code cannot tell them apart.
+  serve({ code: 429, message: "You have run out of API credits for the current minute." }, 429);
+  await twelveDataProvider("k").quotes(["SPY"]);
+  const err = twelveDataLastError() ?? "";
+  assert.match(err, /429/);
+  assert.match(err, /current minute/, "the vendor's own words reach /status");
+});

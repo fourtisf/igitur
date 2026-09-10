@@ -79,12 +79,21 @@ function load(): Map<string, Entry> {
   return memory;
 }
 
-/** The last real quote for `ticker`, if one was stored and is not too old. */
-export function remembered(ticker: string): Quote | null {
+/**
+ * The last real quote for `ticker` and when it was stored, if it is not too
+ * old. The timestamp matters: a caller deciding whether to spend a vendor
+ * request needs to know the age, not only the price.
+ */
+export function rememberedEntry(ticker: string): { quote: Quote; at: number } | null {
   const e = load().get(ticker.toUpperCase());
   if (!e) return null;
   if (Date.now() - e.at > MAX_AGE_MS) return null;
-  return e.quote;
+  return { quote: e.quote, at: e.at };
+}
+
+/** The quote alone, for callers that do not care how old it is. */
+export function remembered(ticker: string): Quote | null {
+  return rememberedEntry(ticker)?.quote ?? null;
 }
 
 /** Stores real quotes. Anything flagged synthetic is ignored, by definition. */

@@ -68,7 +68,9 @@ echo "  commit: $(git -C "$APP" log --oneline -1)"
 say "4/8  Membangun (NEXT_PUBLIC_SITE_URL dibakar saat build)"
 cd "$APP"
 npm ci
-NEXT_PUBLIC_SITE_URL="https://$DOMAIN" npm run build
+# MARKET_OFFLINE: see update-igitur.sh — a build must never spend a vendor's
+# daily allowance on pages nobody has asked for yet.
+NEXT_PUBLIC_SITE_URL="https://$DOMAIN" MARKET_OFFLINE=1 npm run build
 
 # .next/static tidak ikut ke dalam standalone. Tanpa ini situs terbuka tanpa CSS.
 cp -r .next/static .next/standalone/.next/static

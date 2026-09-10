@@ -163,7 +163,12 @@ restore() {
 }
 
 # shellcheck disable=SC2086
-if ! env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" $BUILD_ENV npm run build; then
+# MARKET_OFFLINE: a build prerenders 184 pages across three workers, and
+# without this every deploy fired the whole universe at the vendor several
+# times over in seconds — an instant 429 and most of a day's allowance spent
+# before a single reader arrived. The build renders generated figures,
+# flagged as generated, and the first revalidation fetches real ones.
+if ! env NEXT_PUBLIC_SITE_URL="https://$DOMAIN" MARKET_OFFLINE=1 $BUILD_ENV npm run build; then
   restore
   die "Build gagal. Tidak ada yang berubah di situs."
 fi

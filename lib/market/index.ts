@@ -1,7 +1,7 @@
 import { chainProviders } from "./fallback";
 import { fmpLastError, fmpProvider } from "./fmp";
 import { yahooLastError, yahooProvider } from "./yahoo";
-import { remember, remembered } from "./store";
+import { remember, rememberedEntry } from "./store";
 import { stooqLastError, stooqProvider } from "./stooq";
 import { twelveDataLastError, twelveDataProvider } from "./twelvedata";
 import { syntheticProvider, syntheticQuote } from "./synthetic";
@@ -25,6 +25,10 @@ export { bookDrift, series, SPY_DRIFT } from "./synthetic";
 export interface MarketEnv {
   /** Twelve Data. The one source verified reachable from the deployment server. */
   TWELVEDATA_API_KEY?: string | undefined;
+  /** Set by the deploy scripts so a build never spends a vendor's allowance. */
+  MARKET_OFFLINE?: string | undefined;
+  /** Next's own build-phase flag, as a second signal. */
+  NEXT_PHASE?: string | undefined;
   MARKET_API_KEY?: string | undefined;
   MARKET_PROVIDER?: string | undefined;
   [key: string]: string | undefined;
@@ -43,7 +47,32 @@ export function cleanKey(raw: string | undefined): string | undefined {
   return k ? k : undefined;
 }
 
+/**
+ * True while `next build` is prerendering.
+ *
+ * A build renders 184 pages across three worker processes, each with its own
+ * in-process cache, so every deploy fired the whole universe at the vendor
+ * several times over in a few seconds. Against Yahoo that earned a throttle;
+ * against Twelve Data, whose free tier allows eight requests a minute and 800
+ * credits a day, it earned an instant 429 and spent most of a day's allowance
+ * before a single reader arrived.
+ *
+ * So the build renders generated figures, flagged as generated, and the first
+ * revalidation after the server starts fetches real ones — once, at runtime,
+ * where the rate is one refresh per TTL rather than a burst per deploy.
+ *
+ * Two signals, because the phase variable is Next's and could change: the
+ * deploy scripts set MARKET_OFFLINE themselves, which is not a guess.
+ */
+export function buildingOffline(env: MarketEnv = process.env): boolean {
+  return env.MARKET_OFFLINE === "1" || env.NEXT_PHASE === "phase-production-build";
+}
+
 export function pickProvider(env: MarketEnv = process.env): MarketProvider {
+  // Generated figures during a build are not a lie: the pages say so, and the
+  // first revalidation replaces them with real ones.
+  if (buildingOffline(env)) return syntheticProvider;
+
   const twelve = cleanKey(env.TWELVEDATA_API_KEY);
   const key = cleanKey(env.MARKET_API_KEY);
   const named = env.MARKET_PROVIDER?.trim().toLowerCase();
@@ -184,7 +213,7 @@ function retryDelay(): number {
  */
 function withPreviousClose(ticker: string, q: Quote): Quote {
   if (q.changePct !== null || q.previousClose > 0) return q;
-  const prev = remembered(ticker);
+  const prev = rememberedEntry(ticker)?.quote;
   if (!prev || prev.price <= 0) return q;
   // Same session, so it is not a previous close — it is this one, again.
   if (prev.asOf.slice(0, 10) >= q.asOf.slice(0, 10)) return q;
@@ -238,8 +267,24 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
 
   for (const t of tickers) {
     const hit = quoteCache.get(t);
-    if (hit && now - hit.at < hit.ttl) out.set(t, hit.quote);
-    else missing.push(t);
+    if (hit && now - hit.at < hit.ttl) {
+      out.set(t, hit.quote);
+      continue;
+    }
+
+    // A restart empties the in-process cache, and every deploy restarts the
+    // server — so without this each deploy bought the whole universe again. On
+    // a free tier metered per symbol that is most of a day's allowance spent on
+    // nobody. A stored quote inside its own TTL is as good as one just fetched:
+    // it is the same figure, from the same session, with its own timestamp.
+    const disk = rememberedEntry(t);
+    if (disk && now - disk.at < QUOTE_TTL) {
+      quoteCache.set(t, { at: disk.at, ttl: QUOTE_TTL, quote: disk.quote });
+      out.set(t, disk.quote);
+      continue;
+    }
+
+    missing.push(t);
   }
 
   if (missing.length) {
@@ -279,7 +324,7 @@ export async function getQuotes(tickers: readonly string[]): Promise<Map<string,
       // that, with the timestamp it actually carries, beats inventing one.
       // Only when nothing real is known does a generated figure appear, and it
       // says so.
-      const q = filled.get(t) ?? remembered(t) ?? syntheticQuote(t);
+      const q = filled.get(t) ?? rememberedEntry(t)?.quote ?? syntheticQuote(t);
       quoteCache.set(t, { at: now, ttl, quote: q });
       out.set(t, q);
     }
