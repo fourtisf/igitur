@@ -420,3 +420,12 @@ footer a:hover{color:var(--fg)}
   .bar.go>div{opacity:1!important;transform:none!important}
   html{scroll-behavior:auto}
 }
+
+/* Pasted holdings. Monospaced because it is a column of tickers, and a
+   proportional font makes a misaligned paste look like a parse error. */
+.ta{width:100%;resize:vertical;border:1px solid var(--bd);border-radius:var(--r-s);
+  background:var(--surf-2);color:var(--fg);padding:12px 14px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;
+  line-height:1.7;letter-spacing:.01em}
+.ta::placeholder{color:var(--fg-4)}
+.ta:focus{outline:none;border-color:var(--bd-2);background:var(--surf-3)}
