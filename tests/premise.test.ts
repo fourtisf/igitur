@@ -6,8 +6,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { MAX_PREMISE, normalizePremise } from "../lib/premise";
+import { looksLikeClaim, MAX_PREMISE, normalizePremise } from "../lib/premise";
 import { buildBook } from "../lib/generator";
+import { THEMES } from "../lib/universe";
 import { slugOf } from "../lib/hash";
 import { bookHref, parseDrop } from "../lib/routes";
 import { isPageCardId, PAGE_CARDS, pageOg } from "../lib/og-pages";
@@ -69,4 +70,36 @@ test("share cards for pages come from a fixed allowlist", () => {
     assert.equal("kicker" in card, id !== "home", `${id} kicker`);
     assert.equal(pageOg(id as Parameters<typeof pageOg>[0]), `/api/og?page=${id}`);
   }
+});
+
+test("a greeting is told it is not a claim; a real belief is told the universe lacks it", () => {
+  // Both come back with no book. The refusal page prints two different true
+  // sentences, and this is what decides which — never whether one is built.
+  for (const t of ["hello", "hi there", "test", "NVDA", "stocks go up", "ok"]) {
+    assert.equal(looksLikeClaim(t), false, `"${t}" should read as not-yet-a-claim`);
+  }
+  for (const t of [
+    "the dollar will lose reserve status",
+    "fresh water becomes the constraint climate spending is organised around",
+    "compute is the binding constraint on artificial intelligence",
+  ]) {
+    assert.equal(looksLikeClaim(t), true, `"${t}" is a claim, whether or not it matches`);
+  }
+});
+
+test("every theme's own claim reads as a claim", () => {
+  // If a published thesis tripped this, the refusal page would offer the reader
+  // an example it then called not-a-claim.
+  for (const th of THEMES) {
+    assert.equal(looksLikeClaim(th.claim), true, `${th.id}'s claim does not read as one`);
+  }
+});
+
+test("it never decides whether a book is built", () => {
+  // The generator is the only thing that may. A claim-shaped sentence the
+  // universe does not carry is still refused, and a book still builds from a
+  // premise regardless of what this helper thinks of it.
+  assert.equal(buildBook("hello").ok, false);
+  const real = buildBook(THEMES[0].claim);
+  assert.equal(real.ok, true);
 });

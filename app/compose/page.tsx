@@ -5,7 +5,10 @@ import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 
 import { normalizePremise } from "@/lib/premise";
-import { THEMES } from "@/lib/universe";
+import Link from "next/link";
+
+import { bookHref } from "@/lib/routes";
+import { THEMES, THEME_BY_ID, UNIVERSE_VERSION } from "@/lib/universe";
 import { Composer } from "@/components/Composer";
 
 export const metadata: Metadata = {
@@ -23,6 +26,10 @@ export const metadata: Metadata = {
   twitter: twitterCard(pageOg("compose")),
 };
 
+/** Three claims that build, chosen to be visibly unalike so the field does not
+ *  read as if it only accepts one subject. */
+const EXAMPLES = ["water", "nuclear", "robotics"] as const;
+
 export default async function ComposePage({
   searchParams,
 }: {
@@ -39,6 +46,29 @@ export default async function ComposePage({
         Write it the way you would say it out loud. Name a constraint, an industry or a resource —
         that is what the matcher reads.
       </p>
+
+      {/* The instruction above is abstract until it sits next to a sentence.
+          Readers arriving here type "hello" and get refused, which is correct
+          and teaches nothing, so the worked example goes in front of the field
+          rather than behind a failure. Each chip is a real theme claim and
+          builds a book on the first click. */}
+      <div className="egs rv" style={{ marginTop: 18 }}>
+        <span className="faint">For example</span>
+        {EXAMPLES.map((id) => {
+          const th = THEME_BY_ID.get(id);
+          return th ? (
+            <Link
+              key={id}
+              className="chip"
+              href={bookHref(th.claim, [], { universe: UNIVERSE_VERSION })}
+              title={th.claim}
+            >
+              {th.claim.length > 58 ? th.claim.slice(0, 57).trimEnd() + "…" : th.claim}
+            </Link>
+          ) : null;
+        })}
+      </div>
+
       <Composer
         prefill={normalizePremise(sp.p)}
         claims={Object.fromEntries(THEMES.map((t) => [t.id, t.claim]))}
