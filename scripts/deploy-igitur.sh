@@ -10,7 +10,12 @@
 #
 set -euo pipefail
 
-REPO="https://github.com/fourtisf/premise.git"
+# Repositori ini pernah bernama "premise" dan sudah diganti nama menjadi
+# "igitur". GitHub masih mengalihkan URL lama, jadi memakainya tetap "jalan" —
+# dan itu justru bahayanya: nama `fourtisf/premise` kini bebas didaftarkan siapa
+# pun, dan sejak detik itu pengalihannya putus dan skrip ini mengkloning repo
+# milik orang asing ke server. Nama yang sekarang, bukan yang mengalihkan.
+REPO="https://github.com/fourtisf/igitur.git"
 APP="/var/www/igitur"
 DOMAIN="igitur.xyz"
 PM2_NAME="igitur"
@@ -55,8 +60,15 @@ echo "  port yang sudah dipakai: $(ss -ltn | awk '{print $4}' | grep -oE '[0-9]+
 # ── 3. Kode ─────────────────────────────────────────────────────────────────
 say "3/8  Mengambil kode"
 if [ -d "$APP/.git" ]; then
-  git -C "$APP" fetch --all --quiet && git -C "$APP" reset --hard origin/HEAD --quiet
-  echo "  diperbarui: $APP"
+  # Bukan `origin/HEAD` — lihat update-igitur.sh: ref itu tidak dipelihara oleh
+  # fetch dan tidak dibuat oleh clone --depth 1, jadi mereset ke sana memakukan
+  # pemasangan pada commit lama tanpa sepatah galat pun.
+  BRANCH=$(git -C "$APP" symbolic-ref --quiet --short HEAD || true)
+  [ -n "$BRANCH" ] || BRANCH=$(git -C "$APP" remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' | head -1)
+  [ -n "$BRANCH" ] || die "Tidak bisa menentukan cabang yang diikuti $APP."
+  git -C "$APP" fetch origin "$BRANCH" --quiet
+  git -C "$APP" reset --hard "origin/$BRANCH" --quiet
+  echo "  diperbarui: $APP (cabang $BRANCH)"
 else
   [ -e "$APP" ] && die "$APP sudah ada tapi bukan repo git. Periksa dulu, saya tidak akan menimpanya."
   git clone --depth 1 "$REPO" "$APP"

@@ -96,9 +96,33 @@ BUILT=$(cat "$BUILT_STAMP" 2>/dev/null || true)
 SELF="$APP/scripts/update-igitur.sh"
 SELF_SUM=$(cksum "$SELF" 2>/dev/null | awk '{print $1"-"$2}' || true)
 
-git -C "$APP" fetch --all --quiet
-git -C "$APP" reset --hard origin/HEAD --quiet
+# Cabang yang diikuti pemasangan ini. JANGAN `origin/HEAD`.
+#
+# `git fetch` tidak pernah memperbarui refs/remotes/origin/HEAD, dan
+# `git clone --depth 1` — persis yang dijalankan deploy-igitur.sh — tidak pernah
+# membuatnya sama sekali. Mereset ke ref itu memakukan server pada commit yang
+# kebetulan dipegangnya: skrip melapor "sudah terbaru" selamanya sementara
+# repositori berjalan terus tanpanya. Itu bukan teori — server ini duduk di
+# c1743da dan terus bilang "sudah terbaru" setelah cabangnya sampai di 8ea4650,
+# dan tidak ada satu pun pesan galat yang muncul.
+BRANCH=$(git -C "$APP" symbolic-ref --quiet --short HEAD || true)
+if [ -z "$BRANCH" ]; then
+  # HEAD terlepas: tanya remote cabang bawaannya.
+  BRANCH=$(git -C "$APP" remote show origin 2>/dev/null | sed -n 's/.*HEAD branch: //p' | head -1)
+fi
+[ -n "$BRANCH" ] || die "Tidak bisa menentukan cabang yang diikuti $APP.
+       Lihat sendiri:  git -C $APP branch -vv  dan  git -C $APP remote -v"
+
+git -C "$APP" fetch origin "$BRANCH" --quiet
+git -C "$APP" reset --hard "origin/$BRANCH" --quiet
 NEW_COMMIT=$(git -C "$APP" rev-parse HEAD)
+
+# Buktikan resetnya mendarat. Kegagalan diam di langkah ini adalah kegagalan
+# terburuk skrip ini: semua langkah berikutnya membangun dan menguji kode lama,
+# lulus, lalu melapor sukses.
+WANT=$(git -C "$APP" rev-parse "origin/$BRANCH")
+[ "$NEW_COMMIT" = "$WANT" ] || die "reset tidak mendarat: HEAD ${NEW_COMMIT:0:7}, origin/$BRANCH ${WANT:0:7}"
+ok "mengikuti cabang $BRANCH"
 
 # Kalau skrip ini sendiri ikut berubah, mulai lagi dari awal dengan isi yang
 # baru — sekali saja, dijaga oleh REEXEC supaya tidak berputar.
