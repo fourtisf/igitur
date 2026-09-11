@@ -332,6 +332,31 @@ Biayanya hanya untuk premis yang ditolak. Jawaban disimpan enam jam, dan
 Untuk mematikannya lagi: hapus barisnya, restart. Situsnya kembali ke indeks
 kata kunci tanpa perubahan lain.
 
+## 5f-ter. Asisten /ask
+
+Kunci yang sama (`ANTHROPIC_API_KEY`) juga menyalakan `/ask`. Tanpa kunci,
+halamannya mengatakan apa adanya dan menunjuk ke `/universe` dan `/method`;
+endpointnya menjawab 503, bukan error.
+
+Batasnya sengaja keras, karena kotak chat bebas di situs portofolio adalah cara
+tercepat kehilangan posisi "riset, bukan nasihat":
+
+- Ia menjawab **hanya** dari `lib/ask/corpus.ts`, yang dibangun dari
+  `lib/universe` dan `lib/status` — bukan diketik ulang. Tanpa alat, tanpa
+  pencarian, tanpa ingatan.
+- Aturan pertama: tidak pernah memberi nasihat investasi. Kedua: tidak pernah
+  memprediksi harga atau arah. Ketiga: tidak ada di korpus berarti bilang tidak
+  tahu, jangan mengarang.
+- 30 pertanyaan per alamat per jam, pertanyaan dibatasi 1000 karakter, riwayat
+  yang dikirim balik dibatasi 8 giliran.
+
+Biayanya: korpus ~9 ribu token yang **sama persis di tiap permintaan**, jadi ia
+masuk prompt cache dan pembacaan berikutnya jauh lebih murah.
+
+`tests/ask.test.ts` mengunci batas-batas itu — termasuk bahwa setiap tesis dan
+setiap nama benar-benar ada di korpus, sehingga asisten tidak bisa menjawab dari
+salinan yang basi.
+
 ## 5g. Menerbitkan versi baru: satu perintah
 
 ```bash

@@ -335,6 +335,22 @@ section{padding-block:clamp(64px,9vw,120px)}
 .wopt img{border-radius:6px;flex:none}
 .wopt-dot{width:22px;height:22px;border-radius:6px;flex:none;background:var(--ac-dim);
   box-shadow:inset 0 0 0 1px rgba(124,140,255,.34)}
+
+/* ── /ask ────────────────────────────────────────────────────────────────── */
+.ask{margin-top:clamp(26px,3.4vw,42px)}
+.ask-openers{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ask-openers .p{width:100%}
+.ask-log{display:flex;flex-direction:column;gap:18px;padding:clamp(18px,2.4vw,26px);
+  border-radius:var(--r);background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--bd);
+  max-height:min(56vh,560px);overflow-y:auto}
+.ask-turn{display:grid;grid-template-columns:62px 1fr;gap:14px;align-items:baseline}
+@media(max-width:560px){.ask-turn{grid-template-columns:1fr;gap:5px}}
+.ask-who{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-4)}
+.ask-turn.assistant .ask-who{color:var(--ac-2)}
+.ask-text{font-size:14.5px;line-height:1.6;color:var(--fg-1);white-space:pre-wrap}
+.ask-turn.user .ask-text{color:var(--fg-2)}
+.ask-wait{color:var(--fg-4);font-style:italic}
+.ask .b1[disabled],.ask .chip[disabled]{opacity:.55;cursor:default}
 .chip{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:450;color:var(--fg-2);
   background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:color .18s,background .18s;text-align:left}
 .chip:hover{color:var(--fg);background:var(--surf-2)}

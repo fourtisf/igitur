@@ -22,6 +22,7 @@ export function Footer() {
         <div>
           <div className="fh">Product</div>
           <Link href="/compose">Compose</Link>
+          <Link href="/ask">Ask</Link>
           <Link href="/compare">Compare</Link>
           <Link href="/history">History</Link>
           <Link href="/trending">Trending</Link>

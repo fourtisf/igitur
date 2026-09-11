@@ -172,9 +172,11 @@ test("the status page never promises more than the generator does", () => {
   const src = readFileSync("app/status/page.tsx", "utf8");
   assert.doesNotMatch(src, /from any premise/i, '"any premise" contradicts the refusal');
 
-  // Nothing may sit in both lists.
+  // The lists moved to lib/status.ts when /ask began answering from them too.
+  // This reads the one copy rather than a page that now only renders it.
+  const lists = readFileSync("lib/status.ts", "utf8");
   const list = (name: string) =>
-    (src.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))?.[1] ?? "")
+    (lists.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`))?.[1] ?? "")
       .split("\n").map((l) => l.trim().replace(/^"|",$/g, "")).filter((l) => l.length > 3);
   const live = list("ALWAYS_LIVE");
   const missing = list("ALWAYS_MISSING");

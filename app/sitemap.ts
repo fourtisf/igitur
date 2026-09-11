@@ -28,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const statics: [string, number, MetadataRoute.Sitemap[number]["changeFrequency"]][] = [
     ["/", 1, "weekly"],
     ["/compose", 0.9, "monthly"],
+    ["/ask", 0.8, "monthly"],
     ["/compare", 0.7, "monthly"],
     ["/universe", 0.8, "weekly"],
     ["/method", 0.8, "monthly"],

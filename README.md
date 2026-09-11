@@ -56,6 +56,8 @@ lib/
   universe.ts        26 themes, 170 assets, 354 keywords   ← the data
   generator.ts       scoreThemes + buildBook + assemble    ← the core IP
   matcher/           the model that reads a refused premise
+  ask/               the corpus and rules behind /ask
+  status.ts          what is built and what is not — one copy, two readers
   nearmiss.ts        how a refusal is ranked and explained
   ledger.ts          the append-only public record
   market.ts          synthetic data behind a vendor seam   ← REPLACE
@@ -141,9 +143,16 @@ In build order (`HANDOFF.md` §12):
    `lib/generator.ts` does the weighting for both matchers, which is what keeps
    the weights auditable. `matched: false` is a 200, because refusing is an
    answer. `tests/matcher.test.ts` holds all of it.
-4. Persistence — books and history that survive a refresh.
-5. Conviction tied to disclosed segment revenue, with sources on `/universe`.
-6. Public books, follow and fork.
+4. ~~An assistant that answers from the published theses~~ — **built**; it
+   shares `ANTHROPIC_API_KEY` with the matcher. `/ask` answers only from
+   `lib/ask/corpus.ts`, which is generated from `lib/universe` and
+   `lib/status` — no tools, no search, no memory. The first rule it is given is
+   never to advise, the second never to predict a price, and the third to say
+   it does not know rather than invent. `tests/ask.test.ts` holds the boundary.
+
+5. Persistence — books and history that survive a refresh.
+6. Conviction tied to disclosed segment revenue, with sources on `/universe`.
+7. Public books, follow and fork.
 
 ## Share images
 
