@@ -30,6 +30,8 @@ say()  { printf '\n\033[1;36m=== %s\033[0m\n' "$*"; }
 ok()   { printf '  \033[1;32m✓\033[0m %s\n' "$*"; }
 warn() { printf '  \033[1;33m!\033[0m %s\n' "$*"; }
 die()  { printf '\n\033[1;31mBERHENTI: %s\033[0m\n' "$*" >&2; exit 1; }
+# Bentuk yang sama dengan konsol: awalan, lalu empat karakter terakhir.
+mask() { if [ "${#1}" -ge 24 ]; then printf '%s...%s' "${1:0:16}" "${1: -4}"; else printf '%s karakter' "${#1}"; fi; }
 
 [ -d "$APP" ] || die "tidak ada $APP di server ini."
 
@@ -48,7 +50,7 @@ fi
 if [ -z "$CURRENT" ]; then
   warn "belum ada $NAME di $ENV_FILE"
 elif [ "${#CURRENT}" -ge 24 ]; then
-  ok "${#CURRENT} karakter — ${CURRENT:0:16}...${CURRENT: -4}"
+  ok "${#CURRENT} karakter — $(mask "$CURRENT")"
   printf '    Bandingkan ekor 4 karakter itu dengan yang di console.anthropic.com.\n'
   printf '    Beda  → yang terpasang memang kunci lain.\n'
   printf '    Sama  → kuncinya benar tapi ada karakter salah di tengah.\n'
@@ -95,7 +97,14 @@ esac
 case "$KEY" in
   *[!A-Za-z0-9_-]*) die "kunci memuat karakter di luar huruf, angka, - dan _. Salah salin?" ;;
 esac
-ok "${#KEY} karakter, awalan ${KEY:0:11}"
+ok "${#KEY} karakter — $(mask "$KEY")"
+# Pertanyaan yang paling sering tidak terjawab sesudah 401 adalah "apa bedanya
+# dengan yang tadi". Kalau tidak ada bedanya sama sekali, itulah jawabannya.
+SAME=""
+if [ -n "$CURRENT" ] && [ "$KEY" = "$CURRENT" ]; then
+  SAME=1
+  warn "persis sama dengan yang sudah terpasang"
+fi
 
 say "Menguji ke API sebelum menyentuh .env"
 BODY=$(mktemp); OUT=$(mktemp)
@@ -135,9 +144,23 @@ case "$CODE" in
     warn "saya tetap tulis: yang gagal bukan kuncinya."
     ;;
   401|403)
+    # Panjang yang benar dengan isi yang salah adalah kegagalan paling
+    # membingungkan di sini: 108 karakter, awalan benar, ekor benar, tetap
+    # ditolak. Itu selalu berarti ada karakter yang salah di TENGAH — yang
+    # terjadi kalau kunci disalin dengan mata, bukan dengan tombol Copy.
+    HINT="Ambil dengan tombol Copy key di console.anthropic.com, jangan disalin dengan mata.
+  Dialog kunci hanya tampil sekali; kalau sudah tertutup, buat kunci baru — 20 detik."
+    if [ -n "$SAME" ]; then
+      HINT="Yang Anda tempel SAMA PERSIS dengan yang sudah terpasang dan sudah ditolak.
+  Mengulanginya akan selalu memberi jawaban yang sama. $HINT"
+    elif [ -n "$CURRENT" ] && [ "${KEY: -4}" = "${CURRENT: -4}" ]; then
+      HINT="Ekor 4 karakternya sama dengan yang terpasang, jadi ini memang kunci yang benar
+  dengan satu-dua karakter salah di tengah — O dan 0, l dan I, biasanya. $HINT"
+    fi
     die "API menolak kunci ini (HTTP $CODE). ${REASON:-tanpa alasan}
-  .env TIDAK diubah. Buat kunci baru di console.anthropic.com lalu ulangi.
-  Kunci yang lama pernah tampil di screenshot — cabut kunci itu di sana."
+  yang diuji: $(mask "$KEY")  (${#KEY} karakter)
+  .env TIDAK diubah — yang lama masih di tempatnya.
+  $HINT"
     ;;
   000)
     die "tidak bisa menghubungi $API. Jaringan server, bukan kuncinya. .env tidak diubah."

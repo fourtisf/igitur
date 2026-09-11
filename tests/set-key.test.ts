@@ -126,6 +126,25 @@ test("it shows the installed key the way the console shows it", async () => {
   assert.ok(!out.includes(installed), "never the whole key");
 });
 
+test("re-pasting the key that was already refused is said out loud", async () => {
+  // 108 characters, right prefix, right tail, still refused — the one failure
+  // with no visible difference from a success, and the one most likely to be
+  // repeated. Saying "this is the same string" is the whole answer.
+  const installed = `sk-ant-api03-AeO${"x".repeat(24)}SQAA`;
+  const { code, out } = await run(installed, `ANTHROPIC_API_KEY=${installed}\n`);
+  assert.notEqual(code, 0);
+  assert.match(out, /SAMA PERSIS/, "it must not let the operator retry the same paste blind");
+  assert.match(out, /Copy key/, "and must point at the one way that cannot mistype");
+});
+
+test("a middle-of-the-key typo is named as one", async () => {
+  // Same tail, different body: the key is right and the transcription is not.
+  const installed = `sk-ant-api03-AeO${"x".repeat(24)}SQAA`;
+  const typo = `sk-ant-api03-AeO${"y".repeat(24)}SQAA`;
+  const { out } = await run(typo, `ANTHROPIC_API_KEY=${installed}\n`);
+  assert.match(out, /karakter salah di tengah/);
+});
+
 test("typing it in the open is possible, but never the default", () => {
   // A key that must be retyped from a photograph cannot be typed blind; a key
   // that was never in a photograph should never be on screen. So: opt-in.
