@@ -1,0 +1,107 @@
+<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/5476f68d60460930-s.2uwcyprjm3xu3.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/9c72aa0f40e4eef8-s.1y4-pdgsjb-pw.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/ad66f9afd8947f86-s.3lvt2whj97whp.woff2") format("woff2");font-weight:100 900;font-display:block}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--fg:#FAFAFA;--fg-2:#9E9EA6;--fg-3:#8A8A92;--fg-4:#7A7A82;
+  --ac:#7C8CFF;--ac-2:#AEB6FF;--bd:rgba(255,255,255,.075);--bd-2:rgba(255,255,255,.13)}
+html,body{width:1600px;height:900px}
+body{background:#08080A;font-family:Inter,system-ui,sans-serif;color:var(--fg);
+  -webkit-font-smoothing:antialiased;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;padding:0 96px}
+
+/* One light, from above. A launch card with a sunset gradient behind it is the
+   house style of every token that turned out to be nothing. */
+.wash{position:absolute;inset:0;
+  background:
+    radial-gradient(1200px 620px at 50% -18%,rgba(124,140,255,.15),transparent 62%),
+    linear-gradient(180deg,#0E0E13 0%,#0A0A0D 52%,#08080A 100%)}
+.grain{position:absolute;inset:0;opacity:.22;mix-blend-mode:overlay;z-index:9;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:absolute;inset:0;z-index:8;
+  background:radial-gradient(120% 86% at 50% 42%,transparent 52%,rgba(0,0,0,.66) 100%)}
+.shell{position:relative;z-index:7}
+
+.top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:15px}
+.mark{display:flex;flex-direction:column;gap:4.5px;width:30px;
+  filter:drop-shadow(0 0 18px rgba(174,182,255,.45))}
+.mark .row{display:flex;gap:2.2px;height:6.3px}
+.mark .p1{width:15.6px;background:rgba(255,255,255,.46);border-radius:3.2px}
+.mark .p2{width:10.9px;background:var(--ac);border-radius:3.2px}
+.mark .concl{width:30px;height:8.6px;background:var(--fg);border-radius:4.3px}
+.word{font-size:20px;font-weight:600;letter-spacing:.085em;color:#EDEFFF}
+.live{display:inline-flex;align-items:center;gap:9px;padding:8px 17px;border-radius:99px;
+  font-size:13px;font-weight:600;letter-spacing:.12em;color:var(--ac-2);
+  background:rgba(124,140,255,.13);box-shadow:inset 0 0 0 1px rgba(124,140,255,.34)}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ac-2);display:block;
+  box-shadow:0 0 12px rgba(174,182,255,.95)}
+
+.tick{font-size:82px;font-weight:600;letter-spacing:-.045em;line-height:1;margin-top:46px}
+.tick em{font-style:normal;
+  background:linear-gradient(180deg,#EDEFFF,#A2ADF2);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lede{font-size:17.5px;color:var(--fg-2);margin-top:18px;font-weight:350;max-width:86ch;line-height:1.55}
+
+/* The subject of the card. Monospace, grouped, and the tail set apart — the
+   six characters at the front are what a lookalike address copies, the four at
+   the end are what it cannot. */
+.label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-4);margin-top:42px}
+.addr{margin-top:14px;padding:26px 30px;border-radius:15px;
+  background:rgba(255,255,255,.028);
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 0 90px -30px rgba(124,140,255,.55);
+  font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;
+  font-size:30px;letter-spacing:.012em;color:#E7E8EE;white-space:nowrap}
+.addr b{color:#fff;font-weight:600;
+  text-shadow:0 0 26px rgba(174,182,255,.6)}
+.addr u{text-decoration:none;color:var(--fg-3)}
+
+.facts{display:flex;gap:52px;margin-top:34px;align-items:flex-end}
+.facts b{display:block;font-size:25px;font-weight:600;letter-spacing:-.02em}
+.facts span{display:block;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--fg-4);margin-top:9px}
+.rule{width:1px;height:46px;background:linear-gradient(180deg,transparent,var(--bd-2),transparent)}
+
+.warn{margin-top:38px;padding-left:18px;border-left:2px solid rgba(255,138,124,.55);
+  font-size:15.5px;line-height:1.62;color:var(--fg-2);max-width:104ch}
+.warn b{color:#fff;font-weight:550}
+.url{position:absolute;right:96px;bottom:56px;z-index:7;font-size:14px;color:var(--fg-4);
+  letter-spacing:.14em;text-transform:uppercase}
+</style>
+<div class="wash"></div>
+<div class="shell">
+  <div class="top">
+    <div class="brand">
+      <div class="mark"><div class="row"><div class="p1"></div><div class="p2"></div></div>
+        <div class="concl"></div></div>
+      <div class="word">IGITUR</div>
+    </div>
+    <span class="live"><i></i>LIVE ON ROBINHOOD CHAIN</span>
+  </div>
+
+  <h1 class="tick">$<em>IGITUR</em></h1>
+  <p class="lede">The research tool is free and stays free. The tokenomics went up months before
+    this contract existed — same page, unchanged — so they can be held against us now that it does.</p>
+
+  <p class="label">Contract address</p>
+  <div class="addr"><u>0x</u>4f30670d473e43524bf35c621aa5f525be60<b>38d9</b></div>
+
+  <div class="facts">
+    <div><b>1 billion</b><span>Fixed supply</span></div>
+    <div class="rule"></div>
+    <div><b>None</b><span>Presale · whitelist · team wallet</span></div>
+    <div class="rule"></div>
+    <div><b>26 · 160</b><span>Theses · names, already live</span></div>
+  </div>
+
+  <p class="warn">Published on <b>igitur.xyz/token</b> and by <b>@Igiturapp</b> at the same moment, and
+    nowhere else first. <b>Any address that does not match this one is fake</b> — in replies, DMs,
+    search results and lookalike sites. Nobody from this project will ever message you first.</p>
+</div>
+<p class="url">igitur.xyz/token</p>
+<div class="vignette"></div>
+<div class="grain"></div>

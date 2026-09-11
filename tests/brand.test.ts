@@ -51,3 +51,16 @@ test("the banner's floor and cap are read from the formula, never typed", () => 
   assert.ok(MIN_PCT < MAX_PCT, "a floor above the cap would make the banner nonsense");
   assert.ok(THEME_BY_ID.size === THEMES.length);
 });
+
+test("the launch card reads the address from the site, and checks it is one", () => {
+  // A banner is what somebody compares against the address in their wallet, so
+  // it must carry the deployed string and nothing else — not a snapshot in
+  // book.json, which is where every other figure on these cards comes from and
+  // is exactly the wrong place for this one.
+  const card = readFileSync("brand/x/make-token.mjs", "utf8");
+  assert.match(card, /lib", "site\.ts"/, "the address comes from lib/site.ts");
+  assert.match(card, /\^0x\[0-9a-fA-F\]\{40\}\$/, "and is checked before it is drawn");
+  const thread = readFileSync("brand/x/make-thread.mjs", "utf8");
+  assert.match(thread, /contractAddress:\\s\*"\(0x\[0-9a-fA-F\]\{40\}\)"/, "card 6 reads it too");
+  assert.ok(!/"address":\s*"0x/.test(readFileSync("brand/x/book.json", "utf8")), "never in the snapshot");
+});

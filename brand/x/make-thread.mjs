@@ -31,6 +31,18 @@ const faces = readdirSync(MEDIA)
   .join("\n");
 
 const book = JSON.parse(readFileSync(join(HERE, "book.json"), "utf8"));
+
+/**
+ * The contract address, from lib/site.ts — never from book.json.
+ *
+ * book.json is a snapshot, and a snapshot of an address is a second copy of
+ * the one string on this project that must never drift. tests/honesty.test.ts
+ * fails the build if a literal appears anywhere but lib/site.ts, this file
+ * included, so it is read at render time or not at all.
+ */
+const ADDRESS =
+  readFileSync(join(HERE, "..", "..", "lib", "site.ts"), "utf8")
+    .match(/contractAddress:\s*"(0x[0-9a-fA-F]{40})"/)?.[1] ?? null;
 const lead = book.holdings[0];
 
 const CSS = `
@@ -159,9 +171,10 @@ h1.wide{max-width:27ch}
 .pnote{font-size:19px;color:var(--fg-2);margin-top:16px;font-weight:350}
 .panel svg{display:block;width:100%;height:150px;margin-top:16px}
 
-/* Card 6: the contract address, which does not exist yet. The placeholder is
-   the real one from lib/site.ts, and the warning is the same sentence /token
-   carries — a launch card without it is the exact shape a scammer copies. */
+/* Card 6: the contract address. Deployed now, so the card carries the real
+   string, read from lib/site.ts at render time. The warning is the same
+   sentence /token carries — a launch card without it is the exact shape a
+   scammer copies. */
 .ticker{font-size:78px;font-weight:600;letter-spacing:-.04em;line-height:1}
 .ticker em{font-style:normal;color:var(--ac-2)}
 .soon-pill{display:inline-flex;align-items:center;padding:9px 20px;border-radius:99px;
@@ -363,11 +376,11 @@ const CARDS = {
   <div style="display:flex;flex-direction:column;gap:18px">
     <div style="display:flex;align-items:center;gap:20px">
       <span style="font-size:26px;color:var(--fg-2);font-weight:350">Contract address</span>
-      <span class="soon-pill">COMING SOON</span>
+      <span class="soon-pill">${ADDRESS ? "LIVE" : "COMING SOON"}</span>
     </div>
     <div class="addrbox">
-      <code>${book.token.address ?? "0x0000…0000 — not deployed"}</code>
-      <span>Copy · disabled</span>
+      <code>${ADDRESS ?? book.token.address ?? "0x0000…0000 — not deployed"}</code>
+      <span>${ADDRESS ? "Verify before you trade" : "Copy · disabled"}</span>
     </div>
     <div class="facts">
       <div><b>${book.token.supply === "1B" ? "1 billion" : book.token.supply}</b><span>Fixed supply</span></div>
@@ -377,9 +390,13 @@ const CARDS = {
   </div>
 
   <div class="warn-box">
-    Any contract address for this project circulating right now is fake. When the pool opens, the
-    address appears on igitur.xyz and on @Igiturapp at the same moment — and nowhere else first.
-    Nobody from this project will ever message you first.
+    ${ADDRESS
+      ? `Any address that does not match this one is fake — in replies, DMs, search results and
+         lookalike sites. It is published on igitur.xyz/token and by @Igiturapp at the same moment,
+         and nowhere else first. Nobody from this project will ever message you first.`
+      : `Any contract address for this project circulating right now is fake. When the pool opens, the
+         address appears on igitur.xyz and on @Igiturapp at the same moment — and nowhere else first.
+         Nobody from this project will ever message you first.`}
   </div>
 `),
 };

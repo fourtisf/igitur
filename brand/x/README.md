@@ -38,6 +38,28 @@ floor and cap out of `lib/reweight.ts` at render time. `tests/brand.test.ts`
 fails if the universe moves past the snapshot — when it does, rebuild the images
 rather than edit the numbers.
 
+## The launch card — `09-token.png`
+
+`node brand/x/make-token.mjs`. Standalone, 3200×1800.
+
+Its job is unlike the others: this is the image somebody screenshots and holds
+against the address in front of them before they trade. So the address is the
+subject rather than a footnote — large, monospace, unbroken, with the last four
+characters in white because that is the half a lookalike address cannot copy.
+
+An earlier draft grouped it into sixes. It read beautifully and was wrong: a
+reader comparing a spaced address here against an unspaced one in their wallet
+is more likely to miss a mismatch, not less.
+
+Deliberately quieter than the workspace and assistant banners. A launch card
+that looks like an advertisement is the house style of every token that turned
+out to be nothing; this one should read like a notice board.
+
+The address is read from `lib/site.ts` at render time, never from `book.json` —
+a snapshot of an address is a second copy of the one string on this project that
+must not drift, and `tests/honesty.test.ts` fails the build if a literal appears
+anywhere else. `06-token.png` in the thread reads it the same way.
+
 ## The workspace banner — `07-workspace.png`
 
 `node brand/x/make-workspace.mjs`. One standalone image, same 3200×1800.
