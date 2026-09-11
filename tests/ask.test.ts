@@ -146,6 +146,25 @@ test("what a conviction score measures is stated, so it is not read as a rating"
   assert.match(RULES, /how directly it expresses the thesis, not how good an investment it is/);
 });
 
+test("a conditional verdict is still a verdict", () => {
+  // "Yes, if you are a long-term holder" is the most natural way to slip past
+  // rule 1 — it feels like context and reads like permission. What the site
+  // can honestly say is what the thesis was written for.
+  assert.match(RULES, /Never dress a verdict as a condition/);
+  assert.match(RULES, /the conditional does not launder it/);
+  assert.match(RULES, /let the reader decide whether they are that person/);
+});
+
+test("the horizon and risk band every thesis is written for reach the reader", () => {
+  // They were in the corpus and never used: the one published fact that
+  // answers "is this for someone like me" without answering for them.
+  assert.match(RULES, /the horizon and risk band the thesis is written for/);
+  for (const th of THEMES) {
+    assert.ok(CORPUS.includes(th.horizon), `${th.id}'s horizon is missing from the corpus`);
+    assert.ok(CORPUS.includes(th.risk), `${th.id}'s risk band is missing from the corpus`);
+  }
+});
+
 test("a refusal must answer about the thing the reader named", () => {
   // "I won't tell you whether to buy NVDA — tell me a belief and I'll show you
   // a thesis" is a refusal that answered nothing. The reader named NVDA; the

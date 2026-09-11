@@ -31,11 +31,17 @@ interface Props {
   themes: Thesis[];
 }
 
+/**
+ * The four openers are a template, not decoration. Left to themselves readers
+ * type "should I buy NVDA", get the one answer the site will never give, and
+ * leave — so the chips show the shape of question this thing answers properly:
+ * a name, a thesis, the mechanism, and the limits.
+ */
 const OPENERS = [
-  "How are the weights decided?",
-  "Where do the conviction scores come from?",
-  "Why did it refuse my sentence?",
-  "What is not built yet?",
+  "Why is NVDA in Igitur at all?",
+  "What has to stay true for the compute buildout thesis to work?",
+  "What horizon and risk band is each thesis written for?",
+  "How is a weight decided, and by whom?",
 ];
 
 export function AskChat({ tickers, themes }: Props) {
