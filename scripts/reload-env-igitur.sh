@@ -50,12 +50,32 @@ if [ -f "$APP/.env" ]; then
   # tidak pernah sampai ke proses, betapapun benar isinya di .env.
   MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY|ANTHROPIC_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
 fi
-# Nilainya tidak pernah dicetak — hanya ada tidaknya, dan panjangnya.
+# Setiap kunci runtime yang ditemukan, dengan NAMA dan PANJANGNYA. Nilainya
+# tidak pernah dicetak.
+#
+# Dulu blok ini hanya mengukur MARKET_API_KEY, dan melakukannya dengan pipeline
+# yang pecah begitu kunci itu tidak ada: `grep` keluar 1, `pipefail` menjatuhkan
+# seluruh pipeline, `|| echo 0` ikut jalan setelah `wc -c` sudah mencetak 0, dan
+# hasilnya "0\n0" — "syntax error in expression" di layar operator yang tidak
+# melakukan kesalahan apa pun. Pemasangan ini memang memakai TWELVEDATA_API_KEY,
+# jadi errornya muncul setiap kali.
+#
+# Yang lebih penting: ia tidak pernah menyebut ANTHROPIC_API_KEY sama sekali.
+# Satu-satunya pertanyaan operator saat menjalankan skrip ini adalah "kunci saya
+# terbaca tidak" — dan jawabannya tidak ada di sini, jadi harus ditebak dari
+# /status. Sekarang setiap kunci menyebut dirinya.
 if [ -n "$MARKET_ENV" ]; then
-  KEYLEN=$(grep -E '^MARKET_API_KEY=' "$APP/.env" 2>/dev/null | head -1 | sed 's/^MARKET_API_KEY=//' | tr -d '"'"'"' \r\n' | wc -c || echo 0)
-  ok "konfigurasi pasar ditemukan (kunci: $((KEYLEN > 0 ? KEYLEN - 1 : 0)) karakter)"
+  printf '%s' "$MARKET_ENV" | tr ' ' '\n' | while IFS='=' read -r NAME VALUE; do
+    [ -n "$NAME" ] || continue
+    CLEAN=$(printf '%s' "$VALUE" | tr -d '"'"'"' \r')
+    if [ -n "$CLEAN" ]; then
+      ok "$NAME — ${#CLEAN} karakter"
+    else
+      warn "$NAME — ada di .env tapi kosong"
+    fi
+  done
 else
-  warn "tidak ada MARKET_* di .env — situs akan memakai sumber tanpa kunci"
+  warn "tidak ada kunci runtime di .env — situs memakai sumber tanpa kunci dan mengatakannya"
 fi
 
 say "Menyalakan ulang dengan konfigurasi itu"

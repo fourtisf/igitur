@@ -176,6 +176,40 @@ test("every runtime key the app reads actually reaches the process", () => {
   }
 });
 
+test("no arithmetic is fed from a pipeline that pipefail can double", () => {
+  // `KEYLEN=$(grep ... | wc -c || echo 0)` under `set -o pipefail`: when grep
+  // matches nothing it exits 1, pipefail fails the whole pipeline, `|| echo 0`
+  // runs — after `wc -c` has already printed 0. The result is "0\n0" and the
+  // arithmetic that reads it prints "syntax error in expression" to an operator
+  // who did nothing wrong. It fired on every run of this deployment, because
+  // its .env uses TWELVEDATA_API_KEY and not MARKET_API_KEY.
+  for (const [name, src] of scripts) {
+    if (!/set -[a-z]*o pipefail|set -euo/.test(src)) continue;
+    for (const m of src.matchAll(/\$\(([^()]*\|\|[^()]*)\)/g)) {
+      const inner = m[1];
+      // A real pipe, not the two characters of `||`. Without stripping those
+      // first, every plain `cmd || echo fallback` looks like a pipeline — and
+      // one with no pipe in it cannot be doubled by pipefail at all.
+      const piped = inner.replace(/\|\|/g, "\u0000").includes("|");
+      if (!piped) continue;
+      assert.ok(
+        !/\|\|\s*echo/.test(inner),
+        `${name}: \`${inner.trim().slice(0, 70)}\` can emit two values under pipefail`
+      );
+    }
+  }
+});
+
+test("reloading env says which keys it found, by name", () => {
+  // The only question an operator has when running it is "was my key read?".
+  // Measuring one hard-coded variable answered that for MARKET_API_KEY alone
+  // and said nothing at all about the key they had just set.
+  const src = readFileSync("scripts/reload-env-igitur.sh", "utf8");
+  assert.match(src, /IFS='='\s+read -r NAME VALUE/, "it must walk the keys it found");
+  assert.match(src, /\$NAME — \$\{#CLEAN\} karakter/, "each key must report its own name and length");
+  assert.ok(!/\$\(\(KEYLEN/.test(src), "the single-key arithmetic is what broke");
+});
+
 test("the clone URL is this repository's current name, not one that redirects", () => {
   // The old name is not wrong today — it is unowned tomorrow.
   for (const [name, src] of scripts) {
