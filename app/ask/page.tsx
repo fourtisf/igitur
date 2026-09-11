@@ -6,7 +6,7 @@ import { modelIsReal, modelMatcherConfigured } from "@/lib/matcher/llm";
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 import { twitterCard } from "@/lib/twitter-card";
-import { NAMES, THEMES } from "@/lib/universe";
+import { NAMES, THEMES, UNIVERSE } from "@/lib/universe";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,14 @@ export default async function AskPage() {
       </p>
 
       {ready ? (
-        <AskChat />
+        /* The tickers and theses travel to the browser so an answer can end in
+           something the reader can click. Deciding that in the page rather than
+           in the model keeps every link real: the model writes prose, the site
+           decides where its own pages are. */
+        <AskChat
+          tickers={[...new Set(UNIVERSE.map((a) => a.t))].filter((t) => t.length > 1 && t !== "NOW")}
+          themes={THEMES.map((t) => ({ id: t.id, name: t.name, claim: t.claim }))}
+        />
       ) : (
         /* Derived, not written beside the feature: a page claiming an assistant
            this deployment does not have is the same failure /status exists to

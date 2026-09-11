@@ -126,3 +126,25 @@ test("the words it is given are the reader's, not the codebase's", () => {
   assert.deepEqual(jargon, [], "the assistant must not be taught the word the site stopped using");
   assert.match(RULES, /Never call it a book/);
 });
+
+test("a refusal must answer about the thing the reader named", () => {
+  // "I won't tell you whether to buy NVDA — tell me a belief and I'll show you
+  // a thesis" is a refusal that answered nothing. The reader named NVDA; the
+  // answer has to be about NVDA.
+  assert.match(RULES, /A refusal is ONE sentence/);
+  assert.match(RULES, /conviction score in every thesis that holds it/);
+  assert.match(RULES, /has answered nothing/);
+});
+
+test("every answer offers a way out, and the site decides where its pages are", () => {
+  // An assistant that cannot recommend anything has to hand the reader
+  // somewhere to go, or the refusal is the entire experience. The links are
+  // built from the universe in code — the model writes prose and never a URL,
+  // so a link on screen cannot be one it invented.
+  const chat = readFileSync("components/AskChat.tsx", "utf8");
+  assert.match(chat, /\/name\/\$\{n\.toLowerCase\(\)\}/, "a named holding links to its page");
+  assert.match(chat, /\/compose\?p=\$\{encodeURIComponent\(thesis\.claim\)\}/, "a named thesis builds one");
+  const page = readFileSync("app/ask/page.tsx", "utf8");
+  assert.match(page, /UNIVERSE\.map\(\(a\) => a\.t\)/, "the tickers come from the universe");
+  assert.match(page, /t !== "NOW"/, "ServiceNow's ticker is also an English word");
+});

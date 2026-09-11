@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * The assistant, as a page rather than a bubble in the corner.
@@ -18,6 +19,18 @@ interface Turn {
   content: string;
 }
 
+interface Thesis {
+  id: string;
+  name: string;
+  claim: string;
+}
+
+interface Props {
+  /** Every ticker in the universe, so an answer that names one can link to it. */
+  tickers: string[];
+  themes: Thesis[];
+}
+
 const OPENERS = [
   "How are the weights decided?",
   "Where do the conviction scores come from?",
@@ -25,11 +38,13 @@ const OPENERS = [
   "What is not built yet?",
 ];
 
-export function AskChat() {
+export function AskChat({ tickers, themes }: Props) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const field = useRef<HTMLTextAreaElement>(null);
+  /* One pass over the answer, not 164. Built once, reused for every turn. */
+  const named = useMemo(() => new RegExp(`\\b(${tickers.join("|")})\\b`, "g"), [tickers]);
   const foot = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,6 +95,27 @@ export function AskChat() {
     }
   }
 
+  /**
+   * What the reader can do with the answer they just got.
+   *
+   * This is the part that stops a refusal being a dead end. The assistant is
+   * not allowed to recommend anything and should not be — but "I will not tell
+   * you whether to buy NVDA" is only useful if the next thing on screen is
+   * NVDA's own page, the score behind it and a portfolio built from the thesis
+   * it belongs to. The model writes the prose; this decides where the site's
+   * pages are, so every link here is real by construction.
+   */
+  function acts(text: string) {
+    const names: string[] = [];
+    for (const m of text.matchAll(named)) {
+      if (!names.includes(m[1])) names.push(m[1]);
+      if (names.length >= 3) break;
+    }
+    const low = text.toLowerCase();
+    const thesis = themes.find((t) => low.includes(t.name.toLowerCase()));
+    return { names, thesis };
+  }
+
   return (
     <div className="ask rv">
       {turns.length ? (
@@ -89,6 +125,29 @@ export function AskChat() {
               <span className="ask-who">{t.role === "user" ? "You" : "Igitur"}</span>
               <div className="ask-text">
                 {t.content || <span className="ask-wait">thinking…</span>}
+                {t.role === "assistant" && t.content && !(busy && i === turns.length - 1)
+                  ? (() => {
+                      const { names, thesis } = acts(t.content);
+                      if (!names.length && !thesis) return null;
+                      return (
+                        <div className="ask-acts">
+                          {names.map((n) => (
+                            <Link key={n} className="chip" href={`/name/${n.toLowerCase()}`}>
+                              {n} in full
+                            </Link>
+                          ))}
+                          {thesis ? (
+                            <Link
+                              className="chip"
+                              href={`/compose?p=${encodeURIComponent(thesis.claim)}`}
+                            >
+                              Build the {thesis.name.toLowerCase()} portfolio
+                            </Link>
+                          ) : null}
+                        </div>
+                      );
+                    })()
+                  : null}
               </div>
             </div>
           ))}

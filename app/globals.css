@@ -353,6 +353,11 @@ section{padding-block:clamp(64px,9vw,120px)}
 .ask-text{font-size:14.5px;line-height:1.6;color:var(--fg-1);white-space:pre-wrap}
 .ask-turn.user .ask-text{color:var(--fg-2)}
 .ask-wait{color:var(--fg-4);font-style:italic}
+/* The way out of a refusal. An assistant that cannot recommend anything has to
+   hand the reader somewhere to go, or "I won't answer that" is the whole
+   experience. */
+.ask-acts{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.ask-acts .chip{font-size:12px;padding:6px 11px}
 .ask .b1[disabled],.ask .chip[disabled]{opacity:.55;cursor:default}
 .chip{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:450;color:var(--fg-2);
   background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:color .18s,background .18s;text-align:left}
