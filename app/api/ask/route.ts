@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { corpus, RULES } from "@/lib/ask/corpus";
+import { priceBlock } from "@/lib/ask/prices";
 import { MODEL, modelMatcherConfigured } from "@/lib/matcher/llm";
 import { logModelError, readerSentence } from "@/lib/model-error";
 
@@ -108,6 +109,19 @@ export async function POST(req: Request) {
 
   client ??= new Anthropic();
 
+  /*
+   * Prices for whatever the reader just named. Fetched here rather than by the
+   * model: it has no tools, and it must not be able to reach a vendor on its
+   * own — what goes over is the site's own cached quote, or nothing.
+   */
+  let live = "";
+  try {
+    live = await priceBlock(turns[turns.length - 1]?.content ?? "");
+  } catch (err) {
+    // A quote that will not load is not a reason to lose the answer.
+    logModelError("ask-prices", err);
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const enc = new TextEncoder();
@@ -122,9 +136,11 @@ export async function POST(req: Request) {
           output_config: { effort: "medium" },
           system: [
             // The rules and the corpus never change between requests, so they
-            // cache: the volatile part is the question, and it goes last.
+            // cache: the volatile parts go after the cache breakpoint, or
+            // today's prices would poison tomorrow's cached prompt.
             { type: "text", text: RULES },
             { type: "text", text: corpus(), cache_control: { type: "ephemeral" } },
+            ...(live ? [{ type: "text" as const, text: live }] : []),
           ],
           messages: turns,
         });

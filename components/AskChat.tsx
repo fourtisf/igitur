@@ -207,11 +207,19 @@ export function AskChat({ tickers, themes }: Props) {
         </div>
       </div>
 
-      {/* Where somebody about to ask what to buy will read it first. */}
-      <p className="notice warn rv" style={{ marginTop: 16 }}>
-        This will not tell you what to buy. It cannot: it does not know your position, your
-        horizon or your circumstances, and it has no price data at all. It explains what this
-        site holds and why — nothing here is investment advice.
+      {/* One line, not a paragraph.
+          The block that stood here said the same thing at four times the
+          length and in a warning colour, directly under a chat box — the first
+          thing a reader saw was a wall of what the product would not do. It is
+          still said, because /legal says it and a page that quotes live prices
+          must not be the one page that stops saying it. It is just said once,
+          quietly, where a footnote belongs. */}
+      <p className="faint" style={{ fontSize: 12, marginTop: 14, lineHeight: 1.6 }}>
+        Research, not advice — it explains what this site holds and why, and does not know your
+        circumstances.{" "}
+        <Link href="/legal" style={{ color: "inherit", textDecoration: "underline" }}>
+          Terms
+        </Link>
       </p>
     </div>
   );

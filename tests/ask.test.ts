@@ -78,14 +78,16 @@ test("the refusal is described as designed, not as a fault", () => {
   assert.match(CORPUS, /refusing is a designed outcome, not a failure/);
 });
 
-test("the page warns before anyone types, not after", () => {
+test("the page still says what it is, in one line rather than a wall", () => {
+  // The paragraph that stood here was four sentences in a warning colour,
+  // directly under the chat box: the first thing a reader met was everything
+  // the product would not do. It is now a footnote — but it is still there,
+  // because /legal makes the same promise and the page that quotes live prices
+  // is the last page that should go quiet about it.
   const page = readFileSync("components/AskChat.tsx", "utf8");
-  assert.match(page, /will not tell you what to buy/);
-  assert.match(page, /nothing here is investment advice/i);
-  // Placed with the field rather than at the bottom of the page.
-  const warn = page.indexOf("will not tell you what to buy");
-  const field = page.indexOf("Your question");
-  assert.ok(warn > -1 && field > -1, "both must exist");
+  assert.match(page, /Research, not advice/);
+  assert.match(page, /does not know your\s+circumstances/);
+  assert.match(page, /href="\/legal"/, "and it must reach the terms it is quoting");
 });
 
 test("the endpoint is capped, bounded and off without a key", () => {
@@ -203,4 +205,30 @@ test("every answer offers a way out, and the site decides where its pages are", 
   const page = readFileSync("app/ask/page.tsx", "utf8");
   assert.match(page, /UNIVERSE\.map\(\(a\) => a\.t\)/, "the tickers come from the universe");
   assert.match(page, /t !== "NOW"/, "ServiceNow's ticker is also an English word");
+});
+
+test("live prices reach the assistant, and only for names this site covers", async () => {
+  // "It has no price data at all" was true of the assistant and never of the
+  // site: /universe and /track have shown vendor prices for weeks.
+  const { mentioned } = await import("../lib/ask/prices");
+  assert.deepEqual(mentioned("should i buy nvda or tsm?"), ["NVDA", "TSM"]);
+  // A ticker this site does not cover must never cost a vendor request.
+  assert.deepEqual(mentioned("what about GME and AMC?"), []);
+  // Nor may an English word that happens to be a ticker.
+  assert.deepEqual(mentioned("what should I do now, right now?"), []);
+  // And one conversation must not spend the day's quota.
+  assert.ok(mentioned("NVDA TSM ASML AVGO MU VRT GEV LLY").length <= 6);
+});
+
+test("a generated price is never handed over as a real one", () => {
+  // The site falls back to synthetic figures for its tables when the vendor is
+  // down, and flags them. In a sentence about whether to hold something, a
+  // made-up price is the most damaging thing this assistant could say, so they
+  // are withheld outright rather than flagged.
+  const src = readFileSync("lib/ask/prices.ts", "utf8");
+  assert.match(src, /if \(!q \|\| q\.synthetic\)/, "synthetic quotes must be dropped");
+  assert.match(src, /never estimate one/);
+  assert.match(RULES, /If a name has no live price, say so and never estimate/);
+  // Reporting a price is allowed; judging it is not.
+  assert.match(RULES, /you have left reporting and given advice with a number attached/);
 });
