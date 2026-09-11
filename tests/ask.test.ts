@@ -127,6 +127,25 @@ test("the words it is given are the reader's, not the codebase's", () => {
   assert.match(RULES, /Never call it a book/);
 });
 
+test("the case for is given in full, not summarised into a clause", () => {
+  // The assistant had the bull case all along — every thesis publishes one —
+  // and skipped it: one clause of reason, then straight to the counter-case.
+  // A reader asking about a name got the argument against and nothing for it,
+  // which is not neutrality, it is half the research.
+  assert.match(RULES, /THE CASE FOR, in the site's published words/);
+  assert.match(RULES, /at the same length as the case for/);
+  assert.match(RULES, /The refusal is the doorway, never the room/);
+  // And the corpus must actually carry both sides for every thesis.
+  for (const th of THEMES) {
+    assert.ok(CORPUS.includes(flat(th.forCase)), `${th.id} has no case for in the corpus`);
+    assert.ok(CORPUS.includes(flat(th.againstCase)), `${th.id} has no case against in the corpus`);
+  }
+});
+
+test("what a conviction score measures is stated, so it is not read as a rating", () => {
+  assert.match(RULES, /how directly it expresses the thesis, not how good an investment it is/);
+});
+
 test("a refusal must answer about the thing the reader named", () => {
   // "I won't tell you whether to buy NVDA — tell me a belief and I'll show you
   // a thesis" is a refusal that answered nothing. The reader named NVDA; the

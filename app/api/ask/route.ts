@@ -115,9 +115,11 @@ export async function POST(req: Request) {
         const s = client!.messages.stream({
           model: MODEL,
           max_tokens: MAX_TOKENS,
-          // Short factual answers from a fixed corpus. Effort low is the
-          // documented setting for this shape of work.
-          output_config: { effort: "low" },
+          // Low was right when the job was a lookup. The job is now synthesis:
+          // hold a thesis, its case for, a name's score and the counter-case in
+          // mind at once, and write them as one argument rather than four
+          // quotations. That is worth the extra seconds.
+          output_config: { effort: "medium" },
           system: [
             // The rules and the corpus never change between requests, so they
             // cache: the volatile part is the question, and it goes last.
