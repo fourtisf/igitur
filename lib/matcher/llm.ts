@@ -3,6 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 
 import { matchText } from "../generator";
+import { logModelError } from "../model-error";
 import { normalizePremise } from "../premise";
 import { THEMES, THEME_BY_ID } from "../universe";
 
@@ -132,8 +133,11 @@ export async function matchWithModel(
       { signal }
     );
     parsed = res.parsed_output;
-  } catch {
-    // A vendor that will not answer is not a match. The refusal stands.
+  } catch (err) {
+    // A vendor that will not answer is not a match. The refusal stands — but
+    // it is written down, because a key that is set and rejected looks exactly
+    // like a premise no thesis carries, and that cost a day once.
+    logModelError("matcher", err);
     return null;
   }
   if (!parsed) return null;
