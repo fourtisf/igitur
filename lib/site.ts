@@ -81,8 +81,17 @@ export const SITE = {
     supply: "1B",
     chain: "Robinhood Chain",
     chainShort: "Robinhood",
-    /** Stays null until the pool opens. The UI reads null as "Coming soon". */
-    contractAddress: null as string | null,
+    /**
+     * The one address. Deployed 11 September 2026.
+     *
+     * This string exists exactly once in the repository, and every surface
+     * that shows an address — the strip on every page, /token, the footer,
+     * the assistant's answers — reads it from here. A second copy would be a
+     * second thing to get wrong on the one field where being wrong costs
+     * somebody their money, and tests/honesty.test.ts fails the build if one
+     * appears anywhere else.
+     */
+    contractAddress: "0x4f30670d473e43524bf35c621aa5f525be6038d9" as string | null,
   },
 } as const;
 

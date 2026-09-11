@@ -39,6 +39,5 @@ export const ALWAYS_MISSING = [
   "Following other people's portfolios, and a feed of new claims",
   "Session history that survives a page refresh — only a committed claim persists",
   "Placing an order through a broker",
-  "The token contract — not deployed",
   "Every utility listed on the token page",
 ];

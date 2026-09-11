@@ -57,7 +57,11 @@ export default async function StatusPage() {
   // "Configured" is the wrong word for the keyless default — nothing was
   // configured. This is simply the source failing.
   const rejected = isLive() && !live;
+  // Derived from the one address, like every other line here: publishing it
+  // moves this row by itself, with no launch-day checklist to forget.
+  const token = SITE.token.contractAddress;
   const LIVE = [
+    ...(token ? ["The token contract, deployed — one address, published on /token"] : []),
     ...(live ? [`Live market data from ${providerName()}`] : []),
     ...(model
       ? ["A language model reading a premise the keyword index refused, and saying so on the page"]
@@ -65,6 +69,7 @@ export default async function StatusPage() {
     ...ALWAYS_LIVE,
   ];
   const NOT_BUILT = [
+    ...(token ? [] : ["The token contract — not deployed"]),
     ...(live ? [] : ["Live market data instead of synthetic figures"]),
     ...(model ? [] : ["A language model reading the premise"]),
     ...ALWAYS_MISSING,
@@ -150,10 +155,14 @@ export default async function StatusPage() {
         so on every page.
       </p>
       <p className="notice warn rv" style={{ marginTop: 14 }}>
-        The token is not deployed. Every utility on the token page is a stated intention, not a
-        shipped feature, and the contract address field reads <span className="wn">Coming soon</span>{" "}
-        because there is nothing to put in it. Any address circulating for this project today is
-        fake.
+        {token
+          ? `The contract is deployed and its address is published on /token — that page and the
+             official X account carry it, and nothing else does. Any address that does not match
+             it is fake. Every utility listed on the token page is still a stated intention rather
+             than a shipped feature, and each stays in the second list above until it ships.`
+          : `The token is not deployed. Every utility on the token page is a stated intention, not a
+             shipped feature, and the contract address field reads Coming soon because there is
+             nothing to put in it. Any address circulating for this project today is fake.`}
       </p>
     </section>
   );

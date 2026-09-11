@@ -533,13 +533,13 @@ export default async function Home() {
           Nothing was softened, only moved behind the proof. */}
       <section className="shell">
         <p className="notice rv">
-          The research tool is free, needs no account and no wallet, and stays that way. A token is
-          published ahead of any launch so it can be held against us afterwards — it is not
-          deployed, and the contract address does not exist yet.{" "}
+          The research tool is free, needs no account and no wallet, and stays that way. The
+          tokenomics were published months before the contract existed, so they can be held against
+          us now that it does.{" "}
           <Link href="/token" style={{ textDecoration: "underline" }}>
             Read the tokenomics
           </Link>
-          , including why anyone posting an address today is not us.
+          , including the one address and why every other one is not us.
         </p>
       </section>
 

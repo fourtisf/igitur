@@ -106,7 +106,7 @@ export default async function LegalPage() {
         <div className="cell c3">
           <h3>Token and wallet</h3>
           <p className="p" style={{ marginTop: 8 }}>
-            The token is not deployed and nothing on this site is an offer to sell it. Utilities
+            Nothing on this site is an offer to sell the token. Utilities
             described on the token page are stated intentions and may change or never ship. Tokens
             can be volatile and can lose all value.
           </p>

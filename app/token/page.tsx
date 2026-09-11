@@ -4,16 +4,23 @@ import { twitterCard } from "@/lib/twitter-card";
 import { pageOg } from "@/lib/og-pages";
 
 import { TelegramIcon, XIcon } from "@/components/icons";
+import { CopyAddress } from "@/components/CopyAddress";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: `$${SITE.token.ticker}`,
-  description: `Tokenomics for $${SITE.token.ticker}, published before launch. The research tool is free and stays free. The token is not deployed and any contract address circulating today is fake.`,
+  // The search result and the link preview are where somebody arrives from a
+  // scammer's reply, so they carry the same sentence the page does.
+  description: SITE.token.contractAddress
+    ? `Tokenomics for $${SITE.token.ticker} and the one official contract address. The research tool is free and stays free. Any address that does not match the one on this page is fake.`
+    : `Tokenomics for $${SITE.token.ticker}, published before launch. The research tool is free and stays free. The token is not deployed and any contract address circulating today is fake.`,
   alternates: { canonical: "/token" },
   openGraph: {
     url: "/token",
     title: `$${SITE.token.ticker} — ${SITE.name}`,
-    description: `Fixed supply, stated utilities, and the anti-scam rules — published before anything is deployed.`,
+    description: SITE.token.contractAddress
+      ? `The one official contract address, the stated utilities, and the anti-scam rules.`
+      : `Fixed supply, stated utilities, and the anti-scam rules — published before anything is deployed.`,
     images: [{ url: pageOg("token"), width: 1200, height: 630 }],
   },
   twitter: twitterCard(pageOg("token")),
@@ -31,15 +38,15 @@ export const metadata: Metadata = {
 const UTILITIES: [string, string][] = [
   [
     "Higher generation limits",
-    "Unlimited books per day and access to deeper matching once the model layer ships.",
+    "Unlimited portfolios per day and access to deeper matching once the model layer ships.",
   ],
   [
     "Publish and fork",
-    "Put a book on a public page others can follow or fork under their own premise.",
+    "Put a portfolio on a public page others can follow or fork under their own premise.",
   ],
   [
     "Creator rewards",
-    "A share of protocol fees routed to the authors of books other people actually follow.",
+    "A share of protocol fees routed to the authors of portfolios other people actually follow.",
   ],
   ["Reduced platform fees", "Lower cost on the settlement layer once execution exists."],
   [
@@ -80,7 +87,7 @@ export default function TokenPage() {
       </h1>
       <p className="sub rv" style={{ marginTop: 16 }}>
         The research tool is free and stays free. The token exists for the parts that cost money to
-        run — the model layer, the published books, and eventually settlement.
+        run — the model layer, the published portfolios, and eventually settlement.
       </p>
 
       <div className="stats rv" style={{ marginTop: "clamp(26px,3.5vw,44px)" }}>
@@ -99,8 +106,8 @@ export default function TokenPage() {
           <div className="sl">Chain</div>
         </div>
         <div>
-          <div className="sn wn" style={{ fontSize: 22, paddingTop: 5 }}>
-            Not live
+          <div className={contractAddress ? "sn" : "sn wn"} style={{ fontSize: 22, paddingTop: 5 }}>
+            {contractAddress ? "Live" : "Not live"}
           </div>
           <div className="sl">Status</div>
         </div>
@@ -117,27 +124,38 @@ export default function TokenPage() {
           }}
         >
           <h3>Contract address</h3>
-          <span className="soon">Coming soon</span>
+          <span className={contractAddress ? "pill pon" : "soon"}>
+            {contractAddress ? "Live" : "Coming soon"}
+          </span>
         </div>
         <p className="p" style={{ fontSize: 13, marginTop: 8, maxWidth: "56ch" }}>
-          Nothing is tradeable yet. When the pool opens, the address appears here and on the
-          official X account at the same moment — and nowhere else first.
+          {contractAddress
+            ? `This page and the official X account carry the same address, published at the same
+               moment and nowhere else first. Check it character by character against this page
+               before you trade — including the last four.`
+            : `Nothing is tradeable yet. When the pool opens, the address appears here and on the
+               official X account at the same moment — and nowhere else first.`}
         </p>
-        <div className="addrbox" style={{ marginTop: 14 }}>
-          <code>{contractAddress ?? "0x0000…0000 — not deployed"}</code>
-          <button
-            className="copyb"
-            disabled
-            style={{ opacity: 0.4, cursor: "not-allowed" }}
-            aria-disabled="true"
-          >
-            Copy
-          </button>
-        </div>
+        {contractAddress ? (
+          <CopyAddress address={contractAddress} />
+        ) : (
+          <div className="addrbox" style={{ marginTop: 14 }}>
+            <code>0x0000…0000 — not deployed</code>
+            <button
+              className="copyb"
+              disabled
+              style={{ opacity: 0.4, cursor: "not-allowed" }}
+              aria-disabled="true"
+            >
+              Copy
+            </button>
+          </div>
+        )}
         <p className="notice warn" style={{ marginTop: 16 }}>
-          Any contract address for this project circulating right now is fake. There is no presale,
-          no whitelist, no private round and no team wallet taking deposits. Nobody from this
-          project will ever message you first.
+          Any address that does not match the one on this page is fake, including ones posted in
+          replies, DMs, search results and lookalike sites. There is no presale, no whitelist, no
+          private round and no team wallet taking deposits. Nobody from this project will ever
+          message you first.
         </p>
       </div>
 
@@ -158,8 +176,8 @@ export default function TokenPage() {
         ))}
       </div>
       <p className="notice rv" style={{ marginTop: 20 }}>
-        None of these are live. Composing books, reading the universe, tracking against the index
-        and sharing a book address are free today and stay free — the token gates the expensive
+        None of these are live. Composing portfolios, reading the universe, tracking against the index
+        and sharing a portfolio address are free today and stay free — the token gates the expensive
         layer, not the research.
       </p>
 

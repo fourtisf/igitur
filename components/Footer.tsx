@@ -61,8 +61,10 @@ export function Footer() {
             looking at. The two disclosures that do carry information — what
             data version they are reading, and that the token does not exist —
             stay. */}
-        © 2026 {SITE.name} · Universe v{UNIVERSE_VERSION}, reviewed {REVIEWED} · Research only ·
-        Token not deployed
+        © 2026 {SITE.name} · Universe v{UNIVERSE_VERSION}, reviewed {REVIEWED} · Research only ·{" "}
+        {SITE.token.contractAddress
+          ? `$${SITE.token.ticker} contract published on /token — no other address is ours`
+          : "Token not deployed"}
       </p>
     </footer>
   );

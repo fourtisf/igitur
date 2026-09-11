@@ -17,6 +17,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
+import { corpus } from "../lib/ask/corpus";
 import { SITE, handleFor } from "../lib/site";
 import { twitterCard } from "../lib/twitter-card";
 
@@ -141,7 +142,44 @@ test("the contract-address strip never invents an address", () => {
   const src = readFileSync("components/TokenStrip.tsx", "utf8");
   assert.match(src, /SITE\.token/, "the strip must read the address, not carry one");
   assert.doesNotMatch(src, /0x[0-9a-fA-F]{6}/, "no address literal belongs in this component");
-  assert.equal(SITE.token.contractAddress, null, "nothing is deployed");
+  // Deployed 11 September 2026. The string is pinned here because this is the
+  // one field on the site where being wrong costs a reader their money, and a
+  // silent edit to it must fail the build rather than ship.
+  assert.equal(
+    SITE.token.contractAddress,
+    "0x4f30670d473e43524bf35c621aa5f525be6038d9",
+    "the published address must be exactly the deployed one"
+  );
+});
+
+test("the address exists in exactly one place in the repository", () => {
+  // Two copies is two things to get wrong, and the one that drifts is the one
+  // somebody pastes into a wallet. Every surface — the strip on every page,
+  // /token, the footer, the assistant — reads SITE.token.contractAddress.
+  const roots = ["lib", "app", "components", "scripts", "brand"];
+  const found: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, e.name);
+      if (e.isDirectory()) {
+        walk(path);
+      } else if (/\.(ts|tsx|mjs|json|md|css)$/.test(e.name)) {
+        if (/0x[0-9a-fA-F]{40}/.test(readFileSync(path, "utf8"))) found.push(path);
+      }
+    }
+  };
+  for (const r of roots) walk(r);
+  assert.deepEqual(found, ["lib/site.ts"], "an address literal may live only in lib/site.ts");
+});
+
+test("the assistant is given the address, and told it is the only one", () => {
+  // "What is the contract address?" is the highest-stakes question this
+  // assistant will ever be asked, and the one a scammer most wants it to get
+  // wrong. It answers from the corpus or not at all.
+  const c = corpus();
+  assert.ok(c.includes(SITE.token.contractAddress!), "the corpus must carry the real address");
+  assert.match(c, /ANY other address is fake/);
+  assert.match(c, /never guess at one/);
 });
 
 test("the strip stands down until there is an address, and comes back by itself", () => {
