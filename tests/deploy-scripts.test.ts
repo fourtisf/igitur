@@ -146,6 +146,36 @@ test("a third party's health cannot roll back a release", () => {
   assert.match(src, /market-probe.*\(diagnostik\)|diagnostik/, "it must still be reported");
 });
 
+test("every runtime key the app reads actually reaches the process", () => {
+  // The scripts pass an ALLOWLIST of variables from .env to pm2. A key not on
+  // that list is silently dropped: the operator sets it correctly, the deploy
+  // reports success, and the feature stays off with no error anywhere.
+  // ANTHROPIC_API_KEY was missing, so the model matcher could never have run.
+  const reads = new Set<string>();
+  for (const file of ["lib/matcher/llm.ts", "lib/market/index.ts", "lib/ledger.ts"]) {
+    const src = readFileSync(file, "utf8");
+    for (const m of src.matchAll(/process\.env\.([A-Z][A-Z0-9_]*)/g)) reads.add(m[1]);
+  }
+  // Set by the scripts themselves rather than read out of .env.
+  const setByScript = new Set([
+    "LEDGER_PATH", "MARKET_CACHE_PATH", "MARKET_HISTORY_PATH", "MARKET_OFFLINE",
+    "NEXT_PUBLIC_SITE_URL", "PORT", "HOSTNAME", "NODE_ENV",
+  ]);
+
+  for (const [name, src] of scripts) {
+    const allow = /grep -E '(\^\([^']*)'/.exec(src)?.[1] ?? "";
+    if (!allow.includes("MARKET_")) continue;
+    for (const key of reads) {
+      if (setByScript.has(key)) continue;
+      assert.ok(
+        allow.includes(key.replace(/_API_KEY$/, "_API_KEY")) ||
+          allow.includes(key.split("_")[0]),
+        `${name} never passes ${key} to the process, so setting it in .env does nothing`
+      );
+    }
+  }
+});
+
 test("the clone URL is this repository's current name, not one that redirects", () => {
   // The old name is not wrong today — it is unowned tomorrow.
   for (const [name, src] of scripts) {

@@ -164,16 +164,25 @@ cd "$APP"
 
 # ── 3. Kunci dan handle ─────────────────────────────────────────────────────
 say "3/7  Membaca konfigurasi"
-# MARKET_* dibaca saat RUNTIME — cukup restart.
+# Dibaca saat RUNTIME — cukup restart. Daftar ini adalah ALLOWLIST: variabel
+# yang tidak disebut di sini TIDAK PERNAH sampai ke proses, betapapun rapinya
+# ia ditulis di .env. ANTHROPIC_API_KEY sempat tertinggal, dan akibatnya sebuah
+# kunci yang dipasang dengan benar tidak melakukan apa-apa — tanpa galat, tanpa
+# tanda, hanya fitur yang diam. Tambahkan variabel runtime baru ke sini.
 # NEXT_PUBLIC_* dibaca saat BUILD — harus ikut ke perintah build di bawah.
 MARKET_ENV=""
 BUILD_ENV=""
 if [ -f "$APP/.env" ]; then
-  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
+  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY|ANTHROPIC_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
   BUILD_ENV=$(grep -E '^NEXT_PUBLIC_[A-Z_]+=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
 fi
 # Nilainya tidak pernah dicetak — hanya ada tidaknya.
-[ -n "$MARKET_ENV" ] && ok "kunci vendor ditemukan" || warn "tanpa kunci vendor — angka tetap sintetis, dan situs mengatakannya"
+if [ -n "$MARKET_ENV" ]; then
+  # Nama saja, tidak pernah nilainya.
+  ok "kunci runtime ditemukan: $(printf '%s' "$MARKET_ENV" | tr ' ' '\n' | sed 's/=.*//' | grep -v '^$' | tr '\n' ' ')"
+else
+  warn "tanpa kunci runtime — angka tetap sintetis, dan situs mengatakannya"
+fi
 [ -n "$BUILD_ENV" ]  && ok "variabel build ditemukan" || echo "  tanpa handle sosial — tautan X/Telegram tidak dirender"
 
 # ── 4. Build, dengan yang lama disimpan utuh ────────────────────────────────

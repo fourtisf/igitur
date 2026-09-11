@@ -294,14 +294,31 @@ ulang seluruh riwayat dari jatah harian.
 
 ## 5f-bis. Matcher model (opsional)
 
-Tambahkan ke `/var/www/igitur/.env`:
+Jangan pernah menempel kunci sebagai argumen perintah — ia akan tersimpan di
+riwayat shell. Pakai `read -rs`, yang tidak menggemakan dan tidak masuk riwayat:
 
-```
-ANTHROPIC_API_KEY=sk-ant-...
+```bash
+cd /var/www/igitur
+umask 077
+read -rsp 'Tempel API key, lalu Enter: ' K; echo
+touch .env
+grep -v '^ANTHROPIC_API_KEY=' .env > .env.tmp
+printf 'ANTHROPIC_API_KEY=%s\n' "$K" >> .env.tmp
+mv .env.tmp .env
+chmod 600 .env
+unset K
 ```
 
-lalu `bash scripts/deploy.sh`. Kuncinya dibaca saat **runtime**, jadi restart
-saja sudah cukup — tidak perlu build ulang.
+Lalu `bash scripts/reload-env-igitur.sh` — kuncinya dibaca saat **runtime**,
+jadi restart sudah cukup dan tidak perlu build ulang.
+
+**Variabel runtime dilewatkan lewat ALLOWLIST**, bukan seluruh isi `.env`.
+Variabel yang tidak disebut di regex `MARKET_ENV` pada ketiga skrip tidak akan
+pernah sampai ke proses — sudah benar isinya di `.env`, deploy melapor sukses,
+dan fiturnya tetap mati tanpa satu pun galat. `ANTHROPIC_API_KEY` sempat
+tertinggal persis begitu. `tests/deploy-scripts.test.ts` sekarang memindai
+`process.env.*` yang dibaca aplikasi dan menggagalkan build kalau ada yang tidak
+ikut dilewatkan.
 
 Tanpa kunci, tidak ada yang berubah: indeks kata kunci menjawab semuanya
 seperti biasa, dan `/status` tetap mencantumkan matcher model sebagai belum

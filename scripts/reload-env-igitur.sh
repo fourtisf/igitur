@@ -46,7 +46,9 @@ ok "port $PORT (dari nginx)"
 say "Membaca .env"
 MARKET_ENV=""
 if [ -f "$APP/.env" ]; then
-  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
+  # Allowlist — lihat update-igitur.sh. Variabel yang tidak disebut di sini
+  # tidak pernah sampai ke proses, betapapun benar isinya di .env.
+  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY|ANTHROPIC_API_KEY)=' "$APP/.env" 2>/dev/null | tr '\n' ' ' || true)
 fi
 # Nilainya tidak pernah dicetak — hanya ada tidaknya, dan panjangnya.
 if [ -n "$MARKET_ENV" ]; then

@@ -108,7 +108,8 @@ say "6/8  Menjalankan lewat pm2"
 MARKET_ENV=""
 if [ -f "$APP/.env" ]; then
   # shellcheck disable=SC2046
-  MARKET_ENV=$(grep -E '^MARKET_(PROVIDER|API_KEY)=' "$APP/.env" | tr '\n' ' ')
+  # Allowlist — lihat update-igitur.sh.
+  MARKET_ENV=$(grep -E '^(MARKET_(PROVIDER|API_KEY|TTL_S)|TWELVEDATA_API_KEY|ANTHROPIC_API_KEY)=' "$APP/.env" | tr '\n' ' ')
   [ -n "$MARKET_ENV" ] && echo "  kunci vendor ditemukan di $APP/.env"
 fi
 [ -z "$MARKET_ENV" ] && echo "  tanpa kunci vendor — situs memakai angka sintetis dan menyatakannya"
