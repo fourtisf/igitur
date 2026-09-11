@@ -105,3 +105,24 @@ test("the page does not claim an assistant the deployment lacks", () => {
   assert.match(page, /modelMatcherConfigured\(\)/);
   assert.match(page, /Not configured on this deployment/);
 });
+
+test("it is told how to write, not only what it may say", () => {
+  // The first answers it gave were true, permitted and unreadable: site jargon,
+  // page paths instead of answers, and the same refusal sentence twice in a
+  // row. Rules that only police content produce exactly that.
+  assert.match(RULES, /Answer in the first sentence/);
+  assert.match(RULES, /Speak as yourself/);
+  assert.match(RULES, /Explain a term the first time you use it/);
+  assert.match(RULES, /Do not answer with page paths/);
+  assert.match(RULES, /do not reuse the phrasing of your last refusal/);
+});
+
+test("the words it is given are the reader's, not the codebase's", () => {
+  // "Compose a book from a premise" sat in the status list, so the assistant
+  // learned to call a portfolio a book — the one piece of vocabulary this site
+  // deliberately dropped. One list feeds both the page and the assistant, so a
+  // leftover there reaches every answer.
+  const jargon = CORPUS.split(/(?<=\.)\s+/).filter((s) => /\b(a|the|per|every|your) book\b/i.test(s));
+  assert.deepEqual(jargon, [], "the assistant must not be taught the word the site stopped using");
+  assert.match(RULES, /Never call it a book/);
+});

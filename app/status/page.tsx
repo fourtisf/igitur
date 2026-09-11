@@ -118,10 +118,10 @@ export default async function StatusPage() {
         </p>
       ) : null}
       <p className="notice rv" style={{ marginTop: 26 }}>
-        Two lines moved across in this build. Search-engine routing and per-book preview images both
+        Two lines moved across in this build. Search-engine routing and per-portfolio preview images both
         needed a server — every page used to live behind a hash, which crawlers read as a single
-        page, and a preview image has to be generated per book. Both now ship: every page has its
-        own URL and its own canonical tag, and every book renders its own image.
+        page, and a preview image has to be generated per portfolio. Both now ship: every page has its
+        own URL and its own canonical tag, and every portfolio renders its own image.
       </p>
       <p className="notice warn rv" style={{ marginTop: 14 }}>
         {live

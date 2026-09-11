@@ -11,19 +11,19 @@
  */
 
 export const ALWAYS_LIVE = [
-  "Compose a book from a premise the universe carries — and a refusal when it does not",
+  "Compose a portfolio from a premise the universe carries — and a refusal when it does not",
   "Negative keywords to stop cross-sector mismatches",
   "A ranked way out of a refusal, naming the term that vetoed a theme",
   "Igitur's own 26 theses on the record, on the same terms as anyone else's",
   "Written case for and against, every time",
-  "Remove a holding and reweight the book",
+  "Remove a holding and reweight the portfolio",
   "Session history of everything you built",
   "Prices and market caps on every holding",
   "Filter the universe and the trending table",
-  "A shareable address per book, no account",
+  "A shareable address per portfolio, no account",
   "Server-rendered routes with a canonical URL per page",
-  "A generated preview image per book, and per page",
-  "Share a book straight to X",
+  "A generated preview image per portfolio, and per page",
+  "Share a portfolio straight to X",
   "Performance against the index, honestly centred",
   "A dated public record of any claim you choose to commit",
   "A permanent page per committed claim, measured from the server's date",
@@ -36,7 +36,7 @@ export const ALWAYS_LIVE = [
 export const ALWAYS_MISSING = [
   "Reading filings and news at generation time",
   "Conviction scores tied to disclosed segment revenue",
-  "Following other people's books, and a feed of new claims",
+  "Following other people's portfolios, and a feed of new claims",
   "Session history that survives a page refresh — only a committed claim persists",
   "Placing an order through a broker",
   "The token contract — not deployed",
