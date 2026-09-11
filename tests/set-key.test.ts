@@ -115,6 +115,17 @@ test("a paste that kept its quotes still works", async () => {
   assert.match(readFileSync(join(home, ".env"), "utf8"), new RegExp(`^ANTHROPIC_API_KEY=${GOOD}$`, "m"));
 });
 
+test("typing it in the open is possible, but never the default", () => {
+  // A key that must be retyped from a photograph cannot be typed blind; a key
+  // that was never in a photograph should never be on screen. So: opt-in.
+  const src = readFileSync(SCRIPT, "utf8");
+  assert.match(src, /SHOW_KEY:-/, "there must be a way to see what is typed");
+  const hidden = src.indexOf("read -rs RAW");
+  const shown = src.indexOf("read -r RAW");
+  assert.ok(hidden > -1 && shown > -1, "both paths must exist");
+  assert.match(src, /SHOW_KEY.*\}" = "1" \] && \[ -t 0 \]/, "the visible path is asked for, not stumbled into");
+});
+
 test("the key travels by stdin, never as an argument", () => {
   // Anything on a command line is readable by every user on the box.
   const src = readFileSync(SCRIPT, "utf8");

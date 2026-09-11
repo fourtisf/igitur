@@ -34,7 +34,16 @@ die()  { printf '\n\033[1;31mBERHENTI: %s\033[0m\n' "$*" >&2; exit 1; }
 [ -d "$APP" ] || die "tidak ada $APP di server ini."
 
 say "Kunci"
-if [ -t 0 ]; then
+if [ "${SHOW_KEY:-}" = "1" ] && [ -t 0 ]; then
+  # Untuk kunci yang harus DIKETIK ULANG, bukan ditempel — dari foto layar,
+  # misalnya. Mengetik 108 karakter tanpa bisa melihat layar adalah cara
+  # tercepat membuat kesalahan kedua setelah kesalahan pertama, dan kunci yang
+  # sudah pernah tampil di sebuah gambar tidak menjadi lebih rahasia dengan
+  # disembunyikan di sini. Tetap harus diminta, jadi tidak pernah kebetulan.
+  warn "SHOW_KEY=1 — kunci akan TERLIHAT di layar. Pastikan tidak ada yang merekam."
+  printf '  Ketik atau tempel kunci %s lalu Enter: ' "$NAME"
+  read -r RAW
+elif [ -t 0 ]; then
   # Tanpa echo. Tempel lalu Enter — tidak ada yang tampil, itu memang benar.
   printf '  Tempel kunci %s lalu Enter (tidak akan terlihat): ' "$NAME"
   read -rs RAW
