@@ -64,11 +64,13 @@ test("the route reports the reason rather than swallowing it", () => {
  * the address it was built with, exactly as it does in production.
  */
 let accepts = false;
+let hits = 0;
 const sent: unknown[] = [];
 const vendor = createServer((req, res) => {
   let body = "";
   req.on("data", (c) => (body += c));
   req.on("end", () => {
+    hits += 1;
     if (!accepts) {
       res.writeHead(401, { "content-type": "application/json" });
       res.end(
@@ -158,6 +160,26 @@ test("the probe says so plainly when there is no key at all", async () => {
     assert.match(body.note, /ANTHROPIC_API_KEY/);
   } finally {
     if (had !== undefined) process.env.ANTHROPIC_API_KEY = had;
+  }
+});
+
+test("a key that is set but refused is not reported as working", async () => {
+  // /status called the matcher live for a whole day over a key the service was
+  // rejecting, because "configured" was reading .env instead of asking.
+  const { modelError, modelIsReal, modelMatcherConfigured } = await import("../lib/matcher/llm");
+  assert.equal(modelMatcherConfigured(), true, "a key is set in this process");
+  const before = hits;
+  assert.equal(await modelIsReal(), false, "set is not the same as accepted");
+  assert.match(modelError() ?? "", /401/, "and the reason is kept for the page to print");
+  assert.equal(hits, before + 1, "one request, not one per reader");
+  await modelIsReal();
+  assert.equal(hits, before + 1, "the answer is cached — the failure too");
+});
+
+test("the pages ask the service rather than read the configuration", () => {
+  for (const f of ["app/status/page.tsx", "app/ask/page.tsx"]) {
+    const src = readFileSync(f, "utf8");
+    assert.match(src, /await modelIsReal\(\)/, `${f} must ask whether the key works`);
   }
 });
 

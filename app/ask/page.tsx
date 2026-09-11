@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AskChat } from "@/components/AskChat";
-import { modelMatcherConfigured } from "@/lib/matcher/llm";
+import { modelIsReal, modelMatcherConfigured } from "@/lib/matcher/llm";
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
 import { twitterCard } from "@/lib/twitter-card";
@@ -24,8 +24,12 @@ export const metadata: Metadata = {
   twitter: twitterCard(pageOg("method")),
 };
 
-export default function AskPage() {
-  const ready = modelMatcherConfigured();
+export default async function AskPage() {
+  // Set is not the same as accepted. A chat box that answers every question
+  // with an error is worse than a page that says plainly there is no assistant
+  // here — and /api/ask still says exactly why, for whoever has to fix it.
+  const ready = await modelIsReal();
+  const rejected = modelMatcherConfigured() && !ready;
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>
@@ -47,8 +51,12 @@ export default function AskPage() {
         <div className="cell rv" style={{ marginTop: 28, padding: "clamp(24px,3.4vw,40px)" }}>
           <h3>Not configured on this deployment.</h3>
           <p className="p" style={{ marginTop: 10, maxWidth: "50ch" }}>
-            The assistant needs a model key, and this server has none. Everything it would
-            answer from is published and readable directly.
+            {rejected
+              ? `The assistant needs a model key this service accepts, and the one on this
+                 server is being refused. Everything it would answer from is published and
+                 readable directly.`
+              : `The assistant needs a model key, and this server has none. Everything it would
+                 answer from is published and readable directly.`}
           </p>
           <div className="hero-cta" style={{ justifyContent: "flex-start", marginTop: 20 }}>
             <Link className="b1" href="/universe">

@@ -96,12 +96,70 @@ function system(): string {
   ].join("\n");
 }
 
+/** One model id for every call site, so they cannot drift apart. */
+export const MODEL = "claude-opus-5";
+
 /** Off unless a key is configured, exactly like the market vendor layer. */
 export function modelMatcherConfigured(): boolean {
   return Boolean((process.env.ANTHROPIC_API_KEY ?? "").trim());
 }
 
 let client: Anthropic | null = null;
+
+// ── Is the key any good ──────────────────────────────────────────────────────
+//
+// "Configured" and "working" are different words, and the site spent a day
+// confusing them: a key with one mistyped character sat in .env, /status
+// reported the model as live because a key was present, and every page that
+// depended on it failed silently. The market layer already knew better —
+// marketIsReal() asks the vendor rather than trusting the configuration — so
+// this is the same check for the same reason.
+//
+// Ten minutes between checks, at most one in flight: a health probe is a real
+// request, and a page that renders it must not cost one per reader.
+
+const HEALTH_TTL_MS = 10 * 60 * 1000;
+let checkedAt = 0;
+let healthy = false;
+let health: string | null = null;
+let inFlight: Promise<boolean> | null = null;
+
+/** Why the model service last refused, or null. Never contains the key. */
+export function modelError(): string | null {
+  return health;
+}
+
+/** A key that is set AND accepted. Cached, and cached on failure too. */
+export async function modelIsReal(): Promise<boolean> {
+  if (!modelMatcherConfigured()) {
+    health = null;
+    return false;
+  }
+  if (Date.now() - checkedAt < HEALTH_TTL_MS) return healthy;
+  inFlight ??= checkModel().finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
+}
+
+async function checkModel(): Promise<boolean> {
+  client ??= new Anthropic();
+  try {
+    await client.messages.create({
+      model: MODEL,
+      max_tokens: 16,
+      messages: [{ role: "user", content: "Reply with the single word: ok" }],
+    });
+    healthy = true;
+    health = null;
+  } catch (err) {
+    const d = logModelError("model-health", err);
+    healthy = false;
+    health = [d.status ?? "no status", d.type, d.message].filter(Boolean).join(" ");
+  }
+  checkedAt = Date.now();
+  return healthy;
+}
 
 /**
  * Ask the model. Returns null for "no answer" — no key, an error, a timeout —
@@ -122,7 +180,7 @@ export async function matchWithModel(
   try {
     const res = await client.messages.parse(
       {
-        model: "claude-opus-5",
+        model: MODEL,
         // A classification. Effort low is the documented setting for this
         // shape of work, and thinking is on by default on this model.
         max_tokens: 2048,

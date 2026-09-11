@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { corpus, RULES } from "@/lib/ask/corpus";
-import { modelMatcherConfigured } from "@/lib/matcher/llm";
+import { MODEL, modelMatcherConfigured } from "@/lib/matcher/llm";
 import { logModelError, readerSentence } from "@/lib/model-error";
 
 /**
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       const enc = new TextEncoder();
       try {
         const s = client!.messages.stream({
-          model: "claude-opus-5",
+          model: MODEL,
           max_tokens: MAX_TOKENS,
           // Short factual answers from a fixed corpus. Effort low is the
           // documented setting for this shape of work.
@@ -227,7 +227,7 @@ export async function GET(req: Request) {
   steps.push(
     await attempt("minimal", () =>
       api.messages.create({
-        model: "claude-opus-5",
+        model: MODEL,
         max_tokens: 16,
         messages: [{ role: "user", content: "Reply with the single word: ok" }],
       })
@@ -239,7 +239,7 @@ export async function GET(req: Request) {
     steps.push(
       await attempt("as /ask sends it", () =>
         api.messages.create({
-          model: "claude-opus-5",
+          model: MODEL,
           max_tokens: MAX_TOKENS,
           output_config: { effort: "low" },
           system: [

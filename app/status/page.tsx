@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { twitterCard } from "@/lib/twitter-card";
 
 import { isLive, marketIsReal, providerName, vendorError } from "@/lib/market";
-import { modelMatcherConfigured } from "@/lib/matcher/llm";
+import { modelError, modelIsReal, modelMatcherConfigured } from "@/lib/matcher/llm";
 
 import { ALWAYS_LIVE, ALWAYS_MISSING } from "@/lib/status";
 import { pageOg } from "@/lib/og-pages";
@@ -49,8 +49,11 @@ export default async function StatusPage() {
   // not be the one that gets that wrong.
   const live = await marketIsReal();
   // Derived, never written beside the feature: a key that is set but rejected
-  // must not leave this page claiming a matcher the site does not have.
-  const model = modelMatcherConfigured();
+  // must not leave this page claiming a matcher the site does not have. Asked,
+  // not assumed — this page said "live" for a whole day over a key the service
+  // was refusing, which is the one mistake it exists to prevent.
+  const model = await modelIsReal();
+  const modelRejected = modelMatcherConfigured() && !model;
   // "Configured" is the wrong word for the keyless default — nothing was
   // configured. This is simply the source failing.
   const rejected = isLive() && !live;
@@ -105,6 +108,15 @@ export default async function StatusPage() {
           </div>
         </div>
       </div>
+      {modelRejected ? (
+        <p className="notice warn rv" style={{ marginTop: 26 }}>
+          A model key is set on this server and the service is refusing it, so the line above
+          reads Not built and the assistant on /ask will say the same. The last thing the
+          service said was: {modelError() ?? "no response"}. A 401 or 403 means the key is
+          wrong — one mistyped character is enough — and /api/ask reports it live, one step at
+          a time, so this is diagnosed from the site rather than from the server.
+        </p>
+      ) : null}
       <p className="notice rv" style={{ marginTop: 26 }}>
         Two lines moved across in this build. Search-engine routing and per-book preview images both
         needed a server — every page used to live behind a hash, which crawlers read as a single
