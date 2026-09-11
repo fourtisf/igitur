@@ -23,6 +23,25 @@ import { NAMES, THEMES } from "../lib/universe";
 const flat = (t: string) => t.replace(/\s+/g, " ");
 const CORPUS = flat(corpus());
 
+test("the rule is obeyed, not announced", () => {
+  // "I don't make buy calls, but —" spent the first line of every answer on
+  // what the product would not do, in front of an answer it was about to give
+  // anyway. The rule stands; the announcement goes.
+  assert.match(RULES, /do not ANNOUNCE that rule either/);
+  assert.match(RULES, /no preamble — open with the thesis itself/);
+  assert.match(RULES, /only if the reader presses for a yes or a no/);
+});
+
+test("a figure the vendor did not supply is never narrated", () => {
+  // Twelvedata's quote endpoint returns no market cap, so an empty field was
+  // travelling with every question and coming back as "market cap is not in
+  // the data I have" — a sentence about the plumbing, in the middle of an
+  // answer about a company.
+  const src = readFileSync("lib/ask/prices.ts", "utf8");
+  assert.match(src, /if \(q\.marketCap > 0\)/, "an absent figure must not be sent");
+  assert.match(src, /do not announce what you were not given/);
+});
+
 test("it is told, first and plainly, never to advise", () => {
   const first = RULES.split("\n").find((l) => l.startsWith("1."));
   assert.ok(first, "there must be a first rule");
@@ -136,7 +155,7 @@ test("the case for is given in full, not summarised into a clause", () => {
   // which is not neutrality, it is half the research.
   assert.match(RULES, /THE CASE FOR, in the site's published words/);
   assert.match(RULES, /at the same length as the case for/);
-  assert.match(RULES, /The refusal is the doorway, never the room/);
+  assert.match(RULES, /Just give the published case\./);
   // And the corpus must actually carry both sides for every thesis.
   for (const th of THEMES) {
     assert.ok(CORPUS.includes(flat(th.forCase)), `${th.id} has no case for in the corpus`);

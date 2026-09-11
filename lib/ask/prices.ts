@@ -76,11 +76,17 @@ export async function priceBlock(text: string): Promise<string> {
       missing.push(t);
       continue;
     }
-    const move =
-      q.changePct === null
-        ? "session move not supplied"
-        : `${q.changePct >= 0 ? "+" : ""}${q.changePct.toFixed(2)}% on the session`;
-    rows.push(`  ${t}: ${fmtPrice(q.price)}, ${move}, market cap ${fmtMcap(q.marketCap)} (as of ${q.asOf})`);
+    // Only what the vendor actually supplied. Twelvedata's quote endpoint
+    // returns no market cap at all, and sending an empty field made the
+    // assistant announce its absence — "market cap is not in the data I have" —
+    // which is a sentence about the plumbing in the middle of an answer about
+    // a company. A figure that is not there is simply not mentioned.
+    const parts = [fmtPrice(q.price)];
+    if (q.changePct !== null) {
+      parts.push(`${q.changePct >= 0 ? "+" : ""}${q.changePct.toFixed(2)}% on the session`);
+    }
+    if (q.marketCap > 0) parts.push(`market cap ${fmtMcap(q.marketCap)}`);
+    rows.push(`  ${t}: ${parts.join(", ")} (as of ${q.asOf})`);
   }
 
   if (!rows.length && !missing.length) return "";
@@ -93,6 +99,10 @@ export async function priceBlock(text: string): Promise<string> {
     "what it is worth. You may NOT call a price cheap, expensive, fair or a good entry,",
     "and you may not say where it goes next — this site publishes no valuation and no",
     "forecast, and a price does not become a view because it is current.",
+    "",
+    "Quote only the figures listed below. A figure that is absent is not mentioned at all:",
+    "do not announce what you were not given. The reader asked about a company, not about",
+    "the shape of your data.",
     "",
     ...rows,
     ...(missing.length
