@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { twitterCard } from "@/lib/twitter-card";
 
 import { isLive, marketIsReal, providerName, vendorError } from "@/lib/market";
+import { modelMatcherConfigured } from "@/lib/matcher/llm";
 
 import { pageOg } from "@/lib/og-pages";
 import { SITE } from "@/lib/site";
@@ -60,7 +61,6 @@ const ALWAYS_LIVE = [
 ];
 
 const ALWAYS_MISSING = [
-  "A language model reading the premise",
   "Reading filings and news at generation time",
   "Conviction scores tied to disclosed segment revenue",
   "Following other people's books, and a feed of new claims",
@@ -77,15 +77,24 @@ export default async function StatusPage() {
   // but rejected leaves every figure synthetic, and this page of all pages must
   // not be the one that gets that wrong.
   const live = await marketIsReal();
+  // Derived, never written beside the feature: a key that is set but rejected
+  // must not leave this page claiming a matcher the site does not have.
+  const model = modelMatcherConfigured();
   // "Configured" is the wrong word for the keyless default — nothing was
   // configured. This is simply the source failing.
   const rejected = isLive() && !live;
-  const LIVE = live
-    ? [`Live market data from ${providerName()}`, ...ALWAYS_LIVE]
-    : ALWAYS_LIVE;
-  const NOT_BUILT = live
-    ? ALWAYS_MISSING
-    : ["Live market data instead of synthetic figures", ...ALWAYS_MISSING];
+  const LIVE = [
+    ...(live ? [`Live market data from ${providerName()}`] : []),
+    ...(model
+      ? ["A language model reading a premise the keyword index refused, and saying so on the page"]
+      : []),
+    ...ALWAYS_LIVE,
+  ];
+  const NOT_BUILT = [
+    ...(live ? [] : ["Live market data instead of synthetic figures"]),
+    ...(model ? [] : ["A language model reading the premise"]),
+    ...ALWAYS_MISSING,
+  ];
 
   return (
     <section className="shell pgtop" style={{ paddingBottom: "clamp(50px,7vw,90px)" }}>

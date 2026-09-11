@@ -175,6 +175,51 @@ export function buildBook(
       ? ranked[1].th
       : null;
 
+  return assemble(premise, drop, {
+    primary,
+    secondary,
+    hits: ranked[0].hits,
+    confidence: Math.min(96, 26 + ranked[0].hits.length * 14 + (ranked[0].score > 12 ? 8 : 0)),
+    // scoreThemes ranks all 26 and the book uses at most two. The rest are a
+    // real part of how the answer was reached, so they are reported rather
+    // than discarded — the same reason /method publishes its own weak points.
+    alternatives: ranked
+      .slice(1)
+      .filter((r) => r.score > 0 && r.th.id !== secondary?.id)
+      .slice(0, 3)
+      .map((r) => ({ id: r.th.id, name: r.th.name, score: r.score, hits: r.hits })),
+  });
+}
+
+/** What a matcher — any matcher — has to decide before the weighting runs. */
+export interface Match {
+  primary: Theme;
+  secondary: Theme | null;
+  /** The terms the match rests on. Shown to the reader when confidence is low. */
+  hits: string[];
+  /** 0–96. Below 50 the UI warns and lists what actually matched. */
+  confidence: number;
+  /** Themes that were considered and rejected. May be empty. */
+  alternatives: { id: string; name: string; score: number; hits: string[] }[];
+}
+
+/**
+ * Everything after the theme is chosen: pick the names, size them, cap them,
+ * add the ballast, and force the total to exactly 100.
+ *
+ * Split out of buildBook so that a second matcher — the model behind
+ * /api/compose — reaches the identical weighting rather than growing its own.
+ * That is the promise in README's build order: "the weighting formula stays in
+ * application code so weights stay auditable and reproducible." A matcher may
+ * decide *which* thesis a sentence carries. Nothing but this function decides
+ * what a holding weighs.
+ *
+ * Every invariant in HANDOFF.md §13 is enforced here, so they hold for any
+ * caller: weights total exactly 100, the lead comes from the primary theme, no
+ * duplicate tickers, nothing below 5% or above 27%.
+ */
+export function assemble(premise: string, drop: string[], m: Match): BookResult {
+  const { primary, secondary } = m;
   const seed = fnv(premise.trim().toLowerCase());
   const rand = rng(seed);
 
@@ -283,17 +328,6 @@ export function buildBook(
   });
   holdings[0].lead = true;
 
-  const conf = Math.min(96, 26 + ranked[0].hits.length * 14 + (ranked[0].score > 12 ? 8 : 0));
-
-  // scoreThemes ranks all 26 and the book uses at most two. The rest are a
-  // real part of how the answer was reached, so they are reported rather than
-  // discarded — the same reason /method publishes its own weak points.
-  const alternatives = ranked
-    .slice(1)
-    .filter((r) => r.score > 0 && r.th.id !== secondary?.id)
-    .slice(0, 3)
-    .map((r) => ({ id: r.th.id, name: r.th.name, score: r.score, hits: r.hits }));
-
   const book: Book = {
     ok: true,
     premise: premise.trim(),
@@ -302,11 +336,11 @@ export function buildBook(
     holdings,
     risk: primary.risk,
     horizon: primary.horizon,
-    confidence: conf,
-    hits: ranked[0].hits,
+    confidence: m.confidence,
+    hits: m.hits,
     seed,
     drop,
-    alternatives,
+    alternatives: m.alternatives,
   };
   return book;
 }

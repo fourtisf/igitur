@@ -12,7 +12,7 @@ import { Holdings } from "@/components/Holdings";
 import { NoMatch } from "@/components/NoMatch";
 import { Amount } from "@/components/Amount";
 import { Remember } from "@/components/Remember";
-import { buildBook } from "@/lib/generator";
+import { compose } from "@/lib/matcher/compose";
 import { applyPins, formatPins, MAX_PCT, MIN_PCT, parsePins } from "@/lib/reweight";
 import { slugOf } from "@/lib/hash";
 import { normalizePremise } from "@/lib/premise";
@@ -42,23 +42,25 @@ type Search = Record<string, string | string[] | undefined>;
  * the reader; it is not needed to reconstruct the book.
  */
 
-function read(sp: Search) {
+async function read(sp: Search) {
   const premise = normalizePremise(sp.p);
   const drop = parseDrop(sp.x);
-  return {
+  // The keyword index answers first and answers free; the model is asked only
+  // if it refused. Called from both generateMetadata and the page, so the
+  // answer is cached in lib/matcher/compose.ts — one render, one request.
+  const { result: generated, via } = await compose(premise, drop);
+  const rest = {
     premise,
     drop,
+    via,
     // Provenance, not content: neither changes what the book holds.
     universe: parseUniverse(sp.u),
     stated: parseStated(sp.d),
-    ...(() => {
-      const generated = buildBook(premise, drop);
-      if (!generated.ok) return { pins: new Map<string, number>(), book: generated };
-      const known = new Set(generated.holdings.filter((h) => !h.ballast).map((h) => h.t));
-      const pins = parsePins(sp.w, known);
-      return { pins, book: applyPins(generated, pins) };
-    })(),
   };
+  if (!generated.ok) return { ...rest, pins: new Map<string, number>(), book: generated };
+  const known = new Set(generated.holdings.filter((h) => !h.ballast).map((h) => h.t));
+  const pins = parsePins(sp.w, known);
+  return { ...rest, pins, book: applyPins(generated, pins) };
 }
 
 export async function generateMetadata({
@@ -69,7 +71,7 @@ export async function generateMetadata({
   searchParams: Promise<Search>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const { drop, pins, book } = read(await searchParams);
+  const { drop, pins, book } = await read(await searchParams);
 
   // A refusal is a real page, but it is not one to index.
   if (!book.ok) {
@@ -116,7 +118,7 @@ export default async function BookPage({
 }) {
   const { slug } = await params;
   const sp = await searchParams;
-  const { premise, drop, universe, stated, pins, book } = read(sp);
+  const { premise, drop, universe, stated, pins, book, via } = await read(sp);
 
   if (!book.ok) return <NoMatch premise={premise} emptied={book.emptied} />;
 
@@ -184,6 +186,22 @@ export default async function BookPage({
         {drop.length ? <span className="tagp warn">{drop.length} removed</span> : null}
         {pins.size ? <span className="tagp warn">{pins.size} reweighted</span> : null}
       </div>
+
+      {/* A book the model found is not the same object as one the published
+          keyword list found: the list is on /universe and can be argued with,
+          the model's reading cannot. Saying which answered is the same rule as
+          flagging a generated price. */}
+      {via === "model" ? (
+        <p className="notice rv" style={{ marginTop: 18 }}>
+          The published keyword index did not carry this sentence. A language model read it and
+          matched it to <b>{b.theme.name}</b>; the weights below were then set by the same
+          formula every other book uses.{" "}
+          <Link href="/method" style={{ textDecoration: "underline" }}>
+            How that works
+          </Link>
+          .
+        </p>
+      ) : null}
 
       {/* The honest signal that the match is weak. HANDOFF.md §3.2 — keep it. */}
       {low ? (

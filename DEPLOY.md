@@ -292,6 +292,29 @@ kredit dari jatah 800, dan satu-satunya gejalanya adalah semua sumber menjawab
 Jangan hapus dua berkas ini untuk "membersihkan". Menghapusnya berarti membeli
 ulang seluruh riwayat dari jatah harian.
 
+## 5f-bis. Matcher model (opsional)
+
+Tambahkan ke `/var/www/igitur/.env`:
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+lalu `bash scripts/deploy.sh`. Kuncinya dibaca saat **runtime**, jadi restart
+saja sudah cukup — tidak perlu build ulang.
+
+Tanpa kunci, tidak ada yang berubah: indeks kata kunci menjawab semuanya
+seperti biasa, dan `/status` tetap mencantumkan matcher model sebagai belum
+dibangun. Dengan kunci, satu hal bertambah — premis yang **ditolak** indeks kata
+kunci mendapat pembacaan kedua, dan halaman book mengatakannya sendiri saat itu
+terjadi.
+
+Biayanya hanya untuk premis yang ditolak. Jawaban disimpan enam jam, dan
+`/api/compose` dibatasi 20 premis per alamat per jam.
+
+Untuk mematikannya lagi: hapus barisnya, restart. Situsnya kembali ke indeks
+kata kunci tanpa perubahan lain.
+
 ## 5g. Menerbitkan versi baru: satu perintah
 
 ```bash

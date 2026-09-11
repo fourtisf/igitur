@@ -54,7 +54,8 @@ app/                 routes — one real URL per page, each with its own canonic
 components/          Bar, Holdings, Composer and the client islands
 lib/
   universe.ts        26 themes, 170 assets, 354 keywords   ← the data
-  generator.ts       scoreThemes + buildBook               ← the core IP
+  generator.ts       scoreThemes + buildBook + assemble    ← the core IP
+  matcher/           the model that reads a refused premise
   nearmiss.ts        how a refusal is ranked and explained
   ledger.ts          the append-only public record
   market.ts          synthetic data behind a vendor seam   ← REPLACE
@@ -127,10 +128,19 @@ In build order (`HANDOFF.md` §12):
    When it lands, take the `noindex` off `/track` and put its URLs back in the
    sitemap; they are held out today because publishing fabricated performance
    into a search index is the one thing that would make this site dishonest.
-3. **LLM matcher** behind `POST /api/compose`, with the keyword matcher kept as
-   the fallback. The weighting formula stays in application code so weights stay
-   auditable and reproducible. The model must be allowed to return
-   `matched: false`, and must not invent tickers.
+3. ~~**LLM matcher** behind `POST /api/compose`~~ — **the layer is built**; it
+   needs a key. Set `ANTHROPIC_API_KEY` and a premise the keyword index refuses
+   gets a second reading, which is the only thing that changes: the model is
+   never asked about a premise the index already matched, so a shared link
+   cannot start meaning something else.
+
+   All three constraints are structural rather than asked for nicely. It picks
+   an id from the 26 published themes through a schema enum, so an id outside
+   them is not expressible; it never reaches the asset lists, so it has no
+   ticker to invent; and it never sizes anything — `assemble()` in
+   `lib/generator.ts` does the weighting for both matchers, which is what keeps
+   the weights auditable. `matched: false` is a 200, because refusing is an
+   answer. `tests/matcher.test.ts` holds all of it.
 4. Persistence — books and history that survive a refresh.
 5. Conviction tied to disclosed segment revenue, with sources on `/universe`.
 6. Public books, follow and fork.

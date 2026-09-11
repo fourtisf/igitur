@@ -12,9 +12,11 @@
     "seed:ledger": "tsx scripts/seed-ledger.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
     "next": "^16.3.4",
     "react": "19.1.1",
-    "react-dom": "19.1.1"
+    "react-dom": "19.1.1",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
