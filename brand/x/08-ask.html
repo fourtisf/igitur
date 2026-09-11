@@ -1,0 +1,212 @@
+<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/1bffadaabf893a1e-s.3-6t-g6q0vh0a.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/2bbe8d2671613f1f-s.0k62hbripvv8p.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/2c55a0e60120577a-s.0-dom-5bn10r2.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/5476f68d60460930-s.2uwcyprjm3xu3.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/9c72aa0f40e4eef8-s.1y4-pdgsjb-pw.woff2") format("woff2");font-weight:100 900;font-display:block}
+@font-face{font-family:Inter;src:url("file:///home/user/igitur/.next/static/media/ad66f9afd8947f86-s.3lvt2whj97whp.woff2") format("woff2");font-weight:100 900;font-display:block}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0B;--fg:#FAFAFA;--fg-2:#9E9EA6;--fg-3:#8A8A92;--fg-4:#7A7A82;
+  --ac:#7C8CFF;--ac-2:#AEB6FF;--bd:rgba(255,255,255,.068);--bd-2:rgba(255,255,255,.115)}
+html,body{width:1600px;height:900px}
+body{background:#060608;font-family:Inter,system-ui,sans-serif;color:var(--fg);
+  -webkit-font-smoothing:antialiased;position:relative;overflow:hidden}
+
+/* ── The room ─────────────────────────────────────────────────────────────
+   Same four lights as the workspace banner, moved: the daylight comes from
+   the right here so it falls across the panel rather than behind the copy. */
+.wall{position:absolute;inset:0;
+  background:
+    radial-gradient(1200px 720px at 88% -12%,rgba(150,170,255,.12),transparent 60%),
+    radial-gradient(1100px 700px at 62% 26%,rgba(124,140,255,.13),transparent 64%),
+    radial-gradient(720px 600px at -6% 72%,rgba(255,176,120,.05),transparent 62%),
+    linear-gradient(180deg,#101016 0%,#0B0B0F 46%,#070709 100%)}
+.daylight{position:absolute;top:-160px;right:-160px;width:720px;height:900px;
+  transform:rotate(-16deg);opacity:.5;
+  background:linear-gradient(255deg,rgba(196,212,255,.11),rgba(196,212,255,.02) 44%,transparent 68%);
+  filter:blur(30px)}
+.haze{position:absolute;left:0;right:0;top:440px;height:280px;filter:blur(52px);
+  background:linear-gradient(180deg,transparent,rgba(150,168,235,.09) 46%,transparent)}
+.grain{position:absolute;inset:0;opacity:.26;mix-blend-mode:overlay;z-index:9;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.vignette{position:absolute;inset:0;z-index:8;
+  background:radial-gradient(128% 94% at 56% 46%,transparent 44%,rgba(0,0,0,.74) 100%)}
+
+/* ── The desk ────────────────────────────────────────────────────────────── */
+.desk{position:absolute;left:-10%;right:-10%;bottom:0;height:300px;z-index:2;
+  background:linear-gradient(180deg,#22222B 0%,#15151B 26%,#0C0C11 64%,#08080A 100%);
+  transform:perspective(1000px) rotateX(58deg);transform-origin:top center;
+  box-shadow:0 -1px 0 rgba(255,255,255,.16),0 -44px 120px -30px rgba(124,140,255,.26)}
+.deskline{position:absolute;left:0;right:0;bottom:270px;height:1.5px;z-index:3;
+  background:linear-gradient(90deg,transparent 30%,rgba(255,255,255,.06) 44%,rgba(255,255,255,.30) 62%,rgba(255,255,255,.30) 94%,transparent)}
+.pool{position:absolute;bottom:96px;right:3%;width:56%;height:230px;z-index:3;filter:blur(54px);
+  background:radial-gradient(closest-side,rgba(174,182,255,.28),transparent)}
+
+/* ── The panel ────────────────────────────────────────────────────────────
+   One object, tilted a few degrees, lit along the top bezel. The sheen is
+   steep and short: a highlight that covers the glass stops being light and
+   becomes a scrim over the thing the banner exists to show. */
+.stage{position:absolute;right:72px;bottom:250px;z-index:4;perspective:2000px}
+.mon{position:relative;width:800px;border-radius:16px;
+  background:linear-gradient(180deg,#141418,#0A0A0D);
+  transform:rotateY(-7deg) rotateX(1.4deg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 0 0 1px rgba(255,255,255,.13),
+    0 1px 0 rgba(255,255,255,.06),
+    0 80px 140px -46px rgba(0,0,0,1),
+    0 0 190px -26px rgba(124,140,255,.60)}
+.mon .inner{border-radius:16px;overflow:hidden;position:relative}
+.mon .inner::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(166deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.02) 24%,transparent 44%)}
+/* Anchored to the panel's base — 250 - 210 — so the mirror starts where the
+   object stops. A reflection that floats is worse than none. */
+.reflect{position:absolute;right:72px;bottom:40px;height:210px;z-index:3;perspective:2000px;
+  display:flex;align-items:flex-start;justify-content:flex-end;
+  transform:scaleY(-1);opacity:.20;filter:blur(4.5px);pointer-events:none;
+  -webkit-mask-image:linear-gradient(0deg,#000 8%,transparent 52%)}
+.reflect .mon{box-shadow:none}
+
+.wbar{display:flex;align-items:center;gap:12px;padding:12px 15px;
+  border-bottom:1px solid var(--bd);background:rgba(255,255,255,.025)}
+.wdots{display:flex;gap:6px}
+.wdots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.085);display:block}
+.wurl{flex:1;font-size:13px;color:var(--fg-4);background:rgba(255,255,255,.03);border-radius:6px;
+  padding:6px 11px;box-shadow:inset 0 0 0 1px var(--bd);white-space:nowrap}
+.wbody{padding:22px 24px 20px;background:linear-gradient(180deg,#0D0D10,#0A0A0C)}
+
+/* ── The exchange ─────────────────────────────────────────────────────────
+   The site's own two-column turn: who spoke, then what they said. Kept as
+   plain text on the ground rather than in bubbles — a chat bubble is a
+   messenger app, and this is a page that answers. */
+.turn{display:grid;grid-template-columns:74px 1fr;gap:16px;padding:14px 0}
+.turn+.turn{border-top:1px solid rgba(255,255,255,.05)}
+.who{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg-4);
+  padding-top:4px}
+.turn.a .who{color:var(--ac-2);opacity:.9}
+.said{font-size:16.5px;line-height:1.5;letter-spacing:-.014em;font-weight:380;color:#E9E9EE}
+.turn.a .said{border-left:2px solid rgba(124,140,255,.55);padding-left:16px;margin-left:-2px}
+.said b{font-weight:600;color:#fff}
+.said .q{color:var(--fg-2)}
+.caret{display:inline-block;width:9px;height:17px;vertical-align:-3px;margin-left:3px;
+  background:var(--ac-2);border-radius:1px;box-shadow:0 0 14px rgba(174,182,255,.9)}
+
+.foot{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.05)}
+.field{flex:1;font-size:14px;color:var(--fg-4);background:rgba(255,255,255,.03);
+  border-radius:9px;padding:11px 13px;box-shadow:inset 0 0 0 1px var(--bd)}
+.send{font-size:13px;font-weight:550;color:#0A0A0B;padding:11px 18px;border-radius:9px;
+  background:linear-gradient(180deg,#fff,#D6DAF5);box-shadow:0 0 30px -8px rgba(174,182,255,.8)}
+
+/* ── The copy ─────────────────────────────────────────────────────────────── */
+.sign{position:absolute;left:84px;top:96px;z-index:7;display:flex;align-items:center;gap:16px}
+.mark{display:flex;flex-direction:column;gap:4.5px;width:30px;
+  filter:drop-shadow(0 0 18px rgba(174,182,255,.5))}
+.mark .top{display:flex;gap:2.2px;height:6.3px}
+.mark .p1{width:15.6px;background:rgba(255,255,255,.46);border-radius:3.2px}
+.mark .p2{width:10.9px;background:var(--ac);border-radius:3.2px}
+.mark .concl{width:30px;height:8.6px;background:var(--fg);border-radius:4.3px}
+.sign .word{font-size:21px;font-weight:600;letter-spacing:.085em;color:#EDEFFF;
+  filter:drop-shadow(0 0 22px rgba(174,182,255,.35))}
+
+.copy{position:absolute;left:84px;top:232px;width:560px;z-index:7}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ac-2);
+  opacity:.88}
+.head{font-size:58px;font-weight:500;letter-spacing:-.042em;line-height:1.06;margin-top:22px}
+.head em{font-style:normal;display:block;
+  background:linear-gradient(180deg,#EDEFFF,#A2ADF2);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.deck{font-size:17px;line-height:1.55;color:var(--fg-2);font-weight:350;margin-top:24px;
+  max-width:46ch}
+.url{font-size:14px;color:var(--fg-4);margin-top:28px;letter-spacing:.14em;text-transform:uppercase}
+
+.stat{position:absolute;left:84px;bottom:64px;z-index:7;display:flex;align-items:flex-end;gap:30px;
+  padding-top:26px}
+.stat::before{content:"";position:absolute;top:0;left:0;width:430px;height:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,.16),transparent)}
+.stat .n{font-size:34px;font-weight:600;letter-spacing:-.035em;line-height:1}
+.stat .n span{display:block;font-size:10.5px;color:var(--fg-4);margin-top:9px;
+  letter-spacing:.15em;text-transform:uppercase;font-weight:450;white-space:nowrap}
+.stat .rule{width:1px;height:48px;background:linear-gradient(180deg,transparent,var(--bd-2),transparent)}
+.scrim{position:absolute;left:0;right:0;bottom:0;height:260px;z-index:6;
+  background:linear-gradient(180deg,transparent,rgba(5,5,7,.88) 60%)}
+</style>
+<div class="wall"></div>
+<div class="daylight"></div>
+<div class="haze"></div>
+
+<div class="desk"></div>
+<div class="deskline"></div>
+<div class="pool"></div>
+
+<div class="reflect"><div class="mon"><div class="inner">
+  <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div>
+    <div class="wurl">igitur.xyz/ask</div></div>
+  <div class="wbody">
+    <div class="turn"><div class="who">You</div>
+      <p class="said q">Should I buy NVDA?</p></div>
+    <div class="turn a"><div class="who">Igitur</div>
+      <p class="said">No — and not out of caution. I do not know your position, your horizon
+        or your circumstances, and I hold no price data at all. What I can tell you is why
+        <b>NVDA is 20.5%</b> of this portfolio: conviction <b>97</b>, because
+        &ldquo;Sits on the critical path of nearly every frontier training run.&rdquo;</p></div>
+    <div class="turn"><div class="who">You</div>
+      <p class="said q">Who decided 97?</p></div>
+    <div class="turn a"><div class="who">Igitur</div>
+      <p class="said">A person did, and it is published. Conviction is an editorial judgement,
+        not model output — which is why it sits on a page you can argue with. A formula turns it
+        into the weight, floored at 5% and capped at 27% so no one name runs<span class="caret"></span></p></div>
+    <div class="foot">
+      <div class="field">Ask about a thesis, a weight, or how any of it works</div>
+      <div class="send">Ask</div>
+    </div>
+  </div></div></div></div>
+<div class="stage"><div class="mon"><div class="inner">
+  <div class="wbar"><div class="wdots"><i></i><i></i><i></i></div>
+    <div class="wurl">igitur.xyz/ask</div></div>
+  <div class="wbody">
+    <div class="turn"><div class="who">You</div>
+      <p class="said q">Should I buy NVDA?</p></div>
+    <div class="turn a"><div class="who">Igitur</div>
+      <p class="said">No — and not out of caution. I do not know your position, your horizon
+        or your circumstances, and I hold no price data at all. What I can tell you is why
+        <b>NVDA is 20.5%</b> of this portfolio: conviction <b>97</b>, because
+        &ldquo;Sits on the critical path of nearly every frontier training run.&rdquo;</p></div>
+    <div class="turn"><div class="who">You</div>
+      <p class="said q">Who decided 97?</p></div>
+    <div class="turn a"><div class="who">Igitur</div>
+      <p class="said">A person did, and it is published. Conviction is an editorial judgement,
+        not model output — which is why it sits on a page you can argue with. A formula turns it
+        into the weight, floored at 5% and capped at 27% so no one name runs<span class="caret"></span></p></div>
+    <div class="foot">
+      <div class="field">Ask about a thesis, a weight, or how any of it works</div>
+      <div class="send">Ask</div>
+    </div>
+  </div></div></div></div>
+
+<div class="sign">
+  <div class="mark"><div class="top"><div class="p1"></div><div class="p2"></div></div>
+    <div class="concl"></div></div>
+  <div class="word">IGITUR</div>
+</div>
+
+<div class="scrim"></div>
+<div class="copy">
+  <p class="eyebrow">New — the assistant</p>
+  <h1 class="head">Ask it anything.<em>It still won&rsquo;t tell you what to buy.</em></h1>
+  <p class="deck">No tools, no search, no memory of you. It answers only from the
+    26 published theses and the methodology behind every weight — and says so
+    plainly when the answer is not in there.</p>
+  <p class="url">igitur.xyz/ask</p>
+</div>
+<div class="stat">
+  <div class="n">26<span>Written theses</span></div>
+  <div class="rule"></div>
+  <div class="n">160<span>Names with a reason</span></div>
+  <div class="rule"></div>
+  <div class="n">0<span>Recommendations, ever</span></div>
+</div>
+
+<div class="vignette"></div>
+<div class="grain"></div>

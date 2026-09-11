@@ -17,6 +17,27 @@ product thread.
 3200×1800 (16:9 at 2×). `x-post-banner.png` is a copy of card 1, kept under
 its old name for a standalone post.
 
+## The assistant banner — `08-ask.png`
+
+`node brand/x/make-ask.mjs`. Standalone, 3200×1800, for the /ask launch.
+
+The workspace banner answers "is this a real tool?" by showing it running in a
+room. This one answers the only question worth asking about an assistant bolted
+to a site about portfolios: what will it refuse to do?
+
+So the image is one exchange, and the exchange is the refusal. "Should I buy
+NVDA?" is the first thing anybody types into it, and the answer on screen is the
+product's whole position — it declines, says why it declines, and then hands
+over the number it *can* stand behind, with the reason and the named judgement
+that produced it. An image of the assistant being helpful about a ticker would
+sell the opposite product.
+
+Nothing on the screen is typed into the design. The weight and its reason come
+from `book.json`; the conviction score is read out of `lib/universe.ts` and the
+floor and cap out of `lib/reweight.ts` at render time. `tests/brand.test.ts`
+fails if the universe moves past the snapshot — when it does, rebuild the images
+rather than edit the numbers.
+
 ## The workspace banner — `07-workspace.png`
 
 `node brand/x/make-workspace.mjs`. One standalone image, same 3200×1800.
