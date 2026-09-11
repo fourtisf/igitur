@@ -115,6 +115,17 @@ test("a paste that kept its quotes still works", async () => {
   assert.match(readFileSync(join(home, ".env"), "utf8"), new RegExp(`^ANTHROPIC_API_KEY=${GOOD}$`, "m"));
 });
 
+test("it shows the installed key the way the console shows it", async () => {
+  // The console only ever shows sk-ant-api03-AeO...SQAA. Printing the same
+  // shape here answers the question that actually blocks the operator: is the
+  // key on this server the same one, mistyped in the middle, or a different
+  // key altogether.
+  const installed = `sk-ant-api03-AeO${"x".repeat(24)}SQAA`;
+  const { out } = await run("sk-ant-api03-wrongkey", `ANTHROPIC_API_KEY=${installed}\n`);
+  assert.match(out, /sk-ant-api03-AeO\.\.\.SQAA/, "masked like the console masks it");
+  assert.ok(!out.includes(installed), "never the whole key");
+});
+
 test("typing it in the open is possible, but never the default", () => {
   // A key that must be retyped from a photograph cannot be typed blind; a key
   // that was never in a photograph should never be on screen. So: opt-in.

@@ -33,6 +33,29 @@ die()  { printf '\n\033[1;31mBERHENTI: %s\033[0m\n' "$*" >&2; exit 1; }
 
 [ -d "$APP" ] || die "tidak ada $APP di server ini."
 
+# Apa yang sudah terpasang, dalam bentuk yang bisa dibandingkan dengan konsol.
+# Konsol Anthropic hanya menampilkan kunci dalam bentuk terpotong —
+# sk-ant-api03-AeO...SQAA — dan empat karakter terakhir itu cukup untuk
+# menjawab pertanyaan yang benar: apakah yang terpasang ini kunci yang SAMA
+# dengan yang di konsol (berarti salah ketik di tengah), atau kunci yang
+# berbeda sama sekali. Hanya tampil di terminal server, tidak di halaman mana
+# pun: /api/ask cukup melaporkan panjang dan awalan yang memang seragam.
+say "Yang terpasang sekarang"
+CURRENT=""
+if [ -f "$ENV_FILE" ]; then
+  CURRENT=$(grep "^${NAME}=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"'"'"' \r' || true)
+fi
+if [ -z "$CURRENT" ]; then
+  warn "belum ada $NAME di $ENV_FILE"
+elif [ "${#CURRENT}" -ge 24 ]; then
+  ok "${#CURRENT} karakter — ${CURRENT:0:16}...${CURRENT: -4}"
+  printf '    Bandingkan ekor 4 karakter itu dengan yang di console.anthropic.com.\n'
+  printf '    Beda  → yang terpasang memang kunci lain.\n'
+  printf '    Sama  → kuncinya benar tapi ada karakter salah di tengah.\n'
+else
+  warn "${#CURRENT} karakter — terlalu pendek untuk kunci yang sah"
+fi
+
 say "Kunci"
 if [ "${SHOW_KEY:-}" = "1" ] && [ -t 0 ]; then
   # Untuk kunci yang harus DIKETIK ULANG, bukan ditempel — dari foto layar,
