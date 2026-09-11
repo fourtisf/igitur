@@ -47,11 +47,28 @@ test("an existing connection is restored without prompting", () => {
   assert.ok(order > -1 && order < prompt, "the silent read must come before the prompting one");
 });
 
-test("it picks a provider when several wallets are installed", () => {
-  // Two extensions each overwrite window.ethereum on load; the winner is
-  // whichever ran last, so the button could open a wallet nobody expected.
-  assert.match(src, /providers/, "the providers array must be considered");
-  assert.match(src, /isMetaMask/, "a recognisable prompt is the one to prefer");
+test("wallets are discovered, not guessed at", () => {
+  // window.ethereum is one slot every extension overwrites, so the winner is
+  // whichever loaded last. That reached a wallet holding no Ethereum account
+  // and returned "Unable to find any account for 60" — coin type 60 being
+  // Ethereum — while MetaMask sat in the same toolbar, never asked.
+  assert.match(src, /eip6963:requestProvider/, "the page must ask which wallets exist");
+  assert.match(src, /eip6963:announceProvider/, "and listen for the answers");
+  // The old single-slot read stays only as the fallback for older extensions.
+  const legacyUse = src.indexOf("window as { ethereum?: Eip1193 }");
+  const announce = src.indexOf("eip6963:announceProvider");
+  assert.ok(announce > -1 && announce < legacyUse, "6963 must be tried before the old slot");
+});
+
+test("with several wallets the reader chooses, not the load order", () => {
+  assert.match(src, /if \(found\.length > 1\)/, "more than one wallet must not be resolved silently");
+  assert.match(src, /setChoices\(found\)/, "the choice must reach the reader");
+  assert.match(src, /await ask\(found\[0\]\)/, "one wallet is not a choice and must not prompt one");
+});
+
+test("a failure names the wallet that failed", () => {
+  // "Wallet error: ..." with three installed says nothing about which one.
+  assert.match(src, /\$\{w\.name\}: \$\{explain\(err\)\}/, "the message must name the wallet");
 });
 
 test("it still only ever reads an address", () => {

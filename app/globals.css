@@ -316,6 +316,25 @@ section{padding-block:clamp(64px,9vw,120px)}
    here each one is a link to a real book, so it must not look different. */
 .egs{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:16px;font-size:12px}
 .egs .chip{text-decoration:none}
+
+/* The wallet picker. Only rendered when more than one wallet answered — a
+   sheet rather than a dropdown so it works the same on a phone. */
+.wsheet{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(4,4,6,.72);padding:16px;backdrop-filter:blur(3px)}
+@media(min-width:640px){.wsheet{align-items:center}}
+.wsheet-in{width:100%;max-width:380px;border-radius:var(--r);padding:20px;
+  background:linear-gradient(180deg,#141418,#0C0C0F);
+  box-shadow:inset 0 0 0 1px var(--bd-2),0 40px 90px -30px rgba(0,0,0,1)}
+.wsheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wsheet-head b{font-size:15px;font-weight:600}
+.wopt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border-radius:10px;
+  font-size:14px;font-weight:500;color:var(--fg-1);text-align:left;
+  background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:background .16s}
+.wopt+.wopt{margin-top:8px}
+.wopt:hover{background:var(--surf-2);color:var(--fg)}
+.wopt img{border-radius:6px;flex:none}
+.wopt-dot{width:22px;height:22px;border-radius:6px;flex:none;background:var(--ac-dim);
+  box-shadow:inset 0 0 0 1px rgba(124,140,255,.34)}
 .chip{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:450;color:var(--fg-2);
   background:var(--surf);box-shadow:inset 0 0 0 1px var(--bd);transition:color .18s,background .18s;text-align:left}
 .chip:hover{color:var(--fg);background:var(--surf-2)}

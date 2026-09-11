@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { SITE } from "@/lib/site";
 import { BrandMark, TelegramIcon, XIcon } from "./icons";
@@ -47,22 +47,67 @@ function shortAddr(a: string) {
   return a.slice(0, 6) + "…" + a.slice(-4);
 }
 
+/** One wallet, as EIP-6963 announces it. */
+export interface Discovered {
+  uuid: string;
+  name: string;
+  icon: string;
+  provider: Eip1193;
+}
+
+interface AnnounceEvent extends Event {
+  detail?: { info?: { uuid?: string; name?: string; icon?: string }; provider?: Eip1193 };
+}
+
 /**
- * The wallet to talk to.
+ * Every wallet in the browser, asked properly.
  *
- * With two extensions installed, each overwrites `window.ethereum` on load and
- * the winner is whichever ran last — so the button could open a wallet the
- * reader was not expecting, or a provider that answers nothing. Where they
- * cooperate they publish `providers`, and MetaMask is the one to prefer because
- * it is the one whose prompt a reader recognises.
+ * `window.ethereum` is a single slot that every extension overwrites on load,
+ * so the winner is whichever ran last. This deployment proved what that costs:
+ * the button reached a wallet holding no Ethereum account and returned
+ * "Unable to find any account for 60" — 60 being BIP-44's coin type for
+ * Ethereum — while MetaMask sat in the same toolbar, unasked.
+ *
+ * EIP-6963 is the fix the ecosystem settled on: the page asks, and each wallet
+ * announces itself with a name and an icon. Nobody overwrites anybody, and when
+ * more than one answers the reader chooses instead of the load order choosing
+ * for them.
  */
-function pickProvider(): Eip1193 | null {
-  const eth = (window as { ethereum?: Eip1193 }).ethereum;
-  if (!eth) return null;
-  if (Array.isArray(eth.providers) && eth.providers.length) {
-    return eth.providers.find((p) => p.isMetaMask) ?? eth.providers[0];
-  }
-  return eth;
+function discover(): Promise<Discovered[]> {
+  return new Promise((resolve) => {
+    const found = new Map<string, Discovered>();
+    const onAnnounce = (e: Event) => {
+      const d = (e as AnnounceEvent).detail;
+      const uuid = d?.info?.uuid;
+      if (!uuid || !d?.provider || found.has(uuid)) return;
+      found.set(uuid, {
+        uuid,
+        name: d.info?.name || "Wallet",
+        icon: d.info?.icon || "",
+        provider: d.provider,
+      });
+    };
+    window.addEventListener("eip6963:announceProvider", onAnnounce);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    // Announcements are synchronous in practice; one frame is generous.
+    setTimeout(() => {
+      window.removeEventListener("eip6963:announceProvider", onAnnounce);
+      const list = [...found.values()];
+      if (list.length) return resolve(list);
+      // Nothing announced: an older extension that only injects the old way.
+      const eth = (window as { ethereum?: Eip1193 }).ethereum;
+      if (!eth) return resolve([]);
+      const legacy = Array.isArray(eth.providers) && eth.providers.length ? eth.providers : [eth];
+      resolve(
+        legacy.map((p, i) => ({
+          uuid: `legacy-${i}`,
+          name: p.isMetaMask ? "MetaMask" : "Injected wallet",
+          icon: "",
+          provider: p,
+        }))
+      );
+    }, 120);
+  });
 }
 
 /**
@@ -86,30 +131,39 @@ export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [wallet, setWallet] = useState<string | null>(null);
-  /** True while the wallet's own prompt is open. Guards against -32002. */
+  /** True while a wallet's own prompt is open. Guards against -32002. */
   const [asking, setAsking] = useState(false);
+  /** The wallets that answered, when more than one did and the reader must pick. */
+  const [choices, setChoices] = useState<Discovered[] | null>(null);
+  const bound = useRef<Eip1193 | null>(null);
 
   useEffect(() => {
-    const eth = pickProvider();
-    if (!eth) return;
-
-    // Restore a connection the reader already granted. `eth_accounts` returns
-    // what is already authorised and never prompts, so this is silent — without
-    // it, an already-connected wallet read as disconnected on every page load
-    // and the button invited a connection that had already happened.
-    eth
-      .request({ method: "eth_accounts" })
-      .then((acc) => {
-        if (acc?.length) setWallet(acc[0]);
-      })
-      .catch(() => {
-        /* A wallet that will not say is simply not connected. */
-      });
-
-    if (!eth.on) return;
-    const onAccounts = (acc: string[]) => setWallet(acc?.length ? acc[0] : null);
-    eth.on("accountsChanged", onAccounts);
-    return () => eth.removeListener?.("accountsChanged", onAccounts);
+    let live = true;
+    discover().then((found) => {
+      if (!live || !found.length) return;
+      // Restore a connection already granted, from whichever wallet granted it.
+      // `eth_accounts` returns what is already authorised and never prompts, so
+      // this is silent — and asking all of them is how a reader who connected
+      // with their second wallet is still recognised.
+      for (const w of found) {
+        w.provider
+          .request({ method: "eth_accounts" })
+          .then((acc) => {
+            if (!live || !acc?.length || bound.current) return;
+            bound.current = w.provider;
+            setWallet(acc[0]);
+            w.provider.on?.("accountsChanged", (a: string[]) =>
+              setWallet(a?.length ? a[0] : null)
+            );
+          })
+          .catch(() => {
+            /* A wallet that will not say is simply not connected. */
+          });
+      }
+    });
+    return () => {
+      live = false;
+    };
   }, []);
 
   /**
@@ -122,6 +176,7 @@ export function Nav() {
       // A dapp cannot revoke its own permission; this drops the address from
       // the page. Say which one it is, rather than implying the wallet acted.
       setWallet(null);
+      bound.current = null;
       toast("Address cleared from this page. Your wallet still lists the site — remove it there to revoke.");
       return;
     }
@@ -132,24 +187,37 @@ export function Nav() {
       toast("Already asking — check for your wallet's window or extension popup");
       return;
     }
-    const eth = pickProvider();
-    if (!eth) {
+    const found = await discover();
+    if (!found.length) {
       toast("No EVM wallet found in this browser. This site only ever reads an address.");
       return;
     }
+    // One wallet is not a choice. Several is, and guessing is what produced
+    // "Unable to find any account for 60" — a wallet with no Ethereum account
+    // answering because it happened to load last.
+    if (found.length > 1) {
+      setChoices(found);
+      return;
+    }
+    await ask(found[0]);
+  }
+
+  async function ask(w: Discovered) {
+    setChoices(null);
     setAsking(true);
     try {
-      const acc = await eth.request({ method: "eth_requestAccounts" });
+      const acc = await w.provider.request({ method: "eth_requestAccounts" });
       if (acc?.length) {
+        bound.current = w.provider;
         setWallet(acc[0]);
+        w.provider.on?.("accountsChanged", (a: string[]) => setWallet(a?.length ? a[0] : null));
         toast("Connected " + shortAddr(acc[0]));
       } else {
-        // A wallet that answers with nothing has not refused and has not
-        // connected. Saying "rejected" would be a guess.
-        toast("Your wallet returned no address. Unlock it and try again.");
+        // Answering with nothing is neither a refusal nor a connection.
+        toast(`${w.name} returned no address. Unlock it and try again.`);
       }
     } catch (err) {
-      toast(explain(err));
+      toast(`${w.name}: ${explain(err)}`);
     } finally {
       setAsking(false);
     }
@@ -220,6 +288,37 @@ export function Nav() {
           </div>
         </div>
       </nav>
+      {/* Shown only when several wallets answered. One wallet is not a choice;
+          several is, and letting load order decide is what sent the request to
+          a wallet holding no Ethereum account. */}
+      {choices ? (
+        <div className="wsheet" role="dialog" aria-label="Choose a wallet">
+          <div className="wsheet-in">
+            <div className="wsheet-head">
+              <b>Which wallet?</b>
+              <button className="chip" onClick={() => setChoices(null)}>
+                Cancel
+              </button>
+            </div>
+            <p className="p" style={{ fontSize: 12.5, margin: "8px 0 14px" }}>
+              {choices.length} wallets are installed. Igitur only ever reads an address — it never
+              asks for a signature, a transaction or a key.
+            </p>
+            {choices.map((w) => (
+              <button key={w.uuid} className="wopt" onClick={() => ask(w)}>
+                {w.icon ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={w.icon} alt="" width={22} height={22} />
+                ) : (
+                  <span className="wopt-dot" />
+                )}
+                {w.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className={"mmenu" + (open ? " open" : "")}>
         {MENU.map(([href, label]) => (
           // Closing here rather than in an effect on pathname: the menu is
