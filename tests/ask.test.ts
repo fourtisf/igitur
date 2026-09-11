@@ -146,6 +146,24 @@ test("what a conviction score measures is stated, so it is not read as a rating"
   assert.match(RULES, /how directly it expresses the thesis, not how good an investment it is/);
 });
 
+test("asked for a list of names, it has a list to give", () => {
+  // "Recommend ten stocks" was refused outright, which made the assistant look
+  // broken over a question the site can answer honestly: these are the names
+  // its own editors scored highest, and here is the reason under each.
+  assert.match(RULES, /do not refuse the whole question/);
+  assert.match(RULES, /the highest conviction scores, in order/);
+  assert.match(CORPUS, /The highest conviction scores on the site/);
+
+  // Ranked in code. A model sorting 160 numbers by eye gets it subtly wrong,
+  // and a wrong ranking presented as the site's own is worse than no list.
+  const top = THEMES.flatMap((t) => t.assets).sort((a, b) => b.c - a.c || a.t.localeCompare(b.t));
+  assert.match(CORPUS, new RegExp(`1\\. ${top[0].t} `), "the first name must be the highest scored");
+  assert.match(CORPUS, new RegExp(`15\\. ${top[14].t} `), "and the fifteenth the fifteenth");
+
+  // And it must never read as a buy list.
+  assert.match(CORPUS, /not that it is cheap, safe, timely or a good\s+investment/);
+});
+
 test("a conditional verdict is still a verdict", () => {
   // "Yes, if you are a long-term holder" is the most natural way to slip past
   // rule 1 — it feels like context and reads like permission. What the site

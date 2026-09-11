@@ -34,6 +34,23 @@ export function corpus(): string {
 
   const ballast = BALLAST.map((b) => `  ${b.t} (${b.n}) — ${b.why}`).join("\n");
 
+  /**
+   * The highest published scores, ranked here rather than in the model's head.
+   *
+   * Readers ask for a list of names — "recommend ten stocks" — and until now
+   * the assistant refused the whole question, which made it look broken over
+   * something the site can answer honestly. It cannot rank by attractiveness
+   * and it cannot predict; it CAN say which names its own editors scored
+   * highest for expressing their thesis, and why. Sorting 160 numbers by eye
+   * is exactly the kind of thing a language model gets subtly wrong, so the
+   * order is computed and handed over finished.
+   */
+  const ranked = THEMES.flatMap((t) => t.assets.map((a) => ({ ...a, theme: t.name })))
+    .sort((a, b) => b.c - a.c || a.t.localeCompare(b.t))
+    .slice(0, 15)
+    .map((a, i) => `  ${i + 1}. ${a.t} (${a.n}) — conviction ${a.c}, ${a.theme}. ${a.why}`)
+    .join("\n");
+
   return `# What Igitur is
 
 A bounded, published set of ${THEMES.length} written investment theses and ${NAMES} names, and a
@@ -69,6 +86,15 @@ either way.
 # The ${THEMES.length} theses
 
 ${theses}
+
+# The highest conviction scores on the site
+
+These are the 15 names their thesis's editor scored highest, in order. The score says
+how DIRECTLY a name expresses its thesis — not that it is cheap, safe, timely or a good
+investment, none of which this site measures. A name only earns weight when a reader's
+stated belief matches the thesis it belongs to.
+
+${ranked}
 
 # Ballast
 
@@ -127,7 +153,8 @@ export const RULES = [
   "   (e) the case against, which the same thesis publishes about itself, at the same length as the case for;",
   "   (f) the horizon and risk band the thesis is written for, and what has to stay true for it to work. This is the closest thing to \"who this is for\" that exists here, and it is a fact about the thesis, never a judgement about the reader.",
   "   A reader who reads that has everything the site knows and can decide for themselves. That is the product. Ending at (a), or at (a) and (e), is the failure to avoid.",
-  "10. Never dress a verdict as a condition. \"Yes, if you are a long-term holder\" is still you telling someone to buy, and the conditional does not launder it. Say instead what the thesis is written for — its horizon, its risk band, what must stay true — and let the reader decide whether they are that person. The difference is not pedantry: one is a fact about a published thesis, the other is an instruction to a stranger whose circumstances you do not know.",
+  "10. Asked for picks, a list, the best names, or a recommendation: do not refuse the whole question. You cannot rank by attractiveness, predict, or name a timeframe — but you CAN hand over the list this site publishes: the highest conviction scores, in order, each with its thesis and its published reason. Say what the score measures and what it does not, and say that a name only earns weight when a reader's own belief matches its thesis. A reader who wanted ten tickers gets fifteen, with a reason under each and no verdict attached. That is the honest version of the question they asked, and it is a real answer.",
+  "11. Never dress a verdict as a condition. \"Yes, if you are a long-term holder\" is still you telling someone to buy, and the conditional does not launder it. Say instead what the thesis is written for — its horizon, its risk band, what must stay true — and let the reader decide whether they are that person. The difference is not pedantry: one is a fact about a published thesis, the other is an instruction to a stranger whose circumstances you do not know.",
   "",
   "How to write it. The rules above decide what you may say; these decide whether it is worth reading.",
   "",
